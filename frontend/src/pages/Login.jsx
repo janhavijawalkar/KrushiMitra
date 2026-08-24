@@ -1,0 +1,307 @@
+import { useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+  Sprout,
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  Wheat,
+  UserCheck,
+} from "lucide-react";
+
+import { useApp } from "../context/AppContext";
+
+export default function Login({ nav }) {
+  const { login, apiLogin, t, language, changeLanguage } = useApp();
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    rememberMe: true,
+  });
+
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value,
+    });
+
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!form.email || !form.password) {
+      setError(t("loginRequired") || "Please enter email and password.");
+      return;
+    }
+
+    setIsLoading(true);
+    const result = await apiLogin(form.email.trim(), form.password);
+    setIsLoading(false);
+
+    if (result.success) {
+      nav("dashboard");
+    } else {
+      setError(result.message || "Invalid credentials. Please verify your email and password.");
+    }
+  };
+
+  const handleQuickDemo = async (demoType) => {
+    if (demoType === "farmer") {
+      setForm({
+        email: "ramesh.patil@krushimitra.in",
+        password: "password123",
+        rememberMe: true,
+      });
+      setIsLoading(true);
+      await apiLogin("ramesh.patil@krushimitra.in", "password123");
+      setIsLoading(false);
+      nav("dashboard");
+    } else if (demoType === "admin") {
+      setForm({
+        email: "admin@krushimitra.in",
+        password: "adminpassword",
+        rememberMe: true,
+      });
+      setIsLoading(true);
+      await apiLogin("admin@krushimitra.in", "adminpassword");
+      setIsLoading(false);
+      nav("dashboard");
+    }
+  };
+
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#EAF5E8] via-[#F4F9F2] to-[#E2F3E7] px-4 py-8">
+      {/* Background Decorative Ambient Glows */}
+      <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-[#2E7D32]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-20 h-96 w-96 rounded-full bg-[#10B981]/15 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-white/40 blur-2xl" />
+
+      <div className="relative w-full max-w-lg">
+        {/* TOP BAR: Home & Language Switcher */}
+        <div className="mb-4 flex items-center justify-between px-2">
+          <button
+            type="button"
+            onClick={() => nav?.("landing")}
+            className="key-cap flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
+          >
+            <span>← Home</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 font-medium hidden sm:inline">🌐 {t("language") || "Language"}:</span>
+            <select
+              value={language}
+              onChange={(e) => changeLanguage(e.target.value)}
+              className="key-cap px-2.5 py-1 text-xs font-bold text-[#2E7D32] outline-none cursor-pointer"
+            >
+              <option value="en">English (EN)</option>
+              <option value="hi">हिन्दी (HI)</option>
+              <option value="mr">मराठी (MR)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* MAIN LOGIN CARD */}
+        <div className="rounded-3xl border border-[#DCE8D9] bg-white/95 p-7 sm:p-9 shadow-[0_20px_60px_rgba(46,125,50,0.12)] backdrop-blur-sm">
+          {/* BRAND HEADER */}
+          <div className="mb-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2E7D32] via-[#16A34A] to-[#10B981] text-white shadow-[0_8px_24px_rgba(46,125,50,0.28)] transition-transform duration-300 hover:scale-105">
+              <Sprout size={34} strokeWidth={2.2} />
+            </div>
+
+            <h1 className="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1B5E20]">
+              KrushiMitra
+            </h1>
+
+            <p className="mt-1 text-xs sm:text-sm font-medium text-gray-500">
+              {t("aiPoweredAgriculture") || "AI-Powered Agriculture Platform"}
+            </p>
+          </div>
+
+          {/* SECTION TITLE */}
+          <div className="mb-5 text-left">
+            <h2 className="text-xl font-bold text-gray-800">
+              {t("welcomeBack") || "Welcome Back"}
+            </h2>
+            <p className="mt-0.5 text-xs sm:text-sm text-gray-500">
+              {t("loginToContinue") || "Login to access crop prediction, recommendations, and analytics"}
+            </p>
+          </div>
+
+          {/* ERROR ALERT */}
+          {error && (
+            <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-xs sm:text-sm font-medium text-red-700">
+              <span className="h-2 w-2 rounded-full bg-red-500" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* LOGIN FORM */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* EMAIL FIELD */}
+            <div>
+              <label className="mb-1.5 block text-xs sm:text-sm font-semibold text-gray-700">
+                {t("emailLabel") || "Email Address"}
+              </label>
+              <div className="relative">
+                <Mail
+                  size={18}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder={t("enterYourEmail") || "e.g. farmer@krushimitra.in"}
+                  className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-3 pl-11 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
+                />
+              </div>
+            </div>
+
+            {/* PASSWORD FIELD */}
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-xs sm:text-sm font-semibold text-gray-700">
+                  {t("passwordLabel") || "Password"}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => nav("forgot")}
+                  className="text-xs font-semibold text-[#2E7D32] hover:text-[#1B5E20] hover:underline focus:outline-none"
+                >
+                  {t("forgotPassword") || "Forgot Password?"}
+                </button>
+              </div>
+
+              <div className="relative">
+                <LockKeyhole
+                  size={18}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder={t("enterYourPassword") || "Enter your password"}
+                  className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-3 pl-11 pr-11 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-400 transition hover:text-[#2E7D32]"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* REMEMBER ME */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={form.rememberMe}
+                  onChange={handleChange}
+                  className="h-4 w-4 rounded border-[#DCE8D9] text-[#2E7D32] accent-[#2E7D32] focus:ring-[#2E7D32]"
+                />
+                <span className="text-xs text-gray-600 font-medium">
+                  Remember my session
+                </span>
+              </label>
+            </div>
+
+            {/* SUBMIT BUTTON */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-shimmer mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(46,125,50,0.3)] active:scale-95 disabled:opacity-75 cursor-pointer"
+            >
+              {isLoading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <span>{t("login") || "Login to Account"}</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* QUICK DEMO LOGIN PILLS */}
+          <div className="mt-6 rounded-2xl bg-[#F4F9F2] p-3.5 border border-[#E0EFE0]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#2E7D32] flex items-center gap-1">
+                <Wheat size={13} /> Quick Demo Access
+              </span>
+              <span className="text-[10px] text-gray-500">1-click test login</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleQuickDemo("farmer")}
+                className="key-cap flex items-center justify-center gap-1.5 rounded-xl bg-white border border-[#D0E6D2] px-2.5 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-[#2E7D32] hover:text-white hover:border-[#2E7D32] active:scale-95 cursor-pointer"
+              >
+                <UserCheck size={14} />
+                <span>Demo Farmer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemo("admin")}
+                className="key-cap flex items-center justify-center gap-1.5 rounded-xl bg-white border border-[#D0E6D2] px-2.5 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-[#1E293B] hover:text-white hover:border-[#1E293B] active:scale-95 cursor-pointer"
+              >
+                <ShieldCheck size={14} />
+                <span>Demo Admin</span>
+              </button>
+            </div>
+          </div>
+
+          {/* REGISTER LINK */}
+          <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">
+            <span className="text-xs sm:text-sm text-gray-500">
+              {t("dontHaveAccount") || "Don't have an account?"}
+            </span>
+            <button
+              type="button"
+              onClick={() => nav("register")}
+              className="ml-1.5 text-xs sm:text-sm font-bold text-[#2E7D32] hover:text-[#1B5E20] hover:underline focus:outline-none cursor-pointer"
+            >
+              {t("register") || "Create an Account"}
+            </button>
+          </div>
+        </div>
+
+        {/* TRUST BADGES / FOOTER */}
+        <div className="mt-4 flex items-center justify-center gap-6 text-[11px] font-medium text-gray-500">
+          <div className="flex items-center gap-1">
+            <ShieldCheck size={13} className="text-[#2E7D32]" />
+            <span>Secure Access</span>
+          </div>
+          <span>•</span>
+          <div className="flex items-center gap-1">
+            <Sprout size={13} className="text-[#2E7D32]" />
+            <span>ML Crop Intelligence</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
