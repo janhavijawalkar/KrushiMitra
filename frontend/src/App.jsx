@@ -4,6 +4,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import Dashboard from "./pages/Dashboard";
 import Weather from "./pages/Weather";
@@ -13,6 +14,7 @@ import Reports from "./pages/Reports";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
 
 import Layout from "./components/Layout";
@@ -22,21 +24,32 @@ import { useApp } from "./context/AppContext";
 export default function App() {
   const { user } = useApp();
 
-  const [page, setPage] = useState(
-    user ? "dashboard" : "landing"
-  );
+  const [pageParams, setPageParams] = useState({});
+
+  // Check URL query parameters for reset token on initial load
+  const [page, setPage] = useState(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("reset_token") || urlParams.get("token");
+      if (token) {
+        return "reset-password";
+      }
+    }
+    return user ? "dashboard" : "landing";
+  });
 
   useEffect(() => {
-    if (user && (page === "login" || page === "register" || page === "forgot")) {
+    if (user && (page === "login" || page === "register" || page === "forgot" || page === "reset-password")) {
       setPage("dashboard");
     }
 
-    if (!user && !["landing", "login", "register", "forgot"].includes(page)) {
+    if (!user && !["landing", "login", "register", "forgot", "reset-password"].includes(page)) {
       setPage("landing");
     }
   }, [user, page]);
 
-  const navigate = (newPage) => {
+  const navigate = (newPage, params = {}) => {
+    setPageParams(params || {});
     setPage(newPage);
   };
 
@@ -56,6 +69,10 @@ export default function App() {
       return <ForgotPassword nav={navigate} />;
     }
 
+    if (page === "reset-password") {
+      return <ResetPassword nav={navigate} token={pageParams.token} />;
+    }
+
     if (page === "login") {
       return <Login nav={navigate} />;
     }
@@ -63,7 +80,7 @@ export default function App() {
     return <Landing nav={navigate} />;
   }
 
-  /* ================= ACCOUNT PAGES ================= */
+  /* ================= ACCOUNT & SYSTEM PAGES ================= */
 
   if (page === "profile") {
     return (
@@ -77,6 +94,14 @@ export default function App() {
     return (
       <Layout page={page} nav={navigate}>
         <Settings />
+      </Layout>
+    );
+  }
+
+  if (page === "notifications") {
+    return (
+      <Layout page={page} nav={navigate}>
+        <Notifications nav={navigate} />
       </Layout>
     );
   }
@@ -157,6 +182,7 @@ export default function App() {
         "history",
         "profile",
         "settings",
+        "notifications",
         "admin",
       ].includes(page) && (
         <Dashboard nav={navigate} />

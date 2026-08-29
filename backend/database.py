@@ -1,103 +1,328 @@
-import sqlite3
 import os
+import sqlite3
+import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, date, timedelta
+from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "krushimitra.db")
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+# Database Configuration
+DB_TYPE = os.getenv("DB_TYPE", "mysql").lower().strip()
+MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
+MYSQL_USER = os.getenv("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_DB = os.getenv("MYSQL_DB", "krushimitra")
+
+SQLITE_PATH = os.path.join(BASE_DIR, "krushimitra.db")
+
+_active_engine = None
+
+try:
+    import pymysql
+    from pymysql.cursors import DictCursor
+    HAS_PYMYSQL = True
+except ImportError:
+    HAS_PYMYSQL = False
+
+def get_db():
+    """
+    Returns an active database connection.
+    Attempts MySQL first if DB_TYPE is mysql, otherwise falls back to SQLite.
+    """
+    global _active_engine
+
+    if DB_TYPE == "mysql" and HAS_PYMYSQL:
+        try:
+            # First ensure database exists
+            try:
+                temp_conn = pymysql.connect(
+                    host=MYSQL_HOST,
+                    port=MYSQL_PORT,
+                    user=MYSQL_USER,
+                    password=MYSQL_PASSWORD,
+                    connect_timeout=3
+                )
+                with temp_conn.cursor() as cur:
+                    cur.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+                temp_conn.commit()
+                temp_conn.close()
+            except Exception:
+                pass
+
+            conn = pymysql.connect(
+                host=MYSQL_HOST,
+                port=MYSQL_PORT,
+                user=MYSQL_USER,
+                password=MYSQL_PASSWORD,
+                database=MYSQL_DB,
+                cursorclass=DictCursor,
+                autocommit=True,
+                connect_timeout=3
+            )
+            _active_engine = "mysql"
+            return conn, "mysql"
+        except Exception as e:
+            print(f"[DATABASE WARNING] MySQL connection to {MYSQL_HOST}:{MYSQL_PORT} failed ({e}). Falling back to SQLite.")
+
+    # SQLite fallback
+    conn = sqlite3.connect(SQLITE_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    _active_engine = "sqlite"
+    return conn, "sqlite"
 
-def init_db():
-    conn = get_db_connection()
+def _serialize_row(row):
+    if not row:
+        return row
+    d = dict(row)
+    for k, v in d.items():
+        if isinstance(v, (datetime, date)):
+            d[k] = v.strftime("%Y-%m-%d %H:%M:%S")
+    return d
+
+def execute_query(sql, params=(), fetch_mode="none"):
+    """
+    Executes a SQL query safely across both MySQL and SQLite.
+    Converts '?' placeholders to '%s' when targeting MySQL.
+    """
+    conn, engine = get_db()
     cursor = conn.cursor()
 
-    # 1. USERS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        phone TEXT,
-        role TEXT NOT NULL DEFAULT 'Farmer',
-        state TEXT DEFAULT 'Maharashtra',
-        district TEXT DEFAULT 'Pune',
-        farm_size TEXT DEFAULT '5.0',
-        farm_unit TEXT DEFAULT 'Acres',
-        soil_type TEXT DEFAULT 'Black Clayey Soil (Regur)',
-        irrigation_type TEXT DEFAULT 'Drip & Canal Irrigation',
-        primary_crops TEXT DEFAULT 'Soybean, Cotton, Wheat',
-        kisan_id TEXT DEFAULT 'PMK-MH-2026-8941',
-        farm_details TEXT,
-        status TEXT DEFAULT 'Active',
-        member_since TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
+    formatted_sql = sql
+    if engine == "mysql":
+        formatted_sql = sql.replace("?", "%s")
 
-    # 2. PREDICTIONS HISTORY TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS prediction_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_email TEXT,
-        crop TEXT NOT NULL,
-        district TEXT NOT NULL,
-        season TEXT,
-        area REAL,
-        rainfall REAL,
-        temperature REAL,
-        crop_year INTEGER,
-        productivity REAL NOT NULL,
-        production REAL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
+    try:
+        cursor.execute(formatted_sql, params)
 
-    # 3. RECOMMENDATIONS HISTORY TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS recommendation_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_email TEXT,
-        crop TEXT NOT NULL,
-        confidence REAL,
-        n_val REAL,
-        p_val REAL,
-        k_val REAL,
-        temperature REAL,
-        humidity REAL,
-        ph REAL,
-        rainfall REAL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
+        if fetch_mode == "one":
+            row = cursor.fetchone()
+            if row is not None:
+                return _serialize_row(row)
+            return None
 
-    # 4. SUPPORT TICKETS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS support_tickets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ticket_id TEXT UNIQUE,
-        user_email TEXT,
-        name TEXT,
-        category TEXT,
-        subject TEXT,
-        message TEXT,
-        status TEXT DEFAULT 'Submitted',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
+        elif fetch_mode == "all":
+            rows = cursor.fetchall()
+            return [_serialize_row(r) for r in rows]
 
-    conn.commit()
+        elif fetch_mode == "insert":
+            if engine == "sqlite":
+                conn.commit()
+                last_id = cursor.lastrowid
+            else:
+                last_id = cursor.lastrowid
+            return last_id
 
-    # Seed initial Admin and Demo Farmers if users table is empty
+        else:
+            if engine == "sqlite":
+                conn.commit()
+            return True
+
+    finally:
+        cursor.close()
+        conn.close()
+
+def execute_insert(sql, params=()):
+    """
+    Executes an INSERT statement and returns the newly created row ID.
+    """
+    return execute_query(sql, params, fetch_mode="insert")
+
+def init_db():
+    """
+    Initializes database tables and seeds demo administrator and farmers.
+    """
+    conn, engine = get_db()
+    cursor = conn.cursor()
+
+    if engine == "mysql":
+        print(f"[DATABASE] Connected to MySQL Server ({MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB})")
+        
+        # 1. Users Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(150) NOT NULL,
+            email VARCHAR(150) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            phone VARCHAR(30) DEFAULT '',
+            role VARCHAR(50) NOT NULL DEFAULT 'Farmer',
+            state VARCHAR(100) DEFAULT 'Maharashtra',
+            district VARCHAR(100) DEFAULT 'Pune',
+            farm_size VARCHAR(50) DEFAULT '',
+            farm_unit VARCHAR(20) DEFAULT 'Acres',
+            soil_type VARCHAR(150) DEFAULT '',
+            irrigation_type VARCHAR(150) DEFAULT '',
+            primary_crops VARCHAR(255) DEFAULT '',
+            kisan_id VARCHAR(100) DEFAULT '',
+            farm_details TEXT,
+            status VARCHAR(30) DEFAULT 'Active',
+            member_since VARCHAR(50) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_users_email (email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """)
+
+        # 2. Prediction History Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS prediction_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_email VARCHAR(150) NOT NULL,
+            crop VARCHAR(100) NOT NULL,
+            district VARCHAR(100) NOT NULL,
+            season VARCHAR(50) NOT NULL,
+            area DOUBLE NOT NULL,
+            rainfall DOUBLE NOT NULL,
+            temperature DOUBLE NOT NULL,
+            crop_year INT NOT NULL,
+            productivity DOUBLE NOT NULL,
+            production DOUBLE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_pred_user (user_email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """)
+
+        # 3. Recommendation History Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS recommendation_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_email VARCHAR(150) NOT NULL,
+            crop VARCHAR(100) NOT NULL,
+            confidence DOUBLE NOT NULL,
+            nitrogen DOUBLE NOT NULL,
+            phosphorus DOUBLE NOT NULL,
+            potassium DOUBLE NOT NULL,
+            temperature DOUBLE NOT NULL,
+            humidity DOUBLE NOT NULL,
+            ph DOUBLE NOT NULL,
+            rainfall DOUBLE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_rec_user (user_email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """)
+
+        # 4. Support Inquiries Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_name VARCHAR(150) NOT NULL,
+            user_email VARCHAR(150) NOT NULL,
+            subject VARCHAR(200) NOT NULL,
+            category VARCHAR(50) NOT NULL,
+            message TEXT NOT NULL,
+            status VARCHAR(30) DEFAULT 'Open',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """)
+
+        # 5. Password Resets Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(150) NOT NULL,
+            token VARCHAR(255) NOT NULL UNIQUE,
+            expires_at DATETIME NOT NULL,
+            used TINYINT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_resets_token (token),
+            INDEX idx_resets_email (email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """)
+
+    else:
+        print(f"[DATABASE] Connected to SQLite Database ({SQLITE_PATH})")
+        
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            phone TEXT DEFAULT '',
+            role TEXT NOT NULL DEFAULT 'Farmer',
+            state TEXT DEFAULT 'Maharashtra',
+            district TEXT DEFAULT 'Pune',
+            farm_size TEXT DEFAULT '',
+            farm_unit TEXT DEFAULT 'Acres',
+            soil_type TEXT DEFAULT '',
+            irrigation_type TEXT DEFAULT '',
+            primary_crops TEXT DEFAULT '',
+            kisan_id TEXT DEFAULT '',
+            status TEXT DEFAULT 'Active',
+            member_since TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS prediction_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_email TEXT,
+            crop TEXT NOT NULL,
+            district TEXT NOT NULL,
+            season TEXT,
+            area REAL,
+            rainfall REAL,
+            temperature REAL,
+            crop_year INTEGER,
+            productivity REAL NOT NULL,
+            production REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS recommendation_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_email TEXT,
+            crop TEXT NOT NULL,
+            confidence REAL,
+            n_val REAL,
+            p_val REAL,
+            k_val REAL,
+            temperature REAL,
+            humidity REAL,
+            ph REAL,
+            rainfall REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id TEXT UNIQUE,
+            user_email TEXT,
+            name TEXT,
+            category TEXT,
+            subject TEXT,
+            message TEXT,
+            status TEXT DEFAULT 'Submitted',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at TEXT NOT NULL,
+            used INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        conn.commit()
+
+    # Check and Seed Initial Users
     cursor.execute("SELECT COUNT(*) FROM users")
-    count = cursor.fetchone()[0]
+    res = cursor.fetchone()
+    count = res["COUNT(*)"] if isinstance(res, dict) else res[0]
 
     if count == 0:
-        print("[DATABASE] Seeding database with initial Administrator and Demo Farmers...")
+        print("[DATABASE] Seeding database with Administrator and Demo Farmers...")
         initial_users = [
             (
                 "KrushiMitra Administrator",
@@ -191,154 +416,308 @@ def init_db():
             )
         ]
 
-        cursor.executemany("""
+        insert_sql = """
         INSERT INTO users (
             name, email, password_hash, phone, role, state, district,
             farm_size, farm_unit, soil_type, irrigation_type, primary_crops,
             kisan_id, farm_details, status, member_since
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, initial_users)
+        """
+        for user_tuple in initial_users:
+            if engine == "mysql":
+                cursor.execute(insert_sql.replace("?", "%s"), user_tuple)
+            else:
+                cursor.execute(insert_sql, user_tuple)
 
-        conn.commit()
-        print("[DATABASE] Initial seeding complete.")
+        if engine == "sqlite":
+            conn.commit()
+        print("[DATABASE] Initial user seeding complete.")
 
+    def _extract_count(row):
+        if not row:
+            return 0
+        if isinstance(row, dict):
+            return list(row.values())[0] if row else 0
+        return row[0]
+
+    # 2. Seed Initial Support Tickets if table is empty
+    cursor.execute("SELECT COUNT(*) FROM support_tickets")
+    ticket_row = cursor.fetchone()
+    ticket_count = _extract_count(ticket_row)
+    if ticket_count == 0:
+        sample_tickets = [
+            (
+                "TICK-102941",
+                "ramesh.patil@krushimitra.in",
+                "Ramesh Patil",
+                "Pune",
+                "Crop Advisory",
+                "Query regarding Drip Fertigation NPK ratio for Sugarcane",
+                "Sir, the crop recommendation suggested Sugarcane for my Medium Black Soil. What is the recommended split application of Urea and Potash through drip irrigation during early vegetative phase?",
+                "Resolved",
+                "Split 40% Nitrogen at planting, 30% at tillering, and balance during grand growth. Recommended NPK fertigation schedule sent to your registered email.",
+                5
+            ),
+            (
+                "TICK-203819",
+                "sunita.deshmukh@krushimitra.in",
+                "Sunita Deshmukh",
+                "Nashik",
+                "AI Voice Assistant",
+                "Feedback: Marathi voice assistant is very accurate!",
+                "नमस्कार, मी नाशिकमधील द्राक्ष उत्पादक शेतकरी आहे. मराठीमध्ये बोलून हवामान आणि पावसाचा अंदाज ऐकल्यामुळे औषध फवारणीचे योग्य नियोजन करता आले. धन्यवाद!",
+                "Resolved",
+                "धन्यवाद सुनिताजी! आम्ही नाशिक जिल्ह्यातील सर्व द्राक्ष बागायतदारांसाठी लवकरच विशेष रोग नियंत्रण अलर्ट आणत आहोत.",
+                5
+            ),
+            (
+                "TICK-309482",
+                "anil.jadhav@krushimitra.in",
+                "Anil Jadhav",
+                "Amravati",
+                "Yield Prediction",
+                "Soybean yield calculation query for Kharif season",
+                "I entered 3.5 Acres of Regur Black Soil for Soybean. The model predicted 28.4 Quintals. Does this consider moderate rainfall or deficit monsoon?",
+                "Under Review",
+                "",
+                4
+            ),
+            (
+                "TICK-408127",
+                "dnyaneshwar.patil@krushimitra.in",
+                "Dnyaneshwar Patil",
+                "Kolhapur",
+                "Soil & Fertilizer",
+                "Soil pH adjustment for alkaline black soil",
+                "My soil pH is 7.9 in Kolhapur district. Should I apply gypsum before sowing Kharif Cotton or Wheat?",
+                "Submitted",
+                "",
+                5
+            ),
+            (
+                "TICK-501934",
+                "priya.shinde@krushimitra.in",
+                "Priya Shinde",
+                "Nashik",
+                "General Inquiry",
+                "Official PDF Farm Record Download",
+                "Downloaded the KrushiMitra PDF report for submitting to bank for crop loan subsidy under KCC. The format is very clear and professional.",
+                "Resolved",
+                "Thank you Priya ji! The digital reports are accepted under PMFBY and Kisan Credit Scheme verification.",
+                5
+            )
+        ]
+
+        ticket_insert = """
+        INSERT INTO support_tickets (
+            ticket_id, user_email, name, district, category, subject, message, status, admin_reply, rating
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        for t_tuple in sample_tickets:
+            try:
+                if engine == "mysql":
+                    cursor.execute(ticket_insert.replace("?", "%s"), t_tuple)
+                else:
+                    cursor.execute(ticket_insert, t_tuple)
+            except Exception as ex:
+                print(f"[DB WARN in ticket seed]: {ex}")
+
+        if engine == "sqlite":
+            conn.commit()
+        print("[DATABASE] Initial support tickets seeding complete.")
+
+    # 3. Seed Initial Predictions if table is empty
+    cursor.execute("SELECT COUNT(*) FROM prediction_history")
+    pred_row = cursor.fetchone()
+    pred_count = _extract_count(pred_row)
+    if pred_count == 0:
+        sample_preds = [
+            ("ramesh.patil@krushimitra.in", "Sugarcane", "Pune", "Kharif", 5.0, 850.0, 29.5, 2026, 92.4, 462.0),
+            ("sunita.deshmukh@krushimitra.in", "Grapes", "Nashik", "Rabi", 4.0, 520.0, 24.2, 2026, 22.8, 91.2),
+            ("anil.jadhav@krushimitra.in", "Soybean", "Amravati", "Kharif", 3.5, 780.0, 28.1, 2026, 8.1, 28.35),
+            ("dnyaneshwar.patil@krushimitra.in", "Wheat", "Kolhapur", "Rabi", 6.0, 480.0, 22.0, 2026, 31.5, 189.0),
+            ("priya.shinde@krushimitra.in", "Cotton", "Nagpur", "Kharif", 8.0, 920.0, 31.0, 2026, 18.2, 145.6),
+            ("admin@krushimitra.in", "Rice", "Satara", "Kharif", 2.5, 1100.0, 26.5, 2026, 38.0, 95.0),
+        ]
+        pred_insert = """
+        INSERT INTO prediction_history (
+            user_email, crop, district, season, area, rainfall, temperature, crop_year, productivity, production
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        for p_tuple in sample_preds:
+            try:
+                if engine == "mysql":
+                    cursor.execute(pred_insert.replace("?", "%s"), p_tuple)
+                else:
+                    cursor.execute(pred_insert, p_tuple)
+            except Exception as ex:
+                print(f"[DB WARN in pred seed]: {ex}")
+
+        if engine == "sqlite":
+            conn.commit()
+        print("[DATABASE] Initial predictions seeding complete.")
+
+    # 4. Seed Initial Recommendations if table is empty
+    cursor.execute("SELECT COUNT(*) FROM recommendation_history")
+    rec_row = cursor.fetchone()
+    rec_count = _extract_count(rec_row)
+    if rec_count == 0:
+        sample_recs = [
+            ("ramesh.patil@krushimitra.in", "Sugarcane", 98.4, 90.0, 42.0, 45.0, 29.5, 72.0, 6.8, 850.0),
+            ("sunita.deshmukh@krushimitra.in", "Grapes", 96.2, 70.0, 35.0, 50.0, 24.2, 65.0, 6.5, 520.0),
+            ("anil.jadhav@krushimitra.in", "Soybean", 97.5, 80.0, 40.0, 40.0, 28.1, 80.0, 6.9, 780.0),
+            ("dnyaneshwar.patil@krushimitra.in", "Wheat", 95.1, 85.0, 45.0, 35.0, 22.0, 60.0, 7.1, 480.0),
+            ("priya.shinde@krushimitra.in", "Cotton", 99.0, 95.0, 50.0, 40.0, 31.0, 75.0, 7.2, 920.0),
+            ("admin@krushimitra.in", "Rice", 98.8, 90.0, 40.0, 40.0, 26.5, 85.0, 6.6, 1100.0),
+        ]
+        rec_insert = """
+        INSERT INTO recommendation_history (
+            user_email, crop, confidence, nitrogen, phosphorus, potassium, temperature, humidity, ph, rainfall
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        for r_tuple in sample_recs:
+            try:
+                if engine == "mysql":
+                    cursor.execute(rec_insert.replace("?", "%s"), r_tuple)
+                else:
+                    cursor.execute(rec_insert, r_tuple)
+            except Exception as ex:
+                print(f"[DB WARN in rec seed]: {ex}")
+
+        if engine == "sqlite":
+            conn.commit()
+        print("[DATABASE] Initial recommendations seeding complete.")
+
+    cursor.close()
     conn.close()
 
-# USER OPERATIONS
+# =========================================================
+# USER CRUD OPERATIONS
+# =========================================================
+
 def create_user(name, email, password, role="Farmer", district="Pune", phone="", farm_size="5.0"):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
     password_hash = generate_password_hash(password)
     member_since = datetime.now().strftime("%B %Y")
     
     try:
-        cursor.execute("""
+        user_id = execute_insert("""
         INSERT INTO users (name, email, password_hash, role, district, phone, farm_size, member_since)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (name, email.strip().lower(), password_hash, role, district, phone, farm_size, member_since))
-        conn.commit()
-        user_id = cursor.lastrowid
-        conn.close()
+        
         return get_user_by_id(user_id)
-    except sqlite3.IntegrityError:
-        conn.close()
+    except Exception as e:
+        print(f"[DB ERROR in create_user]: {e}")
         return None
 
 def authenticate_user(email, password):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT * FROM users WHERE email = ?", (email.strip().lower(),))
-    user = cursor.fetchone()
-    conn.close()
-    
+    user = execute_query(
+        "SELECT * FROM users WHERE email = ?",
+        (email.strip().lower(),),
+        fetch_mode="one"
+    )
     if user and check_password_hash(user["password_hash"], password):
-        return dict(user)
+        return user
     return None
 
 def get_user_by_email(email):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE email = ?", (email.strip().lower(),))
-    user = cursor.fetchone()
-    conn.close()
-    return dict(user) if user else None
+    return execute_query(
+        "SELECT * FROM users WHERE email = ?",
+        (email.strip().lower(),),
+        fetch_mode="one"
+    )
 
 def get_user_by_id(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user = cursor.fetchone()
-    conn.close()
-    return dict(user) if user else None
+    return execute_query(
+        "SELECT * FROM users WHERE id = ?",
+        (user_id,),
+        fetch_mode="one"
+    )
 
 def update_user_profile(email, data):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
+    current = get_user_by_email(email)
+    if not current:
+        return None
+
+    name = data.get("name") if "name" in data else current.get("name", "")
+    phone = data.get("phone") if "phone" in data else current.get("phone", "")
+    district = data.get("district") if "district" in data else current.get("district", "")
+    state = data.get("state") if "state" in data else current.get("state", "Maharashtra")
+    farm_size = data.get("farmSize") if "farmSize" in data else (data.get("farm_size") if "farm_size" in data else current.get("farm_size", ""))
+    farm_unit = data.get("farmUnit") if "farmUnit" in data else (data.get("farm_unit") if "farm_unit" in data else current.get("farm_unit", "Acres"))
+    soil_type = data.get("soilType") if "soilType" in data else (data.get("soil_type") if "soil_type" in data else current.get("soil_type", ""))
+    irrigation_type = data.get("irrigationType") if "irrigationType" in data else (data.get("irrigation_type") if "irrigation_type" in data else current.get("irrigation_type", ""))
+    primary_crops = data.get("primaryCrops") if "primaryCrops" in data else (data.get("primary_crops") if "primary_crops" in data else current.get("primary_crops", ""))
+    kisan_id = data.get("kisanId") if "kisanId" in data else (data.get("kisan_id") if "kisan_id" in data else current.get("kisan_id", ""))
+    farm_details = data.get("farmDetails") if "farmDetails" in data else (data.get("farm_details") if "farm_details" in data else current.get("farm_details", ""))
+
+    execute_query("""
     UPDATE users SET
-        name = COALESCE(?, name),
-        phone = COALESCE(?, phone),
-        district = COALESCE(?, district),
-        state = COALESCE(?, state),
-        farm_size = COALESCE(?, farm_size),
-        farm_unit = COALESCE(?, farm_unit),
-        soil_type = COALESCE(?, soil_type),
-        irrigation_type = COALESCE(?, irrigation_type),
-        primary_crops = COALESCE(?, primary_crops),
-        kisan_id = COALESCE(?, kisan_id),
-        farm_details = COALESCE(?, farm_details)
+        name = ?,
+        phone = ?,
+        district = ?,
+        state = ?,
+        farm_size = ?,
+        farm_unit = ?,
+        soil_type = ?,
+        irrigation_type = ?,
+        primary_crops = ?,
+        kisan_id = ?,
+        farm_details = ?
     WHERE email = ?
     """, (
-        data.get("name"),
-        data.get("phone"),
-        data.get("district"),
-        data.get("state"),
-        data.get("farmSize") or data.get("farm_size"),
-        data.get("farmUnit") or data.get("farm_unit"),
-        data.get("soilType") or data.get("soil_type"),
-        data.get("irrigationType") or data.get("irrigation_type"),
-        data.get("primaryCrops") or data.get("primary_crops"),
-        data.get("kisanId") or data.get("kisan_id"),
-        data.get("farmDetails") or data.get("farm_details"),
+        name,
+        phone,
+        district,
+        state,
+        farm_size,
+        farm_unit,
+        soil_type,
+        irrigation_type,
+        primary_crops,
+        kisan_id,
+        farm_details,
         email.strip().lower()
     ))
-    conn.commit()
-    conn.close()
     return get_user_by_email(email)
 
 def change_user_password(email, old_password, new_password):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT password_hash FROM users WHERE email = ?", (email.strip().lower(),))
-    user = cursor.fetchone()
-    
+    user = get_user_by_email(email)
     if not user or not check_password_hash(user["password_hash"], old_password):
-        conn.close()
         return False
         
     new_hash = generate_password_hash(new_password)
-    cursor.execute("UPDATE users SET password_hash = ? WHERE email = ?", (new_hash, email.strip().lower()))
-    conn.commit()
-    conn.close()
+    execute_query(
+        "UPDATE users SET password_hash = ? WHERE email = ?",
+        (new_hash, email.strip().lower())
+    )
     return True
 
 def get_all_users():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
+    return execute_query("""
     SELECT id, name, email, phone, role, state, district, farm_size, farm_unit,
            soil_type, irrigation_type, primary_crops, kisan_id, status, member_since, created_at
     FROM users ORDER BY id ASC
-    """)
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    """, fetch_mode="all")
 
 def update_user_role(user_id, new_role):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
-    conn.commit()
-    conn.close()
-    return True
+    return execute_query(
+        "UPDATE users SET role = ? WHERE id = ?",
+        (new_role, user_id)
+    )
 
 def delete_user_by_id(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    conn.commit()
-    conn.close()
-    return True
+    return execute_query(
+        "DELETE FROM users WHERE id = ?",
+        (user_id,)
+    )
 
+# =========================================================
 # PREDICTION AND RECOMMENDATION STORAGE
+# =========================================================
+
 def save_prediction_record(data):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
+    record_id = execute_insert("""
     INSERT INTO prediction_history (
         user_email, crop, district, season, area, rainfall, temperature, crop_year, productivity, production
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -354,26 +733,23 @@ def save_prediction_record(data):
         float(data.get("productivity", 0)),
         float(data.get("production", 0))
     ))
-    conn.commit()
-    record_id = cursor.lastrowid
-    conn.close()
     return record_id
 
 def get_prediction_history(user_email=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
     if user_email:
-        cursor.execute("SELECT * FROM prediction_history WHERE user_email = ? ORDER BY id DESC", (user_email.strip().lower(),))
+        return execute_query(
+            "SELECT * FROM prediction_history WHERE user_email = ? ORDER BY id DESC",
+            (user_email.strip().lower(),),
+            fetch_mode="all"
+        )
     else:
-        cursor.execute("SELECT * FROM prediction_history ORDER BY id DESC")
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+        return execute_query(
+            "SELECT * FROM prediction_history ORDER BY id DESC",
+            fetch_mode="all"
+        )
 
 def save_recommendation_record(data):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
+    record_id = execute_insert("""
     INSERT INTO recommendation_history (
         user_email, crop, confidence, n_val, p_val, k_val, temperature, humidity, ph, rainfall
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -389,49 +765,254 @@ def save_recommendation_record(data):
         float(data.get("ph", 0)),
         float(data.get("rainfall", 0))
     ))
-    conn.commit()
-    record_id = cursor.lastrowid
-    conn.close()
     return record_id
 
 def get_recommendation_history(user_email=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
     if user_email:
-        cursor.execute("SELECT * FROM recommendation_history WHERE user_email = ? ORDER BY id DESC", (user_email.strip().lower(),))
+        return execute_query(
+            "SELECT * FROM recommendation_history WHERE user_email = ? ORDER BY id DESC",
+            (user_email.strip().lower(),),
+            fetch_mode="all"
+        )
     else:
-        cursor.execute("SELECT * FROM recommendation_history ORDER BY id DESC")
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+        return execute_query(
+            "SELECT * FROM recommendation_history ORDER BY id DESC",
+            fetch_mode="all"
+        )
+
+# =========================================================
+# SUPPORT TICKETS STORAGE
+# =========================================================
+
+def save_support_ticket(data):
+    ticket_id = data.get("ticket_id") or f"TICK-{int(datetime.now().timestamp()) % 1000000:06d}"
+    record_id = execute_insert("""
+    INSERT INTO support_tickets (
+        ticket_id, user_email, name, district, category, subject, message, status, rating
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        ticket_id,
+        data.get("user_email", "guest"),
+        data.get("name") or data.get("user_name", "Farmer"),
+        data.get("district", "Maharashtra"),
+        data.get("category", "General Inquiry"),
+        data.get("subject", "General Query"),
+        data.get("message", ""),
+        data.get("status", "Submitted"),
+        int(data.get("rating", 5))
+    ))
+    return {
+        "id": record_id,
+        "ticket_id": ticket_id,
+        "user_email": data.get("user_email"),
+        "name": data.get("name") or data.get("user_name", "Farmer"),
+        "district": data.get("district", "Maharashtra"),
+        "category": data.get("category", "General Inquiry"),
+        "subject": data.get("subject"),
+        "message": data.get("message"),
+        "status": "Submitted"
+    }
+
+def get_support_tickets(user_email=None):
+    if user_email:
+        return execute_query(
+            "SELECT * FROM support_tickets WHERE user_email = ? ORDER BY id DESC",
+            (user_email.strip().lower(),),
+            fetch_mode="all"
+        )
+    else:
+        return execute_query(
+            "SELECT * FROM support_tickets ORDER BY id DESC",
+            fetch_mode="all"
+        )
+
+def update_support_ticket_status(ticket_id, status):
+    execute_query(
+        "UPDATE support_tickets SET status = ? WHERE ticket_id = ?",
+        (status, ticket_id)
+    )
+    return True
+
+def reply_to_support_ticket(ticket_id, reply_text, status="Resolved"):
+    execute_query(
+        "UPDATE support_tickets SET admin_reply = ?, status = ? WHERE ticket_id = ?",
+        (reply_text, status, ticket_id)
+    )
+    return True
+
+def delete_support_ticket(ticket_id):
+    execute_query(
+        "DELETE FROM support_tickets WHERE ticket_id = ?",
+        (ticket_id,)
+    )
+    return True
+
+def create_user_by_admin(data):
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    if not password:
+        password = "password123"
+    role = data.get("role", "Farmer").strip()
+    phone = data.get("phone", "").strip()
+    district = data.get("district", "").strip()
+    farm_size = data.get("farm_size", "").strip()
+    farm_unit = data.get("farm_unit", "Acres").strip()
+    soil_type = data.get("soil_type", "").strip()
+    irrigation_type = data.get("irrigation_type", "").strip()
+    primary_crops = data.get("primary_crops", "").strip()
+    kisan_id = data.get("kisan_id", "").strip()
+    
+    existing = get_user_by_email(email)
+    if existing:
+        return None, "User with this email already exists"
+        
+    pw_hash = generate_password_hash(password)
+    user_id = execute_insert("""
+    INSERT INTO users (
+        name, email, password_hash, phone, role, district, farm_size, farm_unit,
+        soil_type, irrigation_type, primary_crops, kisan_id, status, member_since
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?)
+    """, (
+        name, email, pw_hash, phone, role, district, farm_size, farm_unit,
+        soil_type, irrigation_type, primary_crops, kisan_id, datetime.now().strftime("%B %Y")
+    ))
+    
+    return user_id, None
+
+def update_user_full_by_admin(user_id, data):
+    execute_query("""
+    UPDATE users SET
+        name = ?,
+        email = ?,
+        phone = ?,
+        role = ?,
+        district = ?,
+        farm_size = ?,
+        farm_unit = ?,
+        soil_type = ?,
+        irrigation_type = ?,
+        primary_crops = ?,
+        kisan_id = ?,
+        status = ?
+    WHERE id = ?
+    """, (
+        data.get("name"),
+        data.get("email", "").strip().lower(),
+        data.get("phone", ""),
+        data.get("role", "Farmer"),
+        data.get("district", "Pune"),
+        data.get("farm_size") or data.get("farmSize", "5.0"),
+        data.get("farm_unit") or data.get("farmUnit", "Acres"),
+        data.get("soil_type") or data.get("soilType", ""),
+        data.get("irrigation_type") or data.get("irrigationType", ""),
+        data.get("primary_crops") or data.get("primaryCrops", ""),
+        data.get("kisan_id") or data.get("kisanId", ""),
+        data.get("status", "Active"),
+        user_id
+    ))
+    return get_user_by_id(user_id)
+
+def get_database_export_data():
+    users = execute_query("SELECT id, name, email, phone, role, district, farm_size, status, created_at FROM users", fetch_mode="all")
+    preds = execute_query("SELECT id, user_email, crop, district, season, area, rainfall, temperature, productivity, production, created_at FROM prediction_history", fetch_mode="all")
+    recs = execute_query("SELECT id, user_email, crop, confidence, n_val, p_val, k_val, temperature, humidity, ph, rainfall, created_at FROM recommendation_history", fetch_mode="all")
+    tickets = execute_query("SELECT id, ticket_id, user_email, name, category, subject, message, status, created_at FROM support_tickets", fetch_mode="all")
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "engine": _active_engine,
+        "users": users,
+        "predictions": preds,
+        "recommendations": recs,
+        "tickets": tickets
+    }
 
 def get_system_stats():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    total_users_res = execute_query("SELECT COUNT(*) AS count FROM users", fetch_mode="one")
+    total_farmers_res = execute_query("SELECT COUNT(*) AS count FROM users WHERE role = 'Farmer'", fetch_mode="one")
+    total_admins_res = execute_query("SELECT COUNT(*) AS count FROM users WHERE role = 'Admin'", fetch_mode="one")
+    total_pred_res = execute_query("SELECT COUNT(*) AS count FROM prediction_history", fetch_mode="one")
+    total_rec_res = execute_query("SELECT COUNT(*) AS count FROM recommendation_history", fetch_mode="one")
+    total_tickets_res = execute_query("SELECT COUNT(*) AS count FROM support_tickets", fetch_mode="one")
     
-    cursor.execute("SELECT COUNT(*) FROM users")
-    total_users = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'Farmer'")
-    total_farmers = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'Admin'")
-    total_admins = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM prediction_history")
-    total_predictions = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM recommendation_history")
-    total_recommendations = cursor.fetchone()[0]
-    
-    conn.close()
+    engine_name = "MySQL (Active)" if _active_engine == "mysql" else "SQLite 3 (Active)"
     
     return {
-        "total_users": total_users,
-        "total_farmers": total_farmers,
-        "total_admins": total_admins,
-        "total_predictions": total_predictions,
-        "total_recommendations": total_recommendations,
-        "db_status": "SQLite 3 Connected",
-        "db_file": "krushimitra.db"
+        "total_users": total_users_res["count"] if total_users_res else 0,
+        "total_farmers": total_farmers_res["count"] if total_farmers_res else 0,
+        "total_admins": total_admins_res["count"] if total_admins_res else 0,
+        "total_predictions": total_pred_res["count"] if total_pred_res else 0,
+        "total_recommendations": total_rec_res["count"] if total_rec_res else 0,
+        "total_support_tickets": total_tickets_res["count"] if total_tickets_res else 0,
+        "db_status": f"{engine_name} Connected",
+        "db_engine": _active_engine or "auto",
+        "db_file": MYSQL_DB if _active_engine == "mysql" else "krushimitra.db"
     }
+
+# =========================================================
+# PASSWORD RESET TOKEN MANAGEMENT
+# =========================================================
+
+def create_password_reset_token(email):
+    """
+    Generates a secure 32-byte URL-safe token valid for 60 minutes.
+    Invalidates any previous unused tokens for the user.
+    """
+    user = get_user_by_email(email)
+    if not user:
+        return None, None
+    
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now() + timedelta(hours=1)
+    expires_str = expires_at.strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Invalidate previous unused tokens
+    execute_query(
+        "UPDATE password_resets SET used = 1 WHERE email = ? AND used = 0",
+        (email.strip().lower(),)
+    )
+    
+    execute_insert("""
+    INSERT INTO password_resets (email, token, expires_at, used)
+    VALUES (?, ?, ?, 0)
+    """, (email.strip().lower(), token, expires_str))
+    
+    return token, user
+
+def verify_password_reset_token(token):
+    """
+    Validates that the token exists, has not been used, and has not expired.
+    Returns the associated user email or None.
+    """
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    res = execute_query("""
+    SELECT email FROM password_resets 
+    WHERE token = ? AND used = 0 AND expires_at > ?
+    LIMIT 1
+    """, (token.strip(), now_str), fetch_mode="one")
+    
+    if not res:
+        return None
+    return res["email"] if isinstance(res, dict) else res[0]
+
+def reset_password_with_token(token, new_password):
+    """
+    Validates token, securely hashes and updates the user's password, and marks the token as used.
+    """
+    email = verify_password_reset_token(token)
+    if not email:
+        return False
+    
+    new_hash = generate_password_hash(new_password)
+    execute_query(
+        "UPDATE users SET password_hash = ? WHERE email = ?",
+        (new_hash, email)
+    )
+    
+    # Mark token as used
+    execute_query(
+        "UPDATE password_resets SET used = 1 WHERE token = ?",
+        (token.strip(),)
+    )
+    return True
+

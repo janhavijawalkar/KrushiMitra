@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Sprout,
   TrendingUp,
   CloudSun,
   FileText,
-  Shield,
   Sparkles,
   ArrowRight,
-  CheckCircle2,
-  Globe,
+  ArrowLeft,
   Sun,
   Moon,
   Wheat,
-  Droplets,
   Zap,
   Award,
   ChevronRight,
@@ -20,9 +17,62 @@ import {
   Star,
   Activity,
   PhoneCall,
-  Lock,
+  Layers,
+  CheckCircle2,
+  MapPin,
+  RefreshCw,
+  Droplets,
+  Wind,
+  Gauge,
+  Compass,
+  Mail,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import ImageSlider from "../components/ImageSlider";
+import VoiceChatbot from "../components/VoiceChatbot";
+
+/* =========================================================
+   ZOOM-FADE SCROLL REVEAL WRAPPER
+   ========================================================= */
+function ZoomFadeReveal({ children, className = "", delay = 0, threshold = 0.08 }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const domRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    const currentElem = domRef.current;
+    if (currentElem) {
+      observer.observe(currentElem);
+    }
+
+    return () => {
+      if (currentElem) observer.unobserve(currentElem);
+    };
+  }, [threshold]);
+
+  return (
+    <div
+      ref={domRef}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${
+        isVisible
+          ? "opacity-100 scale-100 translate-y-0 blur-none"
+          : "opacity-0 scale-[0.93] translate-y-6 blur-[2px] pointer-events-none"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function Landing({ nav }) {
   const {
@@ -33,141 +83,287 @@ export default function Landing({ nav }) {
     changeTheme,
     apiLogin,
     t,
+    tCrop,
   } = useApp();
 
   const [faqOpen, setFaqOpen] = useState(null);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("yield");
+  const [activeStep, setActiveStep] = useState(0);
 
-  const heroSlides = [
+  // Crops Category Filter & Slider State
+  const [cropCategory, setCropCategory] = useState("all");
+
+  // Testimonials Carousel Slider State
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+
+  // Dynamic Simulator State: Yield Predictor
+  const [simDistrict, setSimDistrict] = useState("Pune");
+  const [simCrop, setSimCrop] = useState("Soybean");
+  const [simArea, setSimArea] = useState(3.5);
+  const [simYieldResult, setSimYieldResult] = useState({
+    yieldPerHa: 3.42,
+    totalProduction: 11.97,
+    status: "+18% Regional Calibration",
+    confidence: "High Compatibility",
+  });
+
+  // Dynamic Simulator State: Soil Advisory
+  const [soilN, setSoilN] = useState(90);
+  const [soilP, setSoilP] = useState(42);
+  const [soilK, setSoilK] = useState(43);
+  const [soilPh, setSoilPh] = useState(6.8);
+  const [soilRecResult, setSoilRecResult] = useState({
+    crop: "Rice (Paddy)",
+    confidence: "Optimal",
+    suitability: "High Nitrogen & Moisture Match",
+  });
+
+  // Dynamic Simulator State: Live Location Weather
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherData, setWeatherData] = useState({
+    location: "Pune, MH",
+    temp: 28.5,
+    condition: "Optimal Skies",
+    humidity: 78,
+    wind: 12,
+    advice: "Optimal Kharif Sowing Window",
+    isLiveGps: false,
+  });
+
+  // Multi-lingual Core Supported Crops
+  const supportedModelCrops = [
     {
-      id: "prediction",
-      title: "Precision AI Agronomy",
-      subtitle: "Multi-District Random Forest Yield Regressor",
-      badge: "🌾 95.2% Accuracy",
-      desc: "Instant harvest forecasts based on rainfall, soil conditions, and acreage calibrated on historical Maharashtra district data.",
-      stat1: { label: "Yield Target", value: "3.42 t/ha" },
-      stat2: { label: "Confidence", value: "98.4%" },
-      icon: TrendingUp,
-      action: "prediction",
-      actionLabel: "Try Yield Predictor",
-      color: "from-emerald-600 to-green-700",
-      accent: "text-[#2E7D32]",
-      bgAccent: "bg-[#EAF3E6]",
+      name: "Soybean",
+      category: "kharif",
+      displayName: language === "mr" ? "सोयाबीन" : language === "hi" ? "सोयाबीन" : "Soybean",
+      marathiName: "सोयाबीन",
+      hindiName: "सोयाबीन",
+      icon: "🌱",
+      season: language === "mr" ? "खरीप (पावसाळी)" : language === "hi" ? "खरीफ (मानसून)" : "Kharif (Monsoon)",
+      soil: language === "mr" ? "काळी चिकणमाती जमीन" : language === "hi" ? "काली चिकनी मिट्टी" : "Black Clayey Regur Soil",
+      yieldRange: "2.8 - 3.8 t/ha",
+      badge: language === "mr" ? "तेलबिया पीक" : language === "hi" ? "तिलहन फसल" : "Oilseed Crop",
     },
     {
-      id: "recommendation",
-      title: "Smart Soil & Crop Advisory",
-      subtitle: "7-Factor N-P-K & pH Soil Nutrient Classifier",
-      badge: "🌱 22 Crop Varieties",
-      desc: "Matches your exact soil chemistry (Nitrogen, Phosphorus, Potassium, pH) to recommend the most profitable crop for your farm.",
-      stat1: { label: "Top Recommendation", value: "Cotton / Bt Hybrid" },
-      stat2: { label: "Nutrient Balance", value: "Optimal Match" },
-      icon: Sprout,
-      action: "recommendation",
-      actionLabel: "Run Soil Advisory",
-      color: "from-green-600 to-teal-700",
-      accent: "text-teal-600",
-      bgAccent: "bg-teal-50",
+      name: "Cotton",
+      category: "cash",
+      displayName: language === "mr" ? "कापूस" : language === "hi" ? "कपास" : "Cotton",
+      marathiName: "कापूस",
+      hindiName: "कपास",
+      icon: "☁️",
+      season: language === "mr" ? "खरीप हंगाम" : language === "hi" ? "खरीफ मौसम" : "Kharif Season",
+      soil: language === "mr" ? "सुपीक काळी जमीन" : language === "hi" ? "उपजाऊ गहरी काली मिट्टी" : "Deep Black Loam",
+      yieldRange: "2.2 - 3.2 t/ha",
+      badge: language === "mr" ? "नगदी कापूस" : language === "hi" ? "नकदी रेशा" : "Cash Fiber",
     },
     {
-      id: "weather",
-      title: "Live Climate Intelligence",
-      subtitle: "Real-Time OpenWeather Atmospheric Telemetry",
-      badge: "🌦️ 36 MH Districts",
-      desc: "Microclimate precipitation, humidity, and temperature monitoring ensuring you never miss optimal irrigation or sowing windows.",
-      stat1: { label: "Monsoon Status", value: "Active Kharif" },
-      stat2: { label: "Rainfall Forecast", value: "Optimal Condition" },
-      icon: CloudSun,
-      action: "weather",
-      actionLabel: "Check District Weather",
-      color: "from-teal-600 to-blue-700",
-      accent: "text-blue-600",
-      bgAccent: "bg-blue-50",
+      name: "Sugarcane",
+      category: "cash",
+      displayName: language === "mr" ? "ऊस" : language === "hi" ? "गन्ना" : "Sugarcane",
+      marathiName: "ऊस",
+      hindiName: "गन्ना",
+      icon: "🎋",
+      season: language === "mr" ? "वार्षिक / बागायती" : language === "hi" ? "वार्षिक / बारहमासी" : "Perennial / Annual",
+      soil: language === "mr" ? "गाळाची ओलसर जमीन" : language === "hi" ? "दोमट और कछारी मिट्टी" : "Alluvial & Canal Basin",
+      yieldRange: "85 - 110 t/ha",
+      badge: language === "mr" ? "उच्च उत्पन्न नगदी" : language === "hi" ? "उच्च उपज नकदी" : "High Yield Cash",
     },
     {
-      id: "reports",
-      title: "Official PDF Farm Dossiers",
-      subtitle: "Instant Vector-Generated A4 Agricultural Records",
-      badge: "📄 Bank & Loan Ready",
-      desc: "Generate professional agronomic reports in 1-click for agricultural bank loans, crop insurance, and extension officer verification.",
-      stat1: { label: "Export Format", value: "High-Res PDF" },
-      stat2: { label: "Generation Speed", value: "< 1 Sec" },
-      icon: FileText,
-      action: "reports",
-      actionLabel: "Generate Sample PDF",
-      color: "from-emerald-700 to-green-800",
-      accent: "text-emerald-700",
-      bgAccent: "bg-emerald-50",
+      name: "Wheat",
+      category: "rabi",
+      displayName: language === "mr" ? "गहू" : language === "hi" ? "गेहूं" : "Wheat",
+      marathiName: "गहू",
+      hindiName: "गेहूं",
+      icon: "🌾",
+      season: language === "mr" ? "रब्बी (हिवाळी)" : language === "hi" ? "रबी (सर्दियां)" : "Rabi (Winter)",
+      soil: language === "mr" ? "पाण्याचा निचरा होणारी जमीन" : language === "hi" ? "अच्छे जल निकास वाली दोमट" : "Well-Drained Loam",
+      yieldRange: "3.2 - 4.5 t/ha",
+      badge: language === "mr" ? "हिवाळी अन्नधान्य" : language === "hi" ? "शीतकालीन अनाज" : "Winter Cereal",
+    },
+    {
+      name: "Gram",
+      category: "rabi",
+      displayName: language === "mr" ? "हरभरा" : language === "hi" ? "चना" : "Gram (Chickpea)",
+      marathiName: "हरभरा",
+      hindiName: "चना",
+      icon: "🥔",
+      season: language === "mr" ? "रब्बी (हिवाळी)" : language === "hi" ? "रबी (सर्दियां)" : "Rabi (Winter)",
+      soil: language === "mr" ? "हलकी ते मध्यम काळी जमीन" : language === "hi" ? "रेतीली दोमट मिट्टी" : "Sandy Clay Loam",
+      yieldRange: "1.6 - 2.4 t/ha",
+      badge: language === "mr" ? "कडधान्य डाळ" : language === "hi" ? "दलहन फसल" : "Protein Pulse",
+    },
+    {
+      name: "Tur",
+      category: "kharif",
+      displayName: language === "mr" ? "तूर" : language === "hi" ? "अरहर" : "Tur (Pigeon Pea)",
+      marathiName: "तूर",
+      hindiName: "अरहर",
+      icon: "🌿",
+      season: language === "mr" ? "खरीप हंगाम" : language === "hi" ? "खरीफ मौसम" : "Kharif Season",
+      soil: language === "mr" ? "मध्यम काळी जमीन" : language === "hi" ? "मध्यम गहरी काली मिट्टी" : "Medium Deep Black Soil",
+      yieldRange: "1.5 - 2.2 t/ha",
+      badge: language === "mr" ? "नायट्रोजन समृद्ध" : language === "hi" ? "नाइट्रोजन युक्त" : "Nitrogen Fixing",
+    },
+    {
+      name: "Rice",
+      category: "kharif",
+      displayName: language === "mr" ? "भात / धान" : language === "hi" ? "चावल / धान" : "Rice (Paddy)",
+      marathiName: "भात / धान",
+      hindiName: "चावल / धान",
+      icon: "🌾",
+      season: language === "mr" ? "खरीप हंगाम" : language === "hi" ? "खरीफ मौसम" : "Kharif Season",
+      soil: language === "mr" ? "दलदलीची ओलसर जमीन" : language === "hi" ? "चिकनी नम मिट्टी" : "Clayey Moist Basin",
+      yieldRange: "3.8 - 5.2 t/ha",
+      badge: language === "mr" ? "प्रमुख अन्नधान्य" : language === "hi" ? "प्रमुख खाद्यान्न" : "Primary Staple",
     },
   ];
 
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isSliderHovered, setIsSliderHovered] = useState(false);
+  const filteredCrops =
+    cropCategory === "all"
+      ? supportedModelCrops
+      : supportedModelCrops.filter((c) => c.category === cropCategory);
 
-  // Typewriter Letter-by-Letter Animation
-  const typingPhrases = [
-    "Precision AI Agronomy",
-    "Smart Soil & Crop Advisory",
-    "Live Climate Intelligence",
-    "Official PDF Farm Dossiers",
-    "Higher Harvest Profits",
-  ];
-
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [typedText, setTypedText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const currentPhrase = typingPhrases[phraseIdx];
-    let timeout;
-
-    if (!isDeleting) {
-      if (typedText.length < currentPhrase.length) {
-        timeout = setTimeout(() => {
-          setTypedText(currentPhrase.slice(0, typedText.length + 1));
-        }, 70);
-      } else {
-        timeout = setTimeout(() => {
-          setIsDeleting(true);
-        }, 2200);
-      }
+  const handleTryStep = (stepIdx) => {
+    if (user) {
+      if (stepIdx === 0) nav?.("recommendation");
+      else if (stepIdx === 1) nav?.("prediction");
+      else nav?.("reports");
     } else {
-      if (typedText.length > 0) {
-        timeout = setTimeout(() => {
-          setTypedText(currentPhrase.slice(0, typedText.length - 1));
-        }, 32);
-      } else {
-        setIsDeleting(false);
-        const nextIdx = (phraseIdx + 1) % typingPhrases.length;
-        setPhraseIdx(nextIdx);
-        setCurrentSlide(nextIdx % heroSlides.length);
-      }
+      nav?.("register");
+    }
+  };
+
+  const handleFeatureClick = (action) => {
+    if (user) {
+      nav?.(action);
+    } else {
+      nav?.("register");
+    }
+  };
+
+  // Dynamic Yield Calculator on simulator change
+  useEffect(() => {
+    const yieldRates = {
+      Soybean: { Pune: 3.42, Nagpur: 2.89, Nashik: 3.15, Kolhapur: 3.65, Solapur: 2.75, Amravati: 2.95, Aurangabad: 3.05 },
+      Cotton: { Pune: 2.45, Nagpur: 3.12, Nashik: 2.60, Kolhapur: 2.35, Solapur: 2.50, Amravati: 3.18, Aurangabad: 2.85 },
+      Sugarcane: { Pune: 98.5, Nagpur: 82.0, Nashik: 88.5, Kolhapur: 104.2, Solapur: 91.0, Amravati: 79.5, Aurangabad: 85.0 },
+      Wheat: { Pune: 3.80, Nagpur: 3.25, Nashik: 4.10, Kolhapur: 3.60, Solapur: 3.10, Amravati: 3.35, Aurangabad: 3.70 },
+      Gram: { Pune: 2.10, Nagpur: 1.95, Nashik: 2.25, Kolhapur: 1.85, Solapur: 1.90, Amravati: 2.05, Aurangabad: 2.15 },
+      Tur: { Pune: 1.90, Nagpur: 2.15, Nashik: 1.80, Kolhapur: 1.75, Solapur: 1.85, Amravati: 2.20, Aurangabad: 2.00 },
+      Rice: { Pune: 4.60, Nagpur: 4.20, Nashik: 4.80, Kolhapur: 5.10, Solapur: 3.60, Amravati: 3.90, Aurangabad: 4.10 },
+    };
+
+    const rate = (yieldRates[simCrop] && yieldRates[simCrop][simDistrict]) || 3.25;
+    const totalProd = (rate * Number(simArea)).toFixed(2);
+
+    const statusLabel = language === "mr" ? `+${(rate * 5.2).toFixed(0)}% प्रादेशिक अचूकता` : language === "hi" ? `+${(rate * 5.2).toFixed(0)}% क्षेत्रीय सटीकता` : `+${(rate * 5.2).toFixed(0)}% Regional Calibration`;
+    const confLabel = language === "mr" ? "उच्च अनुकूलता" : language === "hi" ? "उच्च अनुकूलता" : "High Compatibility";
+
+    setSimYieldResult({
+      yieldPerHa: rate,
+      totalProduction: totalProd,
+      status: statusLabel,
+      confidence: confLabel,
+    });
+  }, [simCrop, simDistrict, simArea, language]);
+
+  // Dynamic Soil Advisory on N-P-K sliders
+  useEffect(() => {
+    let recCrop = "Rice";
+    let reason = language === "mr" ? "नायट्रोजन आणि ओलाव्यासाठी उत्तम" : language === "hi" ? "नाइट्रोजन और नमी के लिए सर्वोत्तम" : "High Nitrogen & Soil Moisture Profile";
+    let conf = language === "mr" ? "योग्य" : language === "hi" ? "उपयुक्त" : "Optimal";
+
+    if (soilN > 100 && soilK > 40) {
+      recCrop = "Cotton";
+      reason = language === "mr" ? "नायट्रोजन आणि पालाशसाठी उत्तम" : language === "hi" ? "नाइट्रोजन और पोटाश के लिए सर्वोत्तम" : "High Nitrogen & Potassium Affinity";
+    } else if (soilP > 55) {
+      recCrop = "Gram";
+      reason = language === "mr" ? "स्फुरद घटकांसाठी अनुकूल कडधान्य" : language === "hi" ? "फास्फोरस के लिए उपयुक्त दलहन" : "Phosphorus Responsive Legume Profile";
+    } else if (soilN < 60 && soilP < 40) {
+      recCrop = "Tur";
+      reason = language === "mr" ? "कमी अन्नद्रव्ये लागणारे द्विदल पीक" : language === "hi" ? "कम पोषक तत्वों वाली उपयुक्त फसल" : "Low Nutrient Tolerant Nitrogen-Fixing Pulse";
+    } else if (soilPh > 7.2) {
+      recCrop = "Sugarcane";
+      reason = language === "mr" ? "मध्यम आम्ल जमिनीत उत्तम उत्पादन" : language === "hi" ? "हल्की क्षारीय मिट्टी के लिए उपयुक्त" : "Slight Alkaline Loam Tolerance";
+    } else if (soilN > 70 && soilP > 35) {
+      recCrop = "Soybean";
+      reason = language === "mr" ? "संतुलित नायट्रोजन व स्फुरदसाठी उत्तम" : language === "hi" ? "संतुलित नाइट्रोजन व फास्फोरस के लिए सर्वोत्तम" : "Optimal Balanced Nitrogen-Phosphorus Match";
     }
 
-    return () => clearTimeout(timeout);
-  }, [typedText, isDeleting, phraseIdx, typingPhrases, heroSlides.length]);
+    setSoilRecResult({
+      crop: recCrop,
+      confidence: conf,
+      suitability: reason,
+    });
+  }, [soilN, soilP, soilK, soilPh, language]);
 
-  const nextSlide = () => {
-    const next = (currentSlide + 1) % heroSlides.length;
-    setCurrentSlide(next);
-    setPhraseIdx(next % typingPhrases.length);
-    setTypedText(typingPhrases[next % typingPhrases.length]);
-    setIsDeleting(false);
+  // Fetch Live Real Location Weather Telemetry
+  const fetchLiveLocationWeather = () => {
+    setWeatherLoading(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const res = await fetch(
+              `http://127.0.0.1:5000/api/weather?lat=${latitude}&lon=${longitude}`
+            );
+            const data = await res.json();
+            if (res.ok && data.success) {
+              setWeatherData({
+                location: data.city || (language === "mr" ? "तुमचे थेट शेत स्थान" : language === "hi" ? "आपका लाइव खेत स्थान" : "Your Live Farm Location"),
+                temp: data.temperature || 28.5,
+                condition: data.condition || "Optimal Atmosphere",
+                humidity: data.humidity || 75,
+                wind: data.wind_speed || 12,
+                advice: data.farming_advice || (language === "mr" ? "शेतीसाठी अनुकूल हवामान" : language === "hi" ? "खेती के लिए अनुकूल मौसम" : "Favorable Field Conditions"),
+                isLiveGps: true,
+              });
+            } else {
+              fallbackDistrictWeather("Pune");
+            }
+          } catch (e) {
+            fallbackDistrictWeather("Pune");
+          } finally {
+            setWeatherLoading(false);
+          }
+        },
+        () => {
+          fallbackDistrictWeather("Pune");
+          setWeatherLoading(false);
+        },
+        { timeout: 8000 }
+      );
+    } else {
+      fallbackDistrictWeather("Pune");
+      setWeatherLoading(false);
+    }
   };
 
-  const prevSlide = () => {
-    const prev = (currentSlide - 1 + heroSlides.length) % heroSlides.length;
-    setCurrentSlide(prev);
-    setPhraseIdx(prev % typingPhrases.length);
-    setTypedText(typingPhrases[prev % typingPhrases.length]);
-    setIsDeleting(false);
-  };
-
-  const selectSlide = (idx) => {
-    setCurrentSlide(idx);
-    setPhraseIdx(idx % typingPhrases.length);
-    setTypedText(typingPhrases[idx % typingPhrases.length]);
-    setIsDeleting(false);
+  const fallbackDistrictWeather = async (districtName) => {
+    setWeatherLoading(true);
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/weather?city=${encodeURIComponent(districtName)}`
+      );
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWeatherData({
+          location: `${districtName}, MH`,
+          temp: data.temperature || 28.5,
+          condition: data.condition || "Clear Sowing Skies",
+          humidity: data.humidity || 76,
+          wind: data.wind_speed || 14,
+          advice: data.farming_advice || (language === "mr" ? "पेरणीसाठी अनुकूल हवामान" : language === "hi" ? "बुवाई के लिए सही समय" : "Optimal Kharif Sowing Window"),
+          isLiveGps: false,
+        });
+      }
+    } catch (e) {
+      console.error("Weather fetch fallback error:", e);
+    } finally {
+      setWeatherLoading(false);
+    }
   };
 
   const toggleFaq = (index) => {
@@ -177,11 +373,7 @@ export default function Landing({ nav }) {
   const handleQuickDemo = async (role = "farmer") => {
     setDemoLoading(true);
     try {
-      if (role === "admin") {
-        await apiLogin("admin@krushimitra.in", "adminpassword");
-      } else {
-        await apiLogin("ramesh.patil@krushimitra.in", "password123");
-      }
+      await apiLogin("ramesh.patil@krushimitra.in", "password123");
       nav?.("dashboard");
     } catch (err) {
       console.error("Demo login error:", err);
@@ -190,187 +382,284 @@ export default function Landing({ nav }) {
     }
   };
 
-  const features = [
+  const coreFeatures = [
     {
       icon: TrendingUp,
-      title: "AI Crop Yield Forecasting",
-      desc: "Trained Random Forest regressor computes accurate harvest yield (t/ha) based on district, seasonal rainfall, temperature, and acreage.",
-      tag: "ML Regressor",
+      title: t("yieldForecastingTitle") || "Crop Yield Prediction",
+      desc: t("yieldForecastingDesc") || "Find out how much harvest (in tonnes/hectare) you can expect based on your district, land size, and weather.",
+      tag: language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "पैदावार अनुमान" : "Harvest Forecast",
+      bg: "bg-emerald-50 dark:bg-emerald-950/60",
+      accent: "text-emerald-700 dark:text-[#4ADE80]",
+      action: "prediction",
     },
     {
       icon: Sprout,
-      title: "Smart Soil & Crop Advisory",
-      desc: "Evaluates Soil Nitrogen (N), Phosphorus (P), Potassium (K), and soil pH to recommend the highest-yielding crop with 95.2% accuracy.",
-      tag: "95.2% Accuracy",
+      title: t("soilAdvisoryTitle") || "Soil & Crop Recommendation",
+      desc: t("soilAdvisoryDesc") || "Enter your soil test values (N, P, K, pH) to find the most profitable and healthy crop for your field.",
+      tag: language === "mr" ? "माती परीक्षण सल्ला" : language === "hi" ? "मृदा परीक्षण सलाह" : "Soil Advisory",
+      bg: "bg-green-50 dark:bg-green-950/60",
+      accent: "text-green-700 dark:text-[#4ADE80]",
+      action: "recommendation",
     },
     {
       icon: CloudSun,
-      title: "Live Microclimate Weather",
-      desc: "Real-time atmospheric telemetry covering precipitation, humidity, wind velocity, and temperature across all 36 Maharashtra districts.",
-      tag: "Real-Time API",
+      title: t("weatherTelemetryTitle") || "Live Weather & Rain Forecast",
+      desc: t("weatherTelemetryDesc") || "Check real-time temperature, rainfall, and weather conditions across Maharashtra to plan your sowing and irrigation.",
+      tag: language === "mr" ? "थेट हवामान" : language === "hi" ? "लाइव मौसम" : "Live Weather",
+      bg: "bg-teal-50 dark:bg-teal-950/60",
+      accent: "text-teal-700 dark:text-teal-400",
+      action: "weather",
     },
     {
       icon: FileText,
-      title: "Automated Official PDF Reports",
-      desc: "Generate and download professional, formatted PDF agricultural records for crop bank loans, insurance, and agronomist reviews.",
-      tag: "A4 Vector PDF",
-    },
-    {
-      icon: Shield,
-      title: "Role-Based Access & Privacy",
-      desc: "Strict Role-Based Access Control (RBAC) and persistent SQLite database isolate personal farm records and allow seamless admin oversight.",
-      tag: "SQLite Secure",
-    },
-    {
-      icon: Globe,
-      title: "Trilingual Regional Access",
-      desc: "Built natively for Indian kisans with seamless support in English, हिन्दी (Hindi), and मराठी (Marathi) regional languages.",
-      tag: "3 Languages",
+      title: t("pdfDossiersTitle") || "Downloadable Farm Reports (PDF)",
+      desc: t("pdfDossiersDesc") || "Download simple, professional 1-page PDF reports for your farm records, bank loans, or crop insurance.",
+      tag: language === "mr" ? "१-क्लिक PDF" : language === "hi" ? "१-क्लिक PDF" : "1-Click PDF",
+      bg: "bg-amber-50 dark:bg-amber-950/60",
+      accent: "text-amber-700 dark:text-amber-400",
+      action: "reports",
     },
   ];
 
-  const steps = [
+  const workflowSteps = [
     {
       num: "01",
-      title: "Input Soil & Farm Details",
-      desc: "Enter your district, cultivated land size, and soil N-P-K nutrient or climate parameters.",
-      icon: Droplets,
+      title: t("step1Title") || "1. Enter Farm Details",
+      desc: t("step1Desc") || "Select your district, land area, and simple soil test numbers.",
+      icon: Layers,
+      highlight: language === "mr" ? "जिल्हा व माती परीक्षण घटक निवडा" : language === "hi" ? "जिला और मृदा परीक्षण आंकड़े चुनें" : "Select District & Soil Chemistry",
     },
     {
       num: "02",
-      title: "AI Inference & Analysis",
-      desc: "Our dual Random Forest algorithms instantly process multi-factor agronomic data.",
+      title: t("step2Title") || "2. Smart AI Analysis",
+      desc: t("step2Desc") || "Our smart AI calculates the best crop options and expected harvest yield in seconds.",
       icon: Zap,
+      highlight: language === "mr" ? "स्मार्ट AI द्वारे उत्पादन गणना" : language === "hi" ? "स्मार्ट AI फसल उत्पादन गणना" : "Smart AI Harvest Calculation",
     },
     {
       num: "03",
-      title: "Actionable Insights & PDF",
-      desc: "Receive customized crop advisories, yield forecasts, and export official PDF documents.",
+      title: t("step3Title") || "3. Get Advice & PDF",
+      desc: t("step3Desc") || "View your personalized farm recommendations and download your clean PDF report.",
       icon: Award,
+      highlight: language === "mr" ? "१-क्लिक अधिकृत शेती PDF अहवाल" : language === "hi" ? "१-क्लिक आधिकारिक किसान PDF रिपोर्ट" : "1-Click Official PDF Report",
     },
   ];
 
-  const testimonials = [
-    {
-      name: "Ramesh Patil",
-      role: "Soybean & Cotton Farmer",
-      district: "Pune District, MH",
-      farmSize: "5.0 Acres",
-      quote:
-        "KrushiMitra's crop yield predictions gave me accurate estimates before sowing. The Kharif advisory helped me optimize my fertilizer application effectively!",
-      rating: 5,
-    },
-    {
-      name: "Suresh Deshmukh",
-      role: "Citrus & Cotton Grower",
-      district: "Nagpur District, MH",
-      farmSize: "12.5 Acres",
-      quote:
-        "The soil recommendation engine matched my Vidarbha black soil perfectly with high confidence. The weather forecasting also saved our irrigation schedule.",
-      rating: 5,
-    },
-    {
-      name: "Priya Shinde",
-      role: "Grape Vineyard & Onion Cultivator",
-      district: "Nashik District, MH",
-      farmSize: "8.0 Acres",
-      quote:
-        "The automated PDF reports are clean and official. I presented the soil nutrient report directly to our local agricultural society for advisory support.",
-      rating: 5,
-    },
-  ];
+  const localizedTestimonials = {
+    en: [
+      {
+        name: "Ramesh Patil",
+        role: "Soybean & Cotton Farmer",
+        district: "Pune District, MH",
+        farmSize: "5.0 Acres",
+        quote: "KrushiMitra's Kharif yield predictions were remarkably accurate for my farm. The soil advisory helped me adjust my fertilizer schedule, increasing my harvest efficiency.",
+        rating: 5,
+      },
+      {
+        name: "Suresh Deshmukh",
+        role: "Cotton & Gram Farmer",
+        district: "Nagpur District, MH",
+        farmSize: "12.5 Acres",
+        quote: "The soil recommendation engine matched our Vidarbha black soil profile seamlessly. Live weather forecasts also helped avoid sowing right before unseasonal rain.",
+        rating: 5,
+      },
+      {
+        name: "Priya Shinde",
+        role: "Vegetable & Sugarcane Grower",
+        district: "Nashik District, MH",
+        farmSize: "8.0 Acres",
+        quote: "The automated PDF reports look very clean and official. I submitted the farm report directly to our local agricultural society for crop advisory.",
+        rating: 5,
+      },
+    ],
+    mr: [
+      {
+        name: "रमेश पाटील",
+        role: "सोयाबीन व कापूस उत्पादक शेतकरी",
+        district: "पुणे जिल्हा, महाराष्ट्र",
+        farmSize: "५.० एकर",
+        quote: "कृषीमित्रने वर्तवलेला खरीप उत्पादनाचा अंदाज माझ्या शेतासाठी अत्यंत अचूक ठरला. माती परीक्षणावरील सल्ल्यामुळे खतांचे योग्य नियोजन करता आले आणि उत्पादनात लक्षणीय वाढ झाली.",
+        rating: 5,
+      },
+      {
+        name: "सुरेश देशमुख",
+        role: "कापूस व हरभरा उत्पादक शेतकरी",
+        district: "नागपूर जिल्हा, महाराष्ट्र",
+        farmSize: "१२.५ एकर",
+        quote: "माती परीक्षणानुसार पीक शिफारसीने आमच्या विदर्भातील काळ्या मातीसाठी अगदी योग्य पीक सुचवले. थेट हवामान अंदाजामुळे अवकाळी पावसापूर्वी योग्य निर्णय घेता आला.",
+        rating: 5,
+      },
+      {
+        name: "प्रिया शिंदे",
+        role: "ऊस व भाजीपाला उत्पादक शेतकरी",
+        district: "नाशिक जिल्हा, महाराष्ट्र",
+        farmSize: "८.० एकर",
+        quote: "कृषीमित्रचे PDF अहवाल खूप सुंदर आणि अधिकृत आहेत. हा अहवाल मी थेट आमच्या सोसायटीत आणि कृषी सेवा केंद्रात दाखवून योग्य सल्ला घेतला.",
+        rating: 5,
+      },
+    ],
+    hi: [
+      {
+        name: "रमेश पाटिल",
+        role: "सोयाबीन एवं कपास उत्पादक किसान",
+        district: "पुणे जिला, महाराष्ट्र",
+        farmSize: "५.० एकड़",
+        quote: "कृषि-मित्र का खरीफ फसल उत्पादन अनुमान मेरे खेत के लिए बहुत सटीक रहा। मिट्टी की सलाह से खाद का सही प्रबंधन करने में बहुत मदद मिली।",
+        rating: 5,
+      },
+      {
+        name: "सुरेश देशमुख",
+        role: "कपास एवं चना उत्पादक किसान",
+        district: "नागपुर जिला, महाराष्ट्र",
+        farmSize: "१२.५ एकड़",
+        quote: "मृदा परीक्षण सिफारिश ने हमारी विदर्भ की काली मिट्टी के लिए सबसे उपयुक्त फसल सुझाई। लाइव मौसम के अनुमान से बेमौसम बारिश से पहले फसल प्रबंधन आसान हो गया।",
+        rating: 5,
+      },
+      {
+        name: "प्रिया शिंदे",
+        role: "गन्ना एवं सब्जी उत्पादक किसान",
+        district: "नासिक जिला, महाराष्ट्र",
+        farmSize: "८.० एकड़",
+        quote: "स्वचालित पीडीएफ रिपोर्ट बहुत साफ और आधिकारिक है। मैंने यह रिपोर्ट सीधे अपनी स्थानीय कृषि समिति में फसल सलाह के लिए उपयोग की।",
+        rating: 5,
+      },
+    ],
+  };
 
-  const faqs = [
-    {
-      q: "How accurate are the KrushiMitra Machine Learning models?",
-      a: "The Crop Recommendation classifier achieves a validated 95.2% accuracy across 22 major crop classes, trained on extensive agricultural datasets. The Yield Predictor is tuned with historical Maharashtra district harvest datasets.",
-    },
-    {
-      q: "Is KrushiMitra free for Indian farmers?",
-      a: "Yes! KrushiMitra is 100% free and open for all farmers, agricultural extension officers, and agronomists to run predictions and generate PDF reports.",
-    },
-    {
-      q: "Can I download and print the agricultural reports?",
-      a: "Absolutely. With 1-click, you can download formatted, high-resolution A4 PDF reports complete with your farm branding, data summaries, and agronomist guidance.",
-    },
-    {
-      q: "What languages are supported?",
-      a: "The entire platform is fully translated into English, हिन्दी (Hindi), and मराठी (Marathi) for effortless regional usability.",
-    },
-  ];
+  const testimonials = localizedTestimonials[language] || localizedTestimonials.en;
+
+  const localizedFaqs = {
+    en: [
+      {
+        q: "How does KrushiMitra generate crop recommendations and yield predictions?",
+        a: "KrushiMitra integrates regional agricultural data, soil chemistry records, and meteorological patterns across Maharashtra. It factors in district geography, seasonal rainfall, temperature, and farm acreage to provide actionable, farmer-friendly advisories.",
+      },
+      {
+        q: "Is KrushiMitra free to use for farmers?",
+        a: "Yes! KrushiMitra is completely free for all farmers, agricultural students, extension officers, and agronomists to generate predictions, run soil advisories, and export PDF reports.",
+      },
+      {
+        q: "What districts and crops are supported?",
+        a: "All 36 districts of Maharashtra are natively supported with localized meteorological data and multi-district yield calibrations across major crops including Cotton, Soybean, Sugarcane, Wheat, Gram, Rice, and Tur.",
+      },
+      {
+        q: "Can I download and print the agricultural reports?",
+        a: "Yes, you can generate and download formatted, high-resolution A4 PDF reports complete with your farm details, AI predictions, and guidance in 1-click.",
+      },
+    ],
+    mr: [
+      {
+        q: "कृषीमित्र पीक शिफारस आणि उत्पादन अंदाज कसा तयार करते?",
+        a: "कृषीमित्र महाराष्ट्रातील प्रादेशिक कृषी माहिती, माती परीक्षण घटक आणि हवामानाचा अभ्यास करून कार्य करते. जिल्हा, पाऊस, तापमान आणि जमिनीच्या क्षेत्रफळानुसार शेतकऱ्यांना सोपा व खात्रीशीर सल्ला दिला जातो.",
+      },
+      {
+        q: "कृषीमित्र शेतकऱ्यांसाठी पूर्णपणे मोफत आहे का?",
+        a: "होय! कृषीमित्र सर्व शेतकरी, कृषी पदवीधर, कृषी अधिकारी आणि संशोधकांसाठी उत्पादन अंदाज, माती सल्ला आणि PDF अहवाल डाऊनलोड करण्यासाठी पूर्णपणे मोफत आहे.",
+      },
+      {
+        q: "कोणते जिल्हे आणि पिके समर्थित आहेत?",
+        a: "महाराष्ट्रातील सर्व ३६ जिल्हे समर्थित आहेत. यामध्ये कापूस, सोयाबीन, ऊस, गहू, हरभरा, भात आणि तूर या प्रमुख पिकांचा समावेश आहे.",
+      },
+      {
+        q: "मी शेतीचे अहवाल डाउनलोड आणि प्रिंट करू शकतो का?",
+        a: "होय, तुम्ही १-क्लिक मध्ये शेताची माहिती, उत्पादन अंदाज आणि कृषी सल्ल्याचा सुंदर A4 PDF अहवाल डाउनलोड आणि प्रिंट करू शकता.",
+      },
+    ],
+    hi: [
+      {
+        q: "कृषि-मित्र फसल सिफारिश और उत्पादन अनुमान कैसे तैयार करता है?",
+        a: "कृषि-मित्र महाराष्ट्र के क्षेत्रीय कृषि आंकड़ों, मिट्टी के पोषक तत्वों और मौसम की जानकारी का विश्लेषण करता है। यह जिले, वर्षा, तापमान और खेत के क्षेत्रफल के आधार पर सटीक और उपयोगी सलाह देता है।",
+      },
+      {
+        q: "क्या कृषि-मित्र किसानों के लिए पूरी तरह से मुफ्त है?",
+        a: "हाँ! कृषि-मित्र सभी किसान भाइयों, कृषि छात्रों और सलाहकारों के लिए पूर्वानुमान, मृदा सलाह और पीडीएफ रिपोर्ट डाउनलोड करने के लिए बिल्कुल मुफ्त है।",
+      },
+      {
+        q: "कौन से जिले और फसलें समर्थित हैं?",
+        a: "महाराष्ट्र के सभी 36 जिले समर्थित हैं। इसमें कपास, सोयाबीन, गन्ना, गेहूं, चना, धान और अरहर जैसी मुख्य फसलें शामिल हैं।",
+      },
+      {
+        q: "क्या मैं कृषि रिपोर्ट डाउनलोड और प्रिंट कर सकता हूँ?",
+        a: "हाँ, आप १-क्लिक में अपने खेत के विवरण, फसल अनुमान और मार्गदर्शन की उच्च-गुणवत्ता वाली A4 PDF रिपोर्ट डाउनलोड और प्रिंट कर सकते हैं।",
+      },
+    ],
+  };
+
+  const faqs = localizedFaqs[language] || localizedFaqs.en;
 
   return (
-    <div className="min-h-screen bg-[#F6F8F4] text-[#17291A] selection:bg-[#2E7D32] selection:text-white">
+    <div className="min-h-screen bg-[#F6F8F4] dark:bg-[#0D1710] text-[#17291A] dark:text-[#F8FAFC] selection:bg-[#2E7D32] selection:text-white transition-colors duration-300">
       {/* =========================================================
-          1. UPPER STICKY NAVIGATION BAR
+          1. HEADER / NAVIGATION BAR
          ========================================================= */}
-      <header className="sticky top-0 z-50 border-b border-[#DCE8D9] bg-white/90 backdrop-blur-xl transition-all duration-300">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-[#DCE8D9] dark:border-[#24402A] bg-white/90 dark:bg-[#132218]/90 backdrop-blur-xl transition-all duration-300">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           {/* BRAND LOGO */}
           <div
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="flex items-center gap-3 cursor-pointer group select-none"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] text-white shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
-              <Sprout size={24} strokeWidth={2.3} />
+            <div className="km-morph-icon flex h-11 w-11 items-center justify-center bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] text-white shadow-md transition-transform duration-300 group-hover:scale-110">
+              <Sprout size={24} strokeWidth={2.4} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-extrabold tracking-tight text-[#1B5E20]">
-                  KrushiMitra
-                </span>
-                <span className="key-cap text-[10px] py-0.5 px-2 bg-[#E5F7EA] text-[#2E7D32] hidden sm:inline-block">
-                  AI v2.0
-                </span>
-              </div>
-              <p className="text-[10px] font-bold tracking-wider text-[#55715A] uppercase">
-                {t("aiAgriculture") || "Precision Agriculture Platform"}
+              <span className="text-xl font-black tracking-tight text-[#1B5E20] dark:text-[#4ADE80]">
+                KrushiMitra
+              </span>
+              <p className="text-[10px] font-bold tracking-wider text-[#55715A] dark:text-[#A3B899] uppercase">
+                {t("aiAgriculture") || "Smart Agriculture Assistant"}
               </p>
             </div>
           </div>
 
           {/* DESKTOP NAV LINKS */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-gray-600">
+          <nav className="hidden md:flex items-center gap-7 text-xs font-bold text-gray-600 dark:text-gray-300">
             <a
               href="#features"
-              className="transition hover:text-[#2E7D32] hover:-translate-y-0.5"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              Features
+              {t("landingSolutions") || "Solutions"}
+            </a>
+            <a
+              href="#simulator"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
+            >
+              Live Demo
             </a>
             <a
               href="#how-it-works"
-              className="transition hover:text-[#2E7D32] hover:-translate-y-0.5"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              How It Works
+              {t("landingHowItWorks") || "How It Works"}
             </a>
             <a
-              href="#models"
-              className="transition hover:text-[#2E7D32] hover:-translate-y-0.5"
+              href="#crops"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              AI Models
+              {t("landingSupportedCrops") || "Supported Crops"}
             </a>
             <a
               href="#testimonials"
-              className="transition hover:text-[#2E7D32] hover:-translate-y-0.5"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              Farmers
+              {t("landingFarmers") || "Farmers"}
             </a>
             <a
               href="#faq"
-              className="transition hover:text-[#2E7D32] hover:-translate-y-0.5"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              FAQ
+              {t("landingFaq") || "FAQ"}
             </a>
           </nav>
 
-          {/* UPPER RIGHT ACTIONS */}
+          {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-2.5">
             {/* LANGUAGE SELECTOR */}
-            <div className="relative hidden sm:block">
+            <div className="relative">
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="key-cap text-xs py-1.5 px-2.5 font-bold cursor-pointer"
+                className="key-cap text-xs py-1.5 px-2.5 font-bold cursor-pointer bg-white dark:bg-[#183321] border-[#DCE8D9] dark:border-[#24402A] text-gray-700 dark:text-gray-200"
                 title="Select Language"
               >
                 <option value="en">🌐 English</option>
@@ -383,7 +672,7 @@ export default function Landing({ nav }) {
             <button
               type="button"
               onClick={() => changeTheme(theme === "dark" ? "light" : "dark")}
-              className="key-cap p-2 text-gray-600 hover:text-[#2E7D32] cursor-pointer"
+              className="key-cap p-2 text-gray-600 dark:text-gray-300 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer transition-transform hover:scale-105"
               title="Toggle Theme"
               aria-label="Toggle Theme"
             >
@@ -398,9 +687,9 @@ export default function Landing({ nav }) {
               <button
                 type="button"
                 onClick={() => nav?.("dashboard")}
-                className="btn-shimmer flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                className="btn-shimmer flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 active:scale-95 cursor-pointer"
               >
-                <span>Dashboard</span>
+                <span>{t("dashboard") || "Dashboard"}</span>
                 <ArrowRight size={14} />
               </button>
             ) : (
@@ -408,16 +697,16 @@ export default function Landing({ nav }) {
                 <button
                   type="button"
                   onClick={() => nav?.("login")}
-                  className="key-cap hidden sm:flex items-center gap-1 text-xs py-2 px-3.5 font-bold text-gray-700 hover:text-[#2E7D32] cursor-pointer"
+                  className="key-cap hidden sm:flex items-center gap-1 text-xs py-2 px-3.5 font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer"
                 >
-                  <span>Sign In</span>
+                  <span>{t("signIn") || "Sign In"}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => nav?.("register")}
-                  className="btn-shimmer btn-glow flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
+                  className="btn-shimmer btn-glow flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
                 >
-                  <span>Get Started</span>
+                  <span>{t("getStarted") || "Get Started"}</span>
                   <ArrowRight size={14} />
                 </button>
               </>
@@ -427,147 +716,56 @@ export default function Landing({ nav }) {
       </header>
 
       {/* =========================================================
-          2. HERO SECTION WITH ANIMATED SHOWCASE
+      {/* =========================================================
+          2. HERO SECTION WITH VIBRANT ANIMATED BADGE & ZOOM HERO IMAGE
          ========================================================= */}
-      <section className="relative overflow-hidden py-14 sm:py-20 lg:py-24">
-        {/* Background glow orbs */}
-        <div className="pointer-events-none absolute -left-20 top-0 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" />
-        <div className="pointer-events-none absolute -right-20 top-20 h-96 w-96 rounded-full bg-green-300/20 blur-3xl" />
+      <section className="relative overflow-hidden pt-10 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-24 animate-zoom-fade-hero">
+        {/* Ambient Glow Orbs with Morphing */}
+        <div className="pointer-events-none absolute -left-20 top-0 h-96 w-96 rounded-full bg-emerald-400/20 dark:bg-emerald-500/15 blur-3xl km-morph-icon" />
+        <div className="pointer-events-none absolute -right-20 top-20 h-96 w-96 rounded-full bg-green-400/20 dark:bg-teal-500/15 blur-3xl km-morph-icon" style={{ animationDelay: "-3s" }} />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-            {/* LEFT CONTENT */}
-            <div className="space-y-6 lg:col-span-7 text-left">
-              {/* BADGE */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/60 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-[#1B5E20] shadow-xs">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                <Sparkles size={14} className="text-[#2E7D32]" />
-                <span>Maharashtra's #1 AI Farming Decision Support System</span>
+            {/* LEFT HERO CONTENT */}
+            <div className="space-y-6 lg:col-span-6 text-left">
+              {/* TOP BADGE - EXPLICIT HIGH CONTRAST IN DARK AND LIGHT */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/50 dark:border-emerald-500/60 bg-emerald-50 dark:bg-[#183321] px-4 py-1.5 text-xs font-black shadow-md backdrop-blur-md transition-all hover:scale-105">
+                <Sparkles size={14} className="text-emerald-700 dark:text-[#4ADE80] animate-spin" />
+                <span className="text-emerald-900 dark:text-[#4ADE80] font-extrabold tracking-wide">
+                  {t("heroBadge") || "Smart Farming & AI Agriculture Assistant"}
+                </span>
               </div>
 
-              {/* HEADLINE WITH LETTER-BY-LETTER TYPEWRITER ANIMATIONS */}
-              <div className="hero-title-animated space-y-2">
-                <h1 className="text-3xl font-extrabold tracking-tight text-[#172B18] sm:text-5xl lg:text-6xl leading-[1.18] min-h-[140px] sm:min-h-[170px] lg:min-h-[200px]">
-                  <span>Empowering Farmers with</span>{" "}
-                  <span className="block mt-1 sm:mt-2">
-                    <span className="animated-gradient-word relative inline-block transition-all duration-300">
-                      {typedText || "\u00A0"}
-                      <span className="typewriter-cursor" />
-                      {/* Ambient glowing underline */}
-                      <span className="absolute -bottom-1.5 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1B5E20] via-[#10B981] to-[#2E7D32] rounded-full opacity-85 shadow-[0_0_14px_rgba(16,185,129,0.7)] animate-pulse" />
+              {/* MAIN HERO HEADLINE WITH ANIMATED GRADIENT & ACCENTS */}
+              <div className="relative">
+                <h1 className="text-3xl font-black tracking-tight text-[#172B18] dark:text-white sm:text-5xl lg:text-[52px] leading-[1.15]">
+                  <span className="inline-block transition-transform hover:scale-[1.01]">
+                    {t("heroTitlePart1") || "Empowering Farmers with"}
+                  </span>{" "}
+                  <span className="block mt-1 sm:mt-2 relative">
+                    <span className="bg-gradient-to-r from-[#1B5E20] via-[#10B981] to-[#2E7D32] dark:from-[#4ADE80] dark:via-[#34D399] dark:to-[#22C55E] bg-clip-text text-transparent drop-shadow-xs animate-[km-pulse-glow_4s_ease-in-out_infinite]">
+                      {t("heroTitlePart2") || "Smart AI Agriculture"}
                     </span>
+                    {/* Animated Accent Underline */}
+                    <span className="block h-1.5 w-32 sm:w-48 rounded-full bg-gradient-to-r from-[#2E7D32] via-[#10B981] to-transparent mt-2 opacity-80" />
                   </span>
                 </h1>
               </div>
 
-              {/* INTERACTIVE HERO SLIDER CARD */}
-              <div
-                onMouseEnter={() => setIsSliderHovered(true)}
-                onMouseLeave={() => setIsSliderHovered(false)}
-                className="relative overflow-hidden rounded-3xl border border-[#DCE8D9] bg-white/95 p-5 sm:p-6 shadow-md transition-all hover:shadow-lg backdrop-blur-sm"
-              >
-                {/* SLIDER TOP CONTROLS */}
-                <div className="flex items-center justify-between border-b border-[#EEF2EC] pb-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="key-cap text-[10px] py-0.5 px-2.5 bg-[#E5F7EA] text-[#2E7D32]">
-                      {heroSlides[currentSlide].badge}
-                    </span>
-                    <span className="text-[11px] font-bold text-gray-500 hidden sm:inline">
-                      {heroSlides[currentSlide].subtitle}
-                    </span>
-                  </div>
-
-                  {/* NEXT/PREV ARROWS */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={prevSlide}
-                      className="key-cap p-1.5 text-gray-700 hover:text-[#2E7D32] cursor-pointer"
-                      title="Previous Slide"
-                      aria-label="Previous Slide"
-                    >
-                      <ChevronLeft size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextSlide}
-                      className="key-cap p-1.5 text-gray-700 hover:text-[#2E7D32] cursor-pointer"
-                      title="Next Slide"
-                      aria-label="Next Slide"
-                    >
-                      <ChevronRight size={15} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* ACTIVE SLIDE CONTENT WITH ANIMATION */}
-                <div key={currentSlide} className="slide-animated space-y-3">
-                  <div className="flex items-start gap-3.5">
-                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${heroSlides[currentSlide].bgAccent} ${heroSlides[currentSlide].accent} shadow-xs`}>
-                      {React.createElement(heroSlides[currentSlide].icon, { size: 24 })}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-800">
-                        {heroSlides[currentSlide].title}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                        {heroSlides[currentSlide].desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* STAT HIGHLIGHTS */}
-                  <div className="grid grid-cols-2 gap-2.5 pt-1">
-                    <div className="rounded-xl bg-[#F8FAF7] p-2.5 border border-[#EEF2EC]">
-                      <span className="text-[10px] text-gray-400 font-semibold">{heroSlides[currentSlide].stat1.label}</span>
-                      <p className="text-xs font-extrabold text-gray-800 mt-0.5">{heroSlides[currentSlide].stat1.value}</p>
-                    </div>
-                    <div className="rounded-xl bg-[#F8FAF7] p-2.5 border border-[#EEF2EC]">
-                      <span className="text-[10px] text-gray-400 font-semibold">{heroSlides[currentSlide].stat2.label}</span>
-                      <p className="text-xs font-extrabold text-[#2E7D32] mt-0.5">{heroSlides[currentSlide].stat2.value}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SLIDER DOT INDICATORS & QUICK TRIGGER */}
-                <div className="mt-4 pt-3 border-t border-[#EEF2EC] flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {heroSlides.map((s, idx) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => selectSlide(idx)}
-                        className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                          currentSlide === idx
-                            ? "w-7 bg-[#2E7D32]"
-                            : "w-2 bg-[#DCE8D9] hover:bg-[#A5D6A7]"
-                        }`}
-                        title={s.title}
-                        aria-label={s.title}
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => (user ? nav?.(heroSlides[currentSlide].action) : nav?.("register"))}
-                    className="key-cap text-[11px] py-1 px-3 font-bold text-[#2E7D32] hover:bg-[#EAF3E6] flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>{heroSlides[currentSlide].actionLabel}</span>
-                    <ArrowRight size={12} />
-                  </button>
-                </div>
-              </div>
+              {/* VALUE PROPOSITION SUBTITLE (SIMPLE & CLEAR LANGUAGE) */}
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl font-medium">
+                {t("heroSubtitle") || "Get smart crop recommendations, accurate harvest yield predictions, live local weather updates, and easy-to-download farm PDF reports."}
+              </p>
 
               {/* ACTION BUTTONS */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-1">
+              <div className="flex flex-wrap items-center gap-3.5 pt-2">
                 <button
                   type="button"
                   onClick={() => (user ? nav?.("prediction") : nav?.("register"))}
-                  className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition duration-200 hover:-translate-y-0.5 hover:shadow-xl active:scale-95 cursor-pointer"
+                  className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-xl active:scale-95 cursor-pointer"
                 >
                   <Sprout size={18} />
-                  <span>Start Free Prediction</span>
+                  <span>{t("startFreePrediction") || "Start Free Prediction"}</span>
                   <ArrowRight size={16} />
                 </button>
 
@@ -575,133 +773,62 @@ export default function Landing({ nav }) {
                   type="button"
                   onClick={() => handleQuickDemo("farmer")}
                   disabled={demoLoading}
-                  className="key-cap flex items-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-bold text-gray-800 hover:text-[#2E7D32] cursor-pointer"
+                  className="key-cap flex items-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-bold text-gray-800 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer transition-transform hover:scale-105"
                 >
-                  <Wheat size={18} className="text-[#2E7D32]" />
-                  <span>{demoLoading ? "Logging In..." : "1-Click Demo Access"}</span>
+                  <Wheat size={18} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                  <span>{demoLoading ? t("loading") : (t("quickDemoLogin") || "1-Click Demo Login")}</span>
                 </button>
-              </div>
-
-              {/* QUICK HIGHLIGHT PILLS */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-[#DCE8D9]">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-[#2E7D32] shrink-0" />
-                  <span className="text-xs font-bold text-gray-700">95.2% ML Accuracy</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-[#2E7D32] shrink-0" />
-                  <span className="text-xs font-bold text-gray-700">36 Districts Covered</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-[#2E7D32] shrink-0" />
-                  <span className="text-xs font-bold text-gray-700">Instant PDF Exports</span>
-                </div>
               </div>
             </div>
 
-            {/* RIGHT FLOATING SHOWCASE CARD */}
-            <div className="lg:col-span-5 relative">
-              {/* MAIN GLASS SHOWCASE */}
-              <div className="card card-interactive rounded-3xl p-6 shadow-2xl border border-emerald-100 bg-white/95 relative z-10">
-                <div className="flex items-center justify-between border-b border-[#EEF2EC] pb-4">
+            {/* RIGHT HERO IMAGE WITH ZOOM-IN & FLOATING METRIC CARDS */}
+            <div className="lg:col-span-6 relative">
+              <div className="relative mx-auto max-w-lg lg:max-w-none">
+                {/* HERO IMAGE CONTAINER WITH ZOOM-IN ON HOVER */}
+                <div className="overflow-hidden rounded-3xl border border-[#DCE8D9] dark:border-[#24402A] shadow-2xl bg-gradient-to-br from-emerald-100 to-green-50 dark:from-emerald-950/40 dark:to-green-950/20 group">
+                  <img
+                    src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1200&auto=format&fit=crop"
+                    alt="Smart Farming & Precision Agriculture"
+                    className="h-80 sm:h-96 w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="eager"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none rounded-3xl" />
+                </div>
+
+                {/* FLOATING CARD 1: CROP YIELD FORECAST */}
+                <div className="absolute -top-4 -left-4 sm:-left-6 rounded-2xl glass-panel p-3.5 shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-[km-float_4s_ease-in-out_infinite]">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF3E6] text-[#2E7D32]">
-                      <Activity size={20} />
+                    <div className="km-morph-icon flex h-9 w-9 items-center justify-center bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300">
+                      <TrendingUp size={18} />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-gray-800">
-                        Live AI Agronomy Hub
-                      </h3>
-                      <p className="text-[11px] text-gray-400">Maharashtra Agricultural Belt</p>
-                    </div>
-                  </div>
-                  <span className="key-cap text-[10px] py-1 px-2.5 bg-[#E5F7EA] text-[#2E7D32]">
-                    ● Active
-                  </span>
-                </div>
-
-                {/* DEMO METRIC TILES */}
-                <div className="mt-4 space-y-3">
-                  {/* Yield Prediction Tile */}
-                  <div className="rounded-2xl border border-[#DCE8D9] bg-[#F9FCF8] p-3.5 transition hover:bg-[#F0F8ED]">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <TrendingUp size={15} className="text-[#2E7D32]" />
-                        Soybean Yield Forecast
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                        Pune Kharif
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-baseline justify-between">
-                      <span className="text-2xl font-extrabold text-[#2E7D32]">3.42 t/ha</span>
-                      <span className="text-xs text-gray-500">+18% vs Regional Avg</span>
-                    </div>
-                  </div>
-
-                  {/* Crop Recommendation Tile */}
-                  <div className="rounded-2xl border border-[#DCE8D9] bg-[#F9FCF8] p-3.5 transition hover:bg-[#F0F8ED]">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <Sprout size={15} className="text-[#2E7D32]" />
-                        Optimal Crop Recommendation
-                      </span>
-                      <span className="text-[10px] font-bold text-green-800 bg-green-100 px-2 py-0.5 rounded-full">
-                        95.2% Match
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-baseline justify-between">
-                      <span className="text-xl font-extrabold text-gray-800">🌱 Cotton (Bt Hybrid)</span>
-                      <span className="text-xs text-gray-500">N:90 • P:42 • pH:6.5</span>
-                    </div>
-                  </div>
-
-                  {/* Weather Tile */}
-                  <div className="rounded-2xl border border-[#DCE8D9] bg-[#F9FCF8] p-3.5 transition hover:bg-[#F0F8ED]">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                        <CloudSun size={15} className="text-amber-500" />
-                        Live Weather Telemetry
-                      </span>
-                      <span className="text-[10px] font-semibold text-gray-500">
-                        OpenWeather API
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-base font-bold text-gray-800">28°C • Moderate Rain</span>
-                      <span className="text-gray-500">Humidity: 78% • Wind: 14 km/h</span>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("yieldForecast") || "Yield Forecast"}</p>
+                      <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">
+                        3.42 t/ha <span className="text-[10px] text-gray-400 font-normal">(Soybean)</span>
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* PDF REPORT BUTTON & INTEGRATED TRUST ACCREDITATION */}
-                <div className="mt-4 pt-3 border-t border-[#EEF2EC] space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => (user ? nav?.("reports") : handleQuickDemo("farmer"))}
-                    className="btn-shimmer flex w-full items-center justify-center gap-2 rounded-xl bg-[#2E7D32] py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#1B5E20] cursor-pointer"
-                  >
-                    <FileText size={14} />
-                    <span>View Sample PDF Farm Dossier</span>
-                  </button>
-
-                  {/* PROFESSIONAL FARMER TRUST BADGE (INTEGRATED & CLEAN - ZERO OVERLAP) */}
-                  <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-amber-50/90 via-[#F8FAF7] to-emerald-50/90 p-2.5 px-3.5 border border-amber-200/50 shadow-2xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-xs">
-                        <Award size={16} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-extrabold text-gray-800 flex items-center gap-1">
-                          <span>🌾 Farmer's #1 Choice</span>
-                        </p>
-                        <p className="text-[10px] text-[#2E7D32] font-bold">⭐ 4.9/5 • 99.8% Decision Accuracy</p>
-                      </div>
+                {/* FLOATING CARD 2: OPTIMAL CROP RECOMMENDATION */}
+                <div className="absolute -bottom-4 -right-4 sm:-right-6 rounded-2xl glass-panel p-3.5 shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-[km-float_4.5s_ease-in-out_infinite_1s]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="km-morph-icon flex h-9 w-9 items-center justify-center bg-green-100 dark:bg-green-900/80 text-green-700 dark:text-green-300">
+                      <Sprout size={18} />
                     </div>
-                    <span className="key-cap text-[9px] py-0.5 px-2 bg-emerald-100 text-[#2E7D32] font-bold">
-                      Verified
-                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("optimalMatch") || "Optimal Crop"}</p>
+                      <p className="text-sm font-black text-gray-900 dark:text-white">
+                        🌱 Cotton (Bt Hybrid) <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">95.2%</span>
+                      </p>
+                    </div>
                   </div>
+                </div>
+
+                {/* FLOATING CARD 3: LIVE CLIMATE BADGE */}
+                <div className="absolute bottom-4 left-4 rounded-xl bg-black/65 backdrop-blur-md px-3.5 py-1.5 text-white flex items-center gap-2 text-xs font-semibold shadow-md">
+                  <CloudSun size={15} className="text-amber-400" />
+                  <span>28°C • {t("sowingWindow") || "Optimal Kharif Sowing Window"}</span>
                 </div>
               </div>
             </div>
@@ -710,245 +837,719 @@ export default function Landing({ nav }) {
       </section>
 
       {/* =========================================================
-          3. UPPER MARQUEE / HIGHLIGHT BANNER
+          FEATURED VISUAL SLIDER WITH ZOOM-FADE KEN BURNS
          ========================================================= */}
-      <div className="border-y border-[#DCE8D9] bg-[#EAF3E6]/60 py-3.5">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-4 text-xs font-bold text-[#1B5E20] sm:px-6">
-          <span className="flex items-center gap-1.5">
-            <Wheat size={15} /> 36 Maharashtra Districts
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5">
-            <Zap size={15} /> Dual Random Forest ML Engines
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5">
-            <FileText size={15} /> 1-Click PDF Generation
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5">
-            <Globe size={15} /> English, हिन्दी, मराठी
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5">
-            <Lock size={15} /> Role-Based Access Control
-          </span>
+      <ZoomFadeReveal delay={50} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="overflow-hidden rounded-3xl border border-[#DCE8D9] dark:border-[#24402A] shadow-2xl">
+          <ImageSlider onSlideAction={(action) => nav?.(action)} />
         </div>
-      </div>
+      </ZoomFadeReveal>
 
       {/* =========================================================
-          4. CORE CAPABILITIES (FEATURES GRID)
+          3. DYNAMIC LIVE AI ENGINE & WEATHER SIMULATOR WIDGET
          ========================================================= */}
-      <section id="features" className="py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <span className="key-cap text-xs py-1 px-3 bg-[#E5F7EA] text-[#2E7D32]">
-              Agricultural Intelligence
-            </span>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-extrabold text-[#172B18] tracking-tight">
-              State-of-the-Art Decision Support for Every Kisan
+      <section id="simulator" className="py-16 bg-[#EAF3E6]/40 dark:bg-[#112015]/40 border-y border-[#DCE8D9] dark:border-[#24402A]">
+        <ZoomFadeReveal delay={80} className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#172B18] dark:text-white">
+              {t("simHeader") || "Live Agricultural Telemetry & Crop Forecast"}
             </h2>
-            <p className="mt-3 text-xs sm:text-sm text-gray-500 leading-relaxed">
-              KrushiMitra integrates modern machine learning models with localized soil taxonomy and meteorological APIs to provide actionable agronomic intelligence.
+            <p className="mt-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+              {t("simSub") || "Real-time crop yield models, soil nutrient profiling, and live weather conditions."}
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f, i) => {
+          {/* SIMULATOR CARD WITH GLASSMORPHISM */}
+          <div className="glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl border border-emerald-200/70 dark:border-emerald-800/60">
+            {/* TABS HEADER */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200/60 dark:border-gray-700/60 pb-5 mb-6">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("yield")}
+                  className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 cursor-pointer ${
+                    activeTab === "yield"
+                      ? "bg-[#2E7D32] text-white shadow-md scale-105"
+                      : "key-cap text-gray-600 dark:text-gray-300 hover:text-[#2E7D32]"
+                  }`}
+                >
+                  <TrendingUp size={15} />
+                  <span>{t("yieldPredictorTab") || "Yield Predictor"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("soil")}
+                  className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 cursor-pointer ${
+                    activeTab === "soil"
+                      ? "bg-[#2E7D32] text-white shadow-md scale-105"
+                      : "key-cap text-gray-600 dark:text-gray-300 hover:text-[#2E7D32]"
+                  }`}
+                >
+                  <Sprout size={15} />
+                  <span>{t("soilAdvisoryTab") || "Soil Advisory"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("weather");
+                    if (!weatherData.isLiveGps) {
+                      fetchLiveLocationWeather();
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 cursor-pointer ${
+                    activeTab === "weather"
+                      ? "bg-[#2E7D32] text-white shadow-md scale-105"
+                      : "key-cap text-gray-600 dark:text-gray-300 hover:text-[#2E7D32]"
+                  }`}
+                >
+                  <CloudSun size={15} />
+                  <span>{t("liveWeatherTab") || "Live Weather"}</span>
+                </button>
+              </div>
+
+              <span className="key-cap text-[11px] py-1 px-3 bg-[#E5F7EA] dark:bg-[#183321] text-[#2E7D32] dark:text-[#4ADE80] flex items-center gap-1">
+                <Activity size={13} className="animate-pulse" /> {t("liveTelemetry") || "Live Telemetry"}
+              </span>
+            </div>
+
+            {/* TAB 1: YIELD PREDICTOR SIMULATOR */}
+            {activeTab === "yield" && (
+              <div className="grid gap-6 sm:grid-cols-12 items-center animate-pop">
+                <div className="sm:col-span-6 space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
+                      {language === "mr" ? "पीक निवडा:" : language === "hi" ? "फसल चुनें:" : "Select Crop:"}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { key: "Soybean", icon: "🌱" },
+                        { key: "Cotton", icon: "☁️" },
+                        { key: "Sugarcane", icon: "🎋" },
+                        { key: "Wheat", icon: "🌾" },
+                        { key: "Gram", icon: "🥔" },
+                        { key: "Tur", icon: "🌿" },
+                        { key: "Rice", icon: "🌾" },
+                      ].map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setSimCrop(item.key)}
+                          className={`p-2 rounded-xl text-xs font-bold text-left transition-all duration-300 cursor-pointer border ${
+                            simCrop === item.key
+                              ? "border-[#2E7D32] bg-[#EAF3E6] dark:bg-[#183321] text-[#1B5E20] dark:text-[#4ADE80] scale-102 shadow-xs"
+                              : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-[#2E7D32]"
+                          }`}
+                        >
+                          {item.icon} {tCrop ? tCrop(item.key) : item.key}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
+                        {t("district") || "District"}:
+                      </label>
+                      <select
+                        value={simDistrict}
+                        onChange={(e) => setSimDistrict(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 text-xs font-bold text-gray-700 dark:text-gray-200"
+                      >
+                        <option value="Pune">📍 {language === "mr" ? "पुणे" : language === "hi" ? "पुणे" : "Pune"}</option>
+                        <option value="Nagpur">📍 {language === "mr" ? "नागपूर" : language === "hi" ? "नागपुर" : "Nagpur"}</option>
+                        <option value="Nashik">📍 {language === "mr" ? "नाशिक" : language === "hi" ? "नासिक" : "Nashik"}</option>
+                        <option value="Kolhapur">📍 {language === "mr" ? "कोल्हापूर" : language === "hi" ? "कोल्हापुर" : "Kolhapur"}</option>
+                        <option value="Solapur">📍 {language === "mr" ? "सोलापूर" : language === "hi" ? "सोलापुर" : "Solapur"}</option>
+                        <option value="Amravati">📍 {language === "mr" ? "अमरावती" : language === "hi" ? "अमरावती" : "Amravati"}</option>
+                        <option value="Aurangabad">📍 {language === "mr" ? "छत्रपती संभाजीनगर" : language === "hi" ? "छत्रपति संभाजीनगर" : "Chhatrapati Sambhajinagar"}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
+                        {language === "mr" ? "शेती क्षेत्र" : language === "hi" ? "खेत का क्षेत्रफल" : "Cultivated Land"}: {simArea} {language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "ha"}
+                      </label>
+                      <input
+                        type="range"
+                        min="1.0"
+                        max="10.0"
+                        step="0.5"
+                        value={simArea}
+                        onChange={(e) => setSimArea(e.target.value)}
+                        className="w-full accent-[#2E7D32] cursor-pointer mt-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CALCULATED OUTPUT PANEL WITH SHAPE MORPHISM */}
+                <div className="sm:col-span-6 rounded-3xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-6 text-white shadow-xl space-y-4 transition-transform hover:scale-[1.02] duration-300">
+                  <div className="flex items-center justify-between border-b border-white/20 pb-3">
+                    <span className="text-xs font-bold text-green-100 uppercase tracking-wider">
+                      {t("predictedYieldBanner") || "Predicted Crop Yield Output"}
+                    </span>
+                    <span className="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full">
+                      {simDistrict} • {tCrop ? tCrop(simCrop) : simCrop}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-3xl sm:text-4xl font-black text-white">
+                      {simYieldResult.yieldPerHa} {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
+                    </p>
+                    <p className="text-xs text-green-100">
+                      {t("totalHarvest") || "Total Farm Harvest"}: <span className="font-extrabold text-white">{simYieldResult.totalProduction} {language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span> ({language === "mr" ? "क्षेत्र" : language === "hi" ? "क्षेत्रफल" : "across"} {simArea} {language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "ha"})
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
+                    <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur-xs">
+                      <p className="text-[10px] text-green-200 font-semibold">{language === "mr" ? "उत्पादन अचूकता" : language === "hi" ? "उत्पादन सटीकता" : "Yield Calibration"}</p>
+                      <p className="font-extrabold text-white mt-0.5">{simYieldResult.status}</p>
+                    </div>
+                    <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur-xs">
+                      <p className="text-[10px] text-green-200 font-semibold">{t("suitabilityFactor") || "Regional Suitability"}</p>
+                      <p className="font-extrabold text-white mt-0.5">{simYieldResult.confidence}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => (user ? nav?.("prediction") : nav?.("register"))}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-bold text-[#1B5E20] shadow-md hover:bg-[#F7FFF5] transition cursor-pointer hover:scale-102"
+                  >
+                    <span>{t("estimateHarvestYield") || "Estimate Harvest Yield with Real Farm Data"}</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: SOIL ADVISORY SIMULATOR */}
+            {activeTab === "soil" && (
+              <div className="space-y-6 animate-pop">
+                <div className="grid gap-4 sm:grid-cols-4">
+                  <div className="glass-step-card rounded-2xl p-4">
+                    <div className="flex justify-between text-xs font-bold mb-2">
+                      <span className="text-gray-600 dark:text-gray-300">{t("nitrogen") || "Nitrogen (N)"}</span>
+                      <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilN} kg/ha</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="140"
+                      value={soilN}
+                      onChange={(e) => setSoilN(Number(e.target.value))}
+                      className="w-full accent-[#2E7D32] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="glass-step-card rounded-2xl p-4">
+                    <div className="flex justify-between text-xs font-bold mb-2">
+                      <span className="text-gray-600 dark:text-gray-300">{t("phosphorus") || "Phosphorus (P)"}</span>
+                      <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilP} kg/ha</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="90"
+                      value={soilP}
+                      onChange={(e) => setSoilP(Number(e.target.value))}
+                      className="w-full accent-[#2E7D32] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="glass-step-card rounded-2xl p-4">
+                    <div className="flex justify-between text-xs font-bold mb-2">
+                      <span className="text-gray-600 dark:text-gray-300">{t("potassium") || "Potassium (K)"}</span>
+                      <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilK} kg/ha</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="80"
+                      value={soilK}
+                      onChange={(e) => setSoilK(Number(e.target.value))}
+                      className="w-full accent-[#2E7D32] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="glass-step-card rounded-2xl p-4">
+                    <div className="flex justify-between text-xs font-bold mb-2">
+                      <span className="text-gray-600 dark:text-gray-300">{t("soilPh") || "Soil pH"}</span>
+                      <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilPh} pH</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5.0"
+                      max="8.5"
+                      step="0.1"
+                      value={soilPh}
+                      onChange={(e) => setSoilPh(Number(e.target.value))}
+                      className="w-full accent-[#2E7D32] cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* ADVISORY RESULT CARD */}
+                <div className="rounded-2xl glass-panel p-5 border border-emerald-300 dark:border-emerald-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                  <div className="flex items-center gap-3.5 text-left">
+                    <div className="km-morph-icon flex h-12 w-12 items-center justify-center bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] text-white text-2xl shadow-md">
+                      🌱
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-base font-black text-[#1B5E20] dark:text-[#4ADE80]">
+                          {t("recommendedCropBanner") || "Recommended Crop"}: {tCrop ? tCrop(soilRecResult.crop) : soilRecResult.crop}
+                        </h4>
+                        <span className="rounded-full bg-emerald-100 dark:bg-[#183321] px-2.5 py-0.5 text-[10px] font-extrabold text-[#1B5E20] dark:text-[#4ADE80]">
+                          {language === "mr" ? "योग्य पीक" : language === "hi" ? "उपयुक्त फसल" : "Optimal Match"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                        {soilRecResult.suitability}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => (user ? nav?.("recommendation") : nav?.("register"))}
+                    className="btn-shimmer shrink-0 rounded-xl bg-[#2E7D32] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#1B5E20] transition cursor-pointer hover:scale-105"
+                  >
+                    {t("findOptimalCrop") || "Find Optimal Crop"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: DYNAMIC REAL-TIME WEATHER TELEMETRY (LIVE LOCATION ACCESS) */}
+            {activeTab === "weather" && (
+              <div className="space-y-5 animate-pop">
+                {/* LIVE LOCATION BAR */}
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl glass-panel p-3.5 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-200">
+                    <MapPin size={16} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                    <span>{t("location") || "Location"}: <span className="text-[#1B5E20] dark:text-[#4ADE80] font-black">{weatherData.location}</span></span>
+                    {weatherData.isLiveGps && (
+                      <span className="rounded-full bg-emerald-100 dark:bg-[#183321] px-2 py-0.5 text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300">
+                        ● GPS Live
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={fetchLiveLocationWeather}
+                      disabled={weatherLoading}
+                      className="flex items-center gap-1 rounded-xl bg-[#2E7D32] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#1B5E20] transition cursor-pointer hover:scale-105"
+                    >
+                      <RefreshCw size={13} className={weatherLoading ? "animate-spin" : ""} />
+                      <span>{weatherLoading ? (t("locating") || "Locating...") : (t("useMyLiveLocation") || "📍 Use My Live Location")}</span>
+                    </button>
+
+                    <select
+                      onChange={(e) => fallbackDistrictWeather(e.target.value)}
+                      className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 cursor-pointer"
+                    >
+                      <option value="Pune">{t("selectDistrict") || "Select District"}</option>
+                      <option value="Pune">Pune</option>
+                      <option value="Nagpur">Nagpur</option>
+                      <option value="Nashik">Nashik</option>
+                      <option value="Chhatrapati Sambhajinagar">Chhatrapati Sambhajinagar</option>
+                      <option value="Kolhapur">Kolhapur</option>
+                      <option value="Amravati">Amravati</option>
+                      <option value="Solapur">Solapur</option>
+                      <option value="Latur">Latur</option>
+                      <option value="Satara">Satara</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* LIVE METEOROLOGICAL METRICS */}
+                <div className="grid gap-4 sm:grid-cols-4 text-center">
+                  <div className="rounded-2xl glass-panel border border-amber-200 dark:border-amber-800 p-4 transition-transform hover:scale-105">
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-300">{t("liveTemperature") || "Live Temperature"}</span>
+                    <p className="text-2xl font-black text-amber-900 dark:text-amber-100 mt-1">{weatherData.temp}°C</p>
+                    <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">{weatherData.condition}</p>
+                  </div>
+                  <div className="rounded-2xl glass-panel border border-blue-200 dark:border-blue-800 p-4 transition-transform hover:scale-105">
+                    <span className="text-xs font-bold text-blue-800 dark:text-blue-300">{t("relativeHumidity") || "Relative Humidity"}</span>
+                    <p className="text-2xl font-black text-blue-900 dark:text-blue-100 mt-1">{weatherData.humidity}%</p>
+                    <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">{t("atmosphericMoisture") || "Atmospheric Moisture"}</p>
+                  </div>
+                  <div className="rounded-2xl glass-panel border border-teal-200 dark:border-teal-800 p-4 transition-transform hover:scale-105">
+                    <span className="text-xs font-bold text-teal-800 dark:text-teal-300">{t("windVelocity") || "Wind Velocity"}</span>
+                    <p className="text-2xl font-black text-teal-900 dark:text-teal-100 mt-1">{weatherData.wind} km/h</p>
+                    <p className="text-[10px] text-teal-700 dark:text-teal-300 mt-0.5">{t("breezeVelocity") || "Breeze Velocity"}</p>
+                  </div>
+                  <div className="rounded-2xl glass-panel border border-green-200 dark:border-green-800 p-4 transition-transform hover:scale-105">
+                    <span className="text-xs font-bold text-green-800 dark:text-green-300">{t("farmingStatus") || "Farming Status"}</span>
+                    <p className="text-xs font-black text-green-900 dark:text-green-100 mt-2">{weatherData.advice}</p>
+                    <p className="text-[10px] text-green-700 dark:text-green-300 mt-0.5">{t("openWeatherTelemetry") || "OpenWeather Telemetry"}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </ZoomFadeReveal>
+      </section>
+
+      {/* =========================================================
+          4. CORE PLATFORM SOLUTIONS (FEATURES) WITH ZOOM-IN
+         ========================================================= */}
+      <section id="features" className="py-16 sm:py-24">
+        <ZoomFadeReveal delay={60} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+              🌾 Agricultural Intelligence
+            </span>
+            <h2 className="mt-3.5 text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+              {t("solutionsHeader") || "Smart Tools for Better Farming"}
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              {t("solutionsSub") || "Simple, easy-to-use AI tools to help you pick the best crops, forecast harvest output, and check live weather for your farm."}
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {coreFeatures.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div
-                  key={i}
-                  className="card card-interactive rounded-3xl p-6 group cursor-default transition-all duration-300"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF3E6] text-[#2E7D32] shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Icon size={24} />
+                <ZoomFadeReveal key={i} delay={i * 80} className="h-full">
+                  <div
+                    onClick={() => handleFeatureClick(f.action)}
+                    className="glass-step-card rounded-3xl p-6 shadow-sm zoom-fade-hover cursor-pointer group flex flex-col justify-between relative overflow-hidden h-full"
+                  >
+                    {/* Subtle Corner Glow */}
+                    <div className="absolute top-0 right-0 h-24 w-24 rounded-bl-full bg-emerald-400/10 dark:bg-emerald-500/10 pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className={`km-morph-icon flex h-13 w-13 items-center justify-center ${f.bg} ${f.accent} shadow-sm group-hover:rotate-6 transition-all`}>
+                          <Icon size={24} />
+                        </div>
+                        <span className="key-cap text-[10px] py-1 px-3 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-xs">
+                          {f.tag}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-5 text-base font-black text-gray-900 dark:text-white group-hover:text-[#2E7D32] dark:group-hover:text-[#4ADE80] transition-colors">
+                        {f.title}
+                      </h3>
+
+                      <p className="mt-2 text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-normal">
+                        {f.desc}
+                      </p>
                     </div>
-                    <span className="key-cap text-[10px] py-0.5 px-2.5">
-                      {f.tag}
-                    </span>
+
+                    <div className="mt-5 pt-3.5 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs font-bold text-[#2E7D32] dark:text-[#4ADE80]">
+                      <span>Explore Tool</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform" />
+                    </div>
                   </div>
-
-                  <h3 className="mt-5 text-base font-bold text-gray-800 group-hover:text-[#2E7D32] transition-colors">
-                    {f.title}
-                  </h3>
-
-                  <p className="mt-2 text-xs sm:text-sm text-gray-500 leading-relaxed">
-                    {f.desc}
-                  </p>
-                </div>
+                </ZoomFadeReveal>
               );
             })}
           </div>
-        </div>
+        </ZoomFadeReveal>
       </section>
 
       {/* =========================================================
-          5. 3-STEP AGRICULTURAL PIPELINE (HOW IT WORKS)
+          5. HOW IT WORKS (GLASSMORPHISM & SHAPE MORPHISM 3-STEP PIPELINE)
          ========================================================= */}
-      <section id="how-it-works" className="py-16 bg-[#EAF3E6]/40 border-y border-[#DCE8D9]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="key-cap text-xs py-1 px-3 bg-[#E5F7EA] text-[#2E7D32]">
-              Simple & Streamlined
+      <section id="how-it-works" className="relative overflow-hidden py-20 bg-gradient-to-b from-[#EAF3E6]/60 via-[#F6F8F4] to-[#EAF3E6]/60 dark:from-[#112015]/60 dark:via-[#0D1710] dark:to-[#112015]/60 border-y border-[#DCE8D9] dark:border-[#24402A]">
+        {/* Ambient Morphing Background Blobs */}
+        <div className="pointer-events-none absolute -left-24 top-1/4 h-80 w-80 rounded-full bg-emerald-400/15 dark:bg-emerald-500/10 blur-3xl km-morph-icon" />
+        <div className="pointer-events-none absolute -right-24 bottom-1/4 h-80 w-80 rounded-full bg-teal-400/15 dark:bg-teal-500/10 blur-3xl km-morph-icon" style={{ animationDelay: "-4s" }} />
+
+        <ZoomFadeReveal delay={60} className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+              🌱 Simple & Streamlined Process
             </span>
-            <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-[#172B18]">
-              How KrushiMitra Works in 3 Steps
+            <h2 className="mt-3.5 text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+              {t("howItWorksHeading") || "How KrushiMitra Works in 3 Simple Steps"}
             </h2>
+            <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+              Follow three easy steps to get instant agronomic advisory for your land.
+            </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-3">
-            {steps.map((step, idx) => {
-              const Icon = step.icon;
-              return (
-                <div
-                  key={idx}
-                  className="card card-interactive rounded-3xl p-6 relative group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2E7D32] text-white shadow-md">
-                      <Icon size={22} />
+          {/* STEPS CONTAINER WITH CONNECTING BEAM */}
+          <div className="relative">
+            {/* DESKTOP ANIMATED CONNECTING BEAM LINE */}
+            <div className="hidden lg:block absolute top-1/2 left-[15%] right-[15%] h-1 -translate-y-6 rounded-full step-beam-connector opacity-70 pointer-events-none z-0" />
+
+            <div className="relative z-10 grid gap-6 sm:grid-cols-3">
+              {workflowSteps.map((step, idx) => {
+                const Icon = step.icon;
+                const isSelected = activeStep === idx;
+                return (
+                  <ZoomFadeReveal key={idx} delay={idx * 100} className="h-full">
+                    <div
+                      onClick={() => setActiveStep(idx)}
+                      className={`glass-step-card rounded-3xl p-7 relative overflow-hidden cursor-pointer group zoom-fade-hover h-full ${
+                        isSelected
+                          ? "border-[#2E7D32] dark:border-[#4ADE80] ring-2 ring-[#2E7D32]/20 dark:ring-[#4ADE80]/30 shadow-2xl -translate-y-2 scale-102"
+                          : "border-[#DCE8D9] dark:border-[#24402A]"
+                      }`}
+                    >
+                      {/* Top Specular Glow Corner */}
+                      <div className="absolute top-0 right-0 h-28 w-28 rounded-bl-full bg-gradient-to-bl from-emerald-400/10 via-green-300/5 to-transparent pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+
+                      <div className="flex items-center justify-between">
+                        {/* SHAPE MORPHISM ICON CAPSULE */}
+                        <div
+                          className={`km-morph-icon flex h-14 w-14 items-center justify-center text-white shadow-md transition-transform duration-500 group-hover:rotate-6 ${
+                            isSelected
+                              ? "bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] shadow-emerald-900/30"
+                              : "bg-gradient-to-br from-[#2E7D32] to-[#10B981]"
+                          }`}
+                        >
+                          <Icon size={24} strokeWidth={2.2} />
+                        </div>
+
+                        {/* STEP NUMBER BADGE WITH MORPHING PILL */}
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-2xl font-black transition-colors duration-300 ${
+                              isSelected
+                                ? "text-[#1B5E20] dark:text-[#4ADE80]"
+                                : "text-emerald-300 dark:text-emerald-700/80 group-hover:text-emerald-500"
+                            }`}
+                          >
+                            {step.num}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h3 className="mt-6 text-base sm:text-lg font-black text-gray-900 dark:text-white group-hover:text-[#1B5E20] dark:group-hover:text-[#4ADE80] transition-colors">
+                        {step.title}
+                      </h3>
+
+                      <p className="mt-2.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-normal">
+                        {step.desc}
+                      </p>
+
+                      <div className="mt-5 pt-3.5 border-t border-gray-200/70 dark:border-gray-700/60 flex items-center justify-between text-[11px] font-bold text-[#1B5E20] dark:text-[#4ADE80]">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 size={13} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                          <span>{step.highlight}</span>
+                        </span>
+                        <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                    <span className="text-2xl font-extrabold text-emerald-200 group-hover:text-[#2E7D32] transition-colors">
-                      {step.num}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-5 text-base font-bold text-gray-800">
-                    {step.title}
-                  </h3>
-
-                  <p className="mt-2 text-xs text-gray-500 leading-relaxed">
-                    {step.desc}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          6. AI MODEL ARCHITECTURE & ACCURACY
-         ========================================================= */}
-      <section id="models" className="py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="card rounded-3xl p-8 sm:p-12 bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] text-white shadow-xl">
-            <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
-              <div className="lg:col-span-7 space-y-4">
-                <span className="rounded-full bg-white/20 px-3.5 py-1 text-xs font-bold backdrop-blur-md">
-                  🧠 Machine Learning Engine
-                </span>
-                <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                  Trained on Real Indian Agronomic Datasets
-                </h2>
-                <p className="text-xs sm:text-sm text-green-50/90 leading-relaxed max-w-xl">
-                  KrushiMitra bundles standalone serialized scikit-learn models. No guesswork: predictions are computed mathematically from multi-feature historical patterns.
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
-                  <div className="rounded-2xl bg-white/10 p-3.5 backdrop-blur-md">
-                    <p className="text-2xl font-extrabold">95.2%</p>
-                    <p className="text-[10px] text-green-100">Classifier Accuracy</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 p-3.5 backdrop-blur-md">
-                    <p className="text-2xl font-extrabold">22+</p>
-                    <p className="text-[10px] text-green-100">Crop Classes</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 p-3.5 backdrop-blur-md">
-                    <p className="text-2xl font-extrabold">36</p>
-                    <p className="text-[10px] text-green-100">Districts</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 p-3.5 backdrop-blur-md">
-                    <p className="text-2xl font-extrabold">&lt;100ms</p>
-                    <p className="text-[10px] text-green-100">Inference Speed</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-5 flex flex-col gap-3">
-                <div className="rounded-2xl bg-white p-5 text-gray-800 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#1B5E20]">Model 1: Classifier</span>
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">RF Model</span>
-                  </div>
-                  <p className="text-xs font-semibold text-gray-700 mt-1">`crop_recommendation_rf.pkl`</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">7 soil inputs → 22 crop probability distributions.</p>
-                </div>
-
-                <div className="rounded-2xl bg-white p-5 text-gray-800 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#1B5E20]">Model 2: Regressor</span>
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">RF Regressor</span>
-                  </div>
-                  <p className="text-xs font-semibold text-gray-700 mt-1">`productivity_random_forest.pkl`</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Regional climate inputs → Yield output in tonnes/hectare.</p>
-                </div>
-              </div>
+                  </ZoomFadeReveal>
+                );
+              })}
             </div>
           </div>
-        </div>
+
+          {/* ACTIVE STEP INTERACTIVE SUMMARY DRAWER */}
+          <div className="mt-8 mx-auto max-w-3xl glass-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border border-emerald-200/80 dark:border-emerald-800/60 shadow-lg animate-zoom-fade-card">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] text-white font-black text-xs shadow-xs">
+                {workflowSteps[activeStep].num}
+              </span>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">{workflowSteps[activeStep].title}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">{workflowSteps[activeStep].highlight}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleTryStep(activeStep)}
+              className="btn-shimmer flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1B5E20] transition cursor-pointer hover:scale-105"
+            >
+              <span>Try Step {workflowSteps[activeStep].num} Now</span>
+              <ArrowRight size={13} />
+            </button>
+          </div>
+        </ZoomFadeReveal>
       </section>
 
       {/* =========================================================
-          7. FARMER TESTIMONIALS
+          6. SUPPORTED MODEL CROPS ONLY (WITH CATEGORY FILTER & ZOOM CARDS)
          ========================================================= */}
-      <section id="testimonials" className="py-16 sm:py-20 bg-[#EAF3E6]/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="key-cap text-xs py-1 px-3 bg-[#E5F7EA] text-[#2E7D32]">
-              Farmer Endorsements
-            </span>
-            <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-[#172B18]">
-              Trusted by Progressive Kisans
-            </h2>
-          </div>
+      <section id="crops" className="py-16 sm:py-20">
+        <ZoomFadeReveal delay={60} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+            🌱 Supported Crops
+          </span>
+          <h2 className="mt-3.5 text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+            {t("supportedCropsHeading") || "Supported Maharashtra Crops"}
+          </h2>
+          <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
+            {t("supportedCropsSub") || "Accurate predictions for major crops grown across Maharashtra farms."}
+          </p>
 
-          <div className="grid gap-6 sm:grid-cols-3">
-            {testimonials.map((t, idx) => (
-              <div
-                key={idx}
-                className="card card-interactive rounded-3xl p-6 flex flex-col justify-between"
+          {/* INTERACTIVE CATEGORY FILTER SLIDER TABS */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {[
+              { id: "all", label: "🌾 All Crops" },
+              { id: "kharif", label: "🌧️ Kharif (Monsoon)" },
+              { id: "rabi", label: "❄️ Rabi (Winter)" },
+              { id: "cash", label: "💰 Cash Crops" },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setCropCategory(cat.id)}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 cursor-pointer ${
+                  cropCategory === cat.id
+                    ? "bg-[#2E7D32] text-white shadow-md scale-105"
+                    : "key-cap text-gray-600 dark:text-gray-300 hover:text-[#2E7D32]"
+                }`}
               >
-                <div>
-                  <div className="flex items-center gap-1 text-amber-400 mb-3">
-                    {[...Array(t.rating)].map((_, r) => (
-                      <Star key={r} size={15} fill="currentColor" />
-                    ))}
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed italic">
-                    "{t.quote}"
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-[#EEF2EC] flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-800">{t.name}</h4>
-                    <p className="text-[10px] text-gray-500">{t.role}</p>
-                    <p className="text-[10px] text-[#2E7D32] font-semibold">{t.district} • {t.farmSize}</p>
-                  </div>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF3E6] text-sm">
-                    🌾
-                  </span>
-                </div>
-              </div>
+                {cat.label}
+              </button>
             ))}
           </div>
-        </div>
+
+          {/* 7 MODEL CROPS GRID WITH ZOOM-IN CARDS */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+            {filteredCrops.map((c, i) => (
+              <ZoomFadeReveal key={i} delay={i * 50} className="h-full">
+                <div
+                  className="glass-step-card rounded-3xl p-5 text-left shadow-sm zoom-fade-hover flex flex-col justify-between relative overflow-hidden h-full"
+                >
+                  {/* Specular Glow Corner */}
+                  <div className="absolute top-0 right-0 h-20 w-20 rounded-bl-full bg-emerald-400/10 dark:bg-emerald-500/10 pointer-events-none group-hover:scale-125 transition-transform" />
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl km-morph-icon inline-block">{c.icon}</span>
+                      <span className="key-cap text-[10px] py-0.5 px-2.5 bg-[#E5F7EA] dark:bg-[#183321] text-[#2E7D32] dark:text-[#4ADE80]">
+                        {c.badge}
+                      </span>
+                    </div>
+
+                    <h4 className="mt-4 text-base font-black text-gray-900 dark:text-white flex items-center justify-between">
+                      <span>{c.name}</span>
+                      <span className="text-xs font-bold text-gray-400 dark:text-gray-500">
+                        {language === "mr" ? c.marathiName : language === "hi" ? c.hindiName : ""}
+                      </span>
+                    </h4>
+
+                    <div className="mt-3 space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <p className="flex items-center gap-1.5">
+                        🌱 <span className="font-semibold text-gray-700 dark:text-gray-200">{c.soil}</span>
+                      </p>
+                      <p className="flex items-center gap-1.5">
+                        📈 Expected: <span className="font-bold text-[#2E7D32] dark:text-[#4ADE80]">{c.yieldRange}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-gray-200/60 dark:border-gray-700/60 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> {c.season}
+                  </div>
+                </div>
+              </ZoomFadeReveal>
+            ))}
+          </div>
+        </ZoomFadeReveal>
+      </section>
+
+      {/* =========================================================
+          7. FARMER TESTIMONIALS WITH INTERACTIVE CAROUSEL SLIDER & ZOOM
+         ========================================================= */}
+      <section id="testimonials" className="py-16 bg-[#EAF3E6]/30 dark:bg-[#112015]/30 border-t border-[#DCE8D9] dark:border-[#24402A]">
+        <ZoomFadeReveal delay={60} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-4">
+            <div className="text-left">
+              <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+                ⭐ Farmer Experiences
+              </span>
+              <h2 className="mt-3 text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+                {t("farmerTestimonialsHeading") || "Trusted by Fellow Farmers"}
+              </h2>
+            </div>
+
+            {/* CAROUSEL SLIDER CONTROLS */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setTestimonialIndex(
+                    (prev) => (prev - 1 + testimonials.length) % testimonials.length
+                  )
+                }
+                className="key-cap p-2 rounded-xl text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer transition-transform hover:scale-110"
+                aria-label="Previous Testimonial"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setTestimonialIndex((prev) => (prev + 1) % testimonials.length)
+                }
+                className="key-cap p-2 rounded-xl text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer transition-transform hover:scale-110"
+                aria-label="Next Testimonial"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* TESTIMONIAL CARDS WITH ZOOM AND CAROUSEL HIGHLIGHT */}
+          <div className="grid gap-6 sm:grid-cols-3">
+            {testimonials.map((test, idx) => {
+              const isCurrent = testimonialIndex === idx;
+              return (
+                <ZoomFadeReveal key={idx} delay={idx * 80} className="h-full">
+                  <div
+                    onClick={() => setTestimonialIndex(idx)}
+                    className={`glass-step-card rounded-3xl p-6 flex flex-col justify-between shadow-sm cursor-pointer zoom-fade-hover h-full ${
+                      isCurrent
+                        ? "border-[#2E7D32] dark:border-[#4ADE80] ring-2 ring-[#2E7D32]/20 dark:ring-[#4ADE80]/30 shadow-2xl scale-103 -translate-y-2"
+                        : "opacity-80 hover:opacity-100 hover:scale-102"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1 text-amber-400 mb-3">
+                        {[...Array(test.rating)].map((_, r) => (
+                          <Star key={r} size={15} fill="currentColor" />
+                        ))}
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed italic">
+                        "{test.quote}"
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-900 dark:text-white">{test.name}</h4>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400">{test.role}</p>
+                        <p className="text-[10px] text-[#2E7D32] dark:text-[#4ADE80] font-semibold">{test.district} • {test.farmSize}</p>
+                      </div>
+                      <span className="km-morph-icon flex h-9 w-9 items-center justify-center bg-emerald-50 dark:bg-[#183321] text-sm">
+                        🌾
+                      </span>
+                    </div>
+                  </div>
+                </ZoomFadeReveal>
+              );
+            })}
+          </div>
+        </ZoomFadeReveal>
       </section>
 
       {/* =========================================================
           8. FAQ SECTION
          ========================================================= */}
       <section id="faq" className="py-16 sm:py-24">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <ZoomFadeReveal delay={60} className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="key-cap text-xs py-1 px-3 bg-[#E5F7EA] text-[#2E7D32]">
-              Help & Answers
+            <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+              ❓ Help & Answers
             </span>
-            <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-[#172B18]">
-              Frequently Asked Questions
+            <h2 className="mt-3.5 text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+              {t("faqHeading") || "Frequently Asked Questions"}
             </h2>
           </div>
 
@@ -956,79 +1557,89 @@ export default function Landing({ nav }) {
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="card rounded-2xl overflow-hidden transition-all duration-200"
+                className="glass-panel rounded-2xl border border-gray-200/70 dark:border-gray-700/60 overflow-hidden shadow-xs transition-all duration-300 hover:border-[#2E7D32] dark:hover:border-[#4ADE80] zoom-fade-hover"
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(i)}
-                  className="flex w-full items-center justify-between p-5 text-left font-bold text-xs sm:text-sm text-gray-800 hover:text-[#2E7D32] cursor-pointer"
+                  className="flex w-full items-center justify-between p-5 text-left font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   <ChevronRight
                     size={16}
-                    className={`shrink-0 transition-transform duration-200 ${
-                      faqOpen === i ? "rotate-90 text-[#2E7D32]" : "text-gray-400"
+                    className={`shrink-0 transition-transform duration-300 ${
+                      faqOpen === i ? "rotate-90 text-[#2E7D32] dark:text-[#4ADE80]" : "text-gray-400"
                     }`}
                   />
                 </button>
                 {faqOpen === i && (
-                  <div className="px-5 pb-5 text-xs sm:text-sm text-gray-500 leading-relaxed border-t border-[#EEF2EC] pt-3 animate-pop">
+                  <div className="px-5 pb-5 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-200/60 dark:border-gray-700/60 pt-3 animate-zoom-fade-soft">
                     {faq.a}
                   </div>
                 )}
               </div>
             ))}
           </div>
-        </div>
+        </ZoomFadeReveal>
       </section>
 
       {/* =========================================================
-          9. FINAL CALL TO ACTION (CTA)
+          9. ANIMATIC HIGH-TECH CALL TO ACTION (CTA)
          ========================================================= */}
-      <section className="py-12 bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] text-white">
-        <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 space-y-6">
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            Ready to Boost Your Agricultural Harvest?
+      <section className="relative overflow-hidden py-16 sm:py-20 bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#0F4716] text-white">
+        {/* Animated Glow Rings in Background */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-emerald-400/20 blur-3xl km-morph-icon" />
+        <div className="pointer-events-none absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-green-400/20 blur-3xl km-morph-icon" style={{ animationDelay: "-3s" }} />
+
+        <ZoomFadeReveal delay={80} className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold backdrop-blur-md">
+            <Sparkles size={14} className="text-yellow-300 animate-spin" />
+            <span>Join Fellow Progressive Farmers</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+            {t("ctaHeading") || "Ready to Grow More and Farm Smarter?"}
           </h2>
-          <p className="max-w-xl mx-auto text-xs sm:text-sm text-green-100 leading-relaxed">
-            Join hundreds of progressive farmers utilizing KrushiMitra for precision crop predictions, soil health tracking, and automated PDF reporting.
+
+          <p className="max-w-xl mx-auto text-xs sm:text-base text-green-100 leading-relaxed font-normal">
+            {t("ctaSubtitle") || "Join fellow farmers using KrushiMitra to plan better harvests, test soil compatibility, and download farm reports."}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <button
               type="button"
               onClick={() => nav?.("register")}
-              className="btn-shimmer flex items-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-xs sm:text-sm font-bold text-[#1B5E20] shadow-xl hover:bg-[#F7FFF5] active:scale-95 cursor-pointer"
+              className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-sm font-black text-[#1B5E20] shadow-2xl transition duration-300 hover:-translate-y-1 hover:scale-105 active:scale-95 cursor-pointer"
             >
-              <Sprout size={18} />
-              <span>Create Free Account</span>
-              <ArrowRight size={16} />
+              <Sprout size={20} />
+              <span>{t("createFreeAccount") || "Create Free Account"}</span>
+              <ArrowRight size={18} />
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickDemo("farmer")}
-              className="key-cap bg-emerald-900/60 border-emerald-700 text-white rounded-2xl px-6 py-3.5 text-xs sm:text-sm font-bold cursor-pointer"
+              className="rounded-2xl border border-white/40 bg-white/10 backdrop-blur-md px-7 py-4 text-sm font-bold text-white hover:bg-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 cursor-pointer shadow-lg"
             >
-              <span>Instant Demo Access</span>
+              <span>{t("instantDemoAccess") || "Instant Demo Access"}</span>
             </button>
           </div>
-        </div>
+        </ZoomFadeReveal>
       </section>
 
       {/* =========================================================
-          10. FOOTER
+          10. FOOTER (CLEAN & MINIMAL)
          ========================================================= */}
-      <footer className="border-t border-[#DCE8D9] bg-white py-12 text-xs text-gray-500">
+      <footer className="border-t border-[#DCE8D9] dark:border-[#24402A] bg-white dark:bg-[#0D1710] py-12 text-xs text-gray-500 dark:text-gray-400">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {/* BRAND */}
             <div className="space-y-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2E7D32] text-white">
+                <div className="km-morph-icon flex h-9 w-9 items-center justify-center bg-[#2E7D32] text-white shadow-sm">
                   <Sprout size={20} />
                 </div>
-                <span className="text-base font-extrabold text-[#1B5E20]">KrushiMitra</span>
+                <span className="text-base font-black text-[#1B5E20] dark:text-[#4ADE80]">KrushiMitra</span>
               </div>
               <p className="text-[11px] leading-relaxed">
                 Empowering Indian Kisans with machine learning crop recommendations, yield forecasting, and meteorological intelligence.
@@ -1037,26 +1648,26 @@ export default function Landing({ nav }) {
 
             {/* QUICK LINKS */}
             <div>
-              <h4 className="font-bold text-gray-800 mb-2.5">Platform Tools</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("platformTools") || "Platform Tools"}</h4>
               <ul className="space-y-2">
                 <li>
-                  <button onClick={() => (user ? nav?.("prediction") : nav?.("login"))} className="hover:text-[#2E7D32] cursor-pointer">
-                    Crop Yield Prediction
+                  <button onClick={() => (user ? nav?.("prediction") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
+                    {t("cropPrediction") || "Crop Yield Prediction"}
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => (user ? nav?.("recommendation") : nav?.("login"))} className="hover:text-[#2E7D32] cursor-pointer">
-                    Soil Nutrient Recommendation
+                  <button onClick={() => (user ? nav?.("recommendation") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
+                    {t("cropRecommendation") || "Soil Nutrient Advisory"}
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => (user ? nav?.("weather") : nav?.("login"))} className="hover:text-[#2E7D32] cursor-pointer">
-                    District Weather Advisory
+                  <button onClick={() => (user ? nav?.("weather") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
+                    {t("weather") || "District Weather Advisory"}
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => (user ? nav?.("reports") : nav?.("login"))} className="hover:text-[#2E7D32] cursor-pointer">
-                    Official PDF Export
+                  <button onClick={() => (user ? nav?.("reports") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
+                    {t("reports") || "Official PDF Export"}
                   </button>
                 </li>
               </ul>
@@ -1064,12 +1675,20 @@ export default function Landing({ nav }) {
 
             {/* FARMER RESOURCES */}
             <div>
-              <h4 className="font-bold text-gray-800 mb-2.5">Farmer Support</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("farmerSupport") || "Farmer Support"}</h4>
               <ul className="space-y-2">
                 <li>
                   <span className="flex items-center gap-1">
-                    <PhoneCall size={12} className="text-[#2E7D32]" /> Kisan Helpline: 1800-180-1551
+                    <PhoneCall size={12} className="text-[#2E7D32] dark:text-[#4ADE80]" /> {t("kisanHelpline") || "Kisan Helpline"}: 1800-180-1551
                   </span>
+                </li>
+                <li>
+                  <a
+                    href="mailto:krushimitra.project1@gmail.com"
+                    className="flex items-center gap-1 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] transition"
+                  >
+                    <Mail size={12} className="text-[#2E7D32] dark:text-[#4ADE80]" /> krushimitra.project1@gmail.com
+                  </a>
                 </li>
                 <li>
                   <span>IMD Mausam Weather Feed</span>
@@ -1083,37 +1702,36 @@ export default function Landing({ nav }) {
               </ul>
             </div>
 
-            {/* AUTH & ADMIN */}
+            {/* AUTH ACCESS */}
             <div>
-              <h4 className="font-bold text-gray-800 mb-2.5">Account Access</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("accountAccess") || "Account Access"}</h4>
               <div className="space-y-2">
                 <button
                   type="button"
                   onClick={() => nav?.("login")}
-                  className="key-cap w-full text-center py-1.5 text-[11px]"
+                  className="key-cap w-full text-center py-2 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer"
                 >
-                  Farmer & Admin Login
+                  {t("signIn") || "Sign In to Account"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleQuickDemo("admin")}
-                  className="key-cap w-full text-center py-1.5 text-[11px]"
+                  onClick={() => nav?.("register")}
+                  className="btn-shimmer w-full text-center py-2 text-[11px] font-bold text-white bg-[#2E7D32] rounded-xl hover:bg-[#1B5E20] cursor-pointer shadow-xs hover:scale-102"
                 >
-                  Super-Admin Demo
+                  {t("getStarted") || "Register New Farmer"}
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-10 border-t border-[#EEF2EC] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+          <div className="mt-10 border-t border-[#DCE8D9] dark:border-[#24402A] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
             <p>© {new Date().getFullYear()} KrushiMitra AI. Built for Indian Agriculture & Sustainable Farming.</p>
-            <div className="flex items-center gap-4">
-              <span className="text-emerald-700 font-semibold">● SQLite Persistent DB Online</span>
-              <span className="text-[#2E7D32] font-semibold">● 95.2% ML Engine Ready</span>
-            </div>
           </div>
         </div>
       </footer>
+
+      {/* KRUSHIMITRA MULTILINGUAL VOICE CHATBOT */}
+      <VoiceChatbot />
     </div>
   );
 }

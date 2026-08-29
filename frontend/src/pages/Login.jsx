@@ -8,8 +8,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-  Wheat,
-  UserCheck,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -56,30 +54,6 @@ export default function Login({ nav }) {
       nav("dashboard");
     } else {
       setError(result.message || "Invalid credentials. Please verify your email and password.");
-    }
-  };
-
-  const handleQuickDemo = async (demoType) => {
-    if (demoType === "farmer") {
-      setForm({
-        email: "ramesh.patil@krushimitra.in",
-        password: "password123",
-        rememberMe: true,
-      });
-      setIsLoading(true);
-      await apiLogin("ramesh.patil@krushimitra.in", "password123");
-      setIsLoading(false);
-      nav("dashboard");
-    } else if (demoType === "admin") {
-      setForm({
-        email: "admin@krushimitra.in",
-        password: "adminpassword",
-        rememberMe: true,
-      });
-      setIsLoading(true);
-      await apiLogin("admin@krushimitra.in", "adminpassword");
-      setIsLoading(false);
-      nav("dashboard");
     }
   };
 
@@ -232,7 +206,7 @@ export default function Login({ nav }) {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-shimmer mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(46,125,50,0.3)] active:scale-95 disabled:opacity-75 cursor-pointer"
+              className="btn-shimmer btn-glow mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(46,125,50,0.3)] active:scale-95 disabled:opacity-75 cursor-pointer"
             >
               {isLoading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -244,35 +218,6 @@ export default function Login({ nav }) {
               )}
             </button>
           </form>
-
-          {/* QUICK DEMO LOGIN PILLS */}
-          <div className="mt-6 rounded-2xl bg-[#F4F9F2] p-3.5 border border-[#E0EFE0]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#2E7D32] flex items-center gap-1">
-                <Wheat size={13} /> Quick Demo Access
-              </span>
-              <span className="text-[10px] text-gray-500">1-click test login</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo("farmer")}
-                className="key-cap flex items-center justify-center gap-1.5 rounded-xl bg-white border border-[#D0E6D2] px-2.5 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-[#2E7D32] hover:text-white hover:border-[#2E7D32] active:scale-95 cursor-pointer"
-              >
-                <UserCheck size={14} />
-                <span>Demo Farmer</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemo("admin")}
-                className="key-cap flex items-center justify-center gap-1.5 rounded-xl bg-white border border-[#D0E6D2] px-2.5 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-[#1E293B] hover:text-white hover:border-[#1E293B] active:scale-95 cursor-pointer"
-              >
-                <ShieldCheck size={14} />
-                <span>Demo Admin</span>
-              </button>
-            </div>
-          </div>
 
           {/* REGISTER LINK */}
           <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">

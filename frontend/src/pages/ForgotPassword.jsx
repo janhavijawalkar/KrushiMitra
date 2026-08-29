@@ -5,30 +5,23 @@ import {
   Mail,
   Sprout,
   KeyRound,
-  LockKeyhole,
-  Eye,
-  EyeOff,
-  Sparkles,
-  ArrowRight,
   ShieldCheck,
+  Send,
+  ExternalLink,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
 
 export default function ForgotPassword({ nav }) {
-  const { t, language, changeLanguage } = useApp();
+  const { t, language, changeLanguage, apiForgotPassword } = useApp();
 
-  // Steps: 1 = Email, 2 = OTP, 3 = New Password, 4 = Success
-  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [devInfo, setDevInfo] = useState(null);
 
-  const handleSendOtp = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -38,56 +31,30 @@ export default function ForgotPassword({ nav }) {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await apiForgotPassword(email);
       setLoading(false);
-      setStep(2);
-    }, 400);
-  };
 
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!otp.trim() || otp.length < 4) {
-      setError("Please enter the 6-digit verification code sent to your email.");
-      return;
-    }
-
-    setLoading(true);
-    setTimeout(() => {
+      if (res.success) {
+        setSubmitted(true);
+        if (res.dev_token || res.dev_reset_url) {
+          setDevInfo({
+            token: res.dev_token,
+            url: res.dev_reset_url,
+            isSmtpLive: res.is_smtp_live,
+          });
+        }
+      } else {
+        setError(res.message || "Failed to send reset email. Please try again.");
+      }
+    } catch (err) {
       setLoading(false);
-      setStep(3);
-    }, 400);
-  };
-
-  const handleResetPassword = (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!password || !confirmPassword) {
-      setError("Please enter and confirm your new password.");
-      return;
+      setError("Server connection error. Please ensure backend is running.");
     }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setStep(4);
-    }, 450);
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#EAF5E8] via-[#F4F9F2] to-[#E2F3E7] px-4 py-8">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#EAF5E8] via-[#F4F9F2] to-[#E2F3E7] dark:from-[#0D1710] dark:via-[#112015] dark:to-[#0D1710] px-4 py-8">
       {/* Ambient background glows */}
       <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-[#2E7D32]/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-20 h-96 w-96 rounded-full bg-[#10B981]/15 blur-3xl" />
@@ -98,17 +65,19 @@ export default function ForgotPassword({ nav }) {
           <button
             type="button"
             onClick={() => nav?.("landing")}
-            className="key-cap flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
+            className="key-cap flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] dark:text-[#4ADE80] hover:underline cursor-pointer"
           >
-            <span>← Home</span>
+            <span>← {t("home") || "Home"}</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-medium hidden sm:inline">🌐 {t("language") || "Language"}:</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium hidden sm:inline">
+              🌐 {t("language") || "Language"}:
+            </span>
             <select
               value={language}
               onChange={(e) => changeLanguage(e.target.value)}
-              className="key-cap px-2.5 py-1 text-xs font-bold text-[#2E7D32] outline-none cursor-pointer"
+              className="key-cap px-2.5 py-1 text-xs font-bold text-[#2E7D32] dark:text-[#4ADE80] outline-none cursor-pointer"
             >
               <option value="en">English (EN)</option>
               <option value="hi">हिन्दी (HI)</option>
@@ -118,102 +87,59 @@ export default function ForgotPassword({ nav }) {
         </div>
 
         {/* CARD */}
-        <div className="rounded-3xl border border-[#DCE8D9] bg-white/95 p-7 sm:p-9 shadow-[0_20px_60px_rgba(46,125,50,0.12)] backdrop-blur-sm">
+        <div className="rounded-3xl border border-[#DCE8D9] dark:border-[#24402A] bg-white/95 dark:bg-[#152319]/95 p-7 sm:p-9 shadow-[0_20px_60px_rgba(46,125,50,0.12)] backdrop-blur-sm">
           {/* BRAND HEADER */}
-          <div className="mb-5 text-center">
+          <div className="mb-6 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2E7D32] via-[#16A34A] to-[#10B981] text-white shadow-[0_8px_22px_rgba(46,125,50,0.25)]">
               <Sprout size={30} />
             </div>
 
-            <h1 className="mt-3 text-2xl font-extrabold text-[#1B5E20]">
+            <h1 className="mt-3 text-2xl font-extrabold text-[#1B5E20] dark:text-[#4ADE80]">
               KrushiMitra
             </h1>
 
-            <p className="mt-0.5 text-xs text-gray-500 font-medium">
-              {t("aiPoweredAgriculture") || "AI-Powered Agriculture Platform"}
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
+              {t("aiPoweredAgriculture") || "Smart AI Agriculture Platform"}
             </p>
           </div>
 
-          {/* STEP INDICATOR */}
-          {step < 4 && (
-            <div className="mb-6 flex items-center justify-between px-4">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                    step >= 1
-                      ? "bg-[#2E7D32] text-white shadow-sm"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  1
-                </div>
-                <span className="text-[11px] font-semibold text-gray-600">Email</span>
-              </div>
-              <div className="h-0.5 flex-1 mx-2 bg-[#DCE8D9]" />
-              <div className="flex items-center gap-2">
-                <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                    step >= 2
-                      ? "bg-[#2E7D32] text-white shadow-sm"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  2
-                </div>
-                <span className="text-[11px] font-semibold text-gray-600">Code</span>
-              </div>
-              <div className="h-0.5 flex-1 mx-2 bg-[#DCE8D9]" />
-              <div className="flex items-center gap-2">
-                <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                    step >= 3
-                      ? "bg-[#2E7D32] text-white shadow-sm"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  3
-                </div>
-                <span className="text-[11px] font-semibold text-gray-600">Reset</span>
-              </div>
-            </div>
-          )}
-
-          {/* ERROR ALERT */}
-          {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-xs sm:text-sm font-medium text-red-700">
-              <span className="h-2 w-2 rounded-full bg-red-500" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* STEP 1: ENTER EMAIL */}
-          {step === 1 && (
+          {!submitted ? (
             <div>
-              <div className="mb-5">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Forgot Password?
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-[#2E7D32] dark:text-[#4ADE80]">
+                  <KeyRound size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {t("forgotPassword") || "Forgot Your Password?"}
                 </h2>
-                <p className="mt-0.5 text-xs sm:text-sm text-gray-500">
-                  Enter your registered farmer email to receive a password reset verification code.
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                  {t("forgotPasswordSub") || "Enter your registered farmer email. We will send you a secure link to reset your password."}
                 </p>
               </div>
 
-              <form onSubmit={handleSendOtp} className="space-y-4">
+              {error && (
+                <div className="mb-4 rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 animate-pop">
+                  ⚠️ {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs sm:text-sm font-semibold text-gray-700">
-                    {t("emailLabel") || "Email Address"}
+                  <label className="mb-1 block text-xs font-bold text-gray-700 dark:text-gray-300">
+                    {t("registeredEmail") || "Registered Email Address"}
                   </label>
                   <div className="relative">
                     <Mail
-                      size={18}
+                      size={16}
                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
                     />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={t("enterYourEmail") || "e.g. farmer@krushimitra.in"}
-                      className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-3 pl-11 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
+                      placeholder="farmer@krushimitra.in"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-[#F6F8F4] dark:bg-[#183321] py-2.5 pl-10 pr-4 text-xs text-gray-900 dark:text-white outline-none transition focus:border-[#2E7D32] focus:bg-white dark:focus:bg-[#152319]"
+                      required
                     />
                   </div>
                 </div>
@@ -221,214 +147,104 @@ export default function ForgotPassword({ nav }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-shimmer flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-75 cursor-pointer"
+                  className="btn-shimmer flex w-full items-center justify-center gap-2 rounded-xl bg-[#2E7D32] py-3 text-xs font-bold text-white shadow-md hover:bg-[#1B5E20] transition disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Sending Reset Link...</span>
                   ) : (
                     <>
-                      <span>Send Verification Code</span>
-                      <ArrowRight size={16} />
+                      <Send size={14} />
+                      <span>{t("sendResetLink") || "Send Password Reset Link"}</span>
                     </>
                   )}
                 </button>
               </form>
             </div>
-          )}
-
-          {/* STEP 2: VERIFY CODE */}
-          {step === 2 && (
-            <div>
-              <div className="mb-5">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Enter Verification Code
-                </h2>
-                <p className="mt-0.5 text-xs sm:text-sm text-gray-500">
-                  We sent a 6-digit code to <strong className="text-gray-700">{email}</strong>
-                </p>
+          ) : (
+            <div className="text-center animate-page-enter">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950 text-[#2E7D32] dark:text-[#4ADE80] shadow-sm">
+                <CheckCircle2 size={32} />
               </div>
 
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs sm:text-sm font-semibold text-gray-700">
-                      Verification Code
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setOtp("482910")}
-                      className="key-cap text-[10px] py-0.5 px-2 font-bold text-[#2E7D32]"
-                    >
-                      Fill Demo Code (482910)
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <KeyRound
-                      size={18}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                      placeholder="Enter 6-digit code"
-                      className="w-full tracking-widest text-center rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-3 pl-11 text-base font-bold text-gray-800 outline-none transition focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="key-cap w-1/3 rounded-xl py-3 text-xs font-bold text-gray-700 cursor-pointer"
-                  >
-                    Back
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-shimmer flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-75 cursor-pointer"
-                  >
-                    {loading ? (
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <>
-                        <span>Verify & Continue</span>
-                        <ArrowRight size={16} />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* STEP 3: SET NEW PASSWORD */}
-          {step === 3 && (
-            <div>
-              <div className="mb-5">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Create New Password
-                </h2>
-                <p className="mt-0.5 text-xs sm:text-sm text-gray-500">
-                  Please choose a strong password for your account.
-                </p>
-              </div>
-
-              <form onSubmit={handleResetPassword} className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-xs sm:text-sm font-semibold text-gray-700">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <LockKeyhole
-                      size={18}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter new password (min. 6 characters)"
-                      className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-3 pl-11 pr-11 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2E7D32]"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs sm:text-sm font-semibold text-gray-700">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <LockKeyhole
-                      size={18}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter new password"
-                      className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-3 pl-11 pr-11 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2E7D32]"
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-shimmer flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-75 cursor-pointer"
-                >
-                  {loading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <>
-                      <span>Reset Password</span>
-                      <CheckCircle2 size={16} />
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* STEP 4: SUCCESS CONFIRMATION */}
-          {step === 4 && (
-            <div className="text-center py-2 animate-pop">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E5F7EA] text-[#2E7D32] shadow-sm animate-float">
-                <CheckCircle2 size={36} />
-              </div>
-
-              <h2 className="mt-4 text-xl font-extrabold text-gray-800">
-                Password Successfully Reset!
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                Password Reset Link Dispatched!
               </h2>
 
-              <p className="mt-2 text-xs sm:text-sm text-gray-500">
-                Your password for <strong className="text-gray-700">{email}</strong> has been updated. You can now log in with your new credentials.
+              <p className="mt-2 text-xs text-gray-600 dark:text-gray-300 leading-relaxed max-w-sm mx-auto">
+                We have sent secure password reset instructions to{" "}
+                <strong className="text-[#1B5E20] dark:text-[#4ADE80] font-bold">{email}</strong>.
               </p>
 
-              <button
-                type="button"
-                onClick={() => nav("login")}
-                className="btn-shimmer mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(46,125,50,0.25)] transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
-              >
-                <span>Proceed to Login</span>
-                <ArrowRight size={16} />
-              </button>
+              <div className="my-5 rounded-2xl bg-emerald-50/80 dark:bg-[#183321]/60 border border-emerald-200 dark:border-emerald-800 p-4 text-left text-xs text-emerald-900 dark:text-emerald-200 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-[#1B5E20] dark:text-[#4ADE80]">
+                  <ShieldCheck size={16} />
+                  <span>Security Information:</span>
+                </div>
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-gray-600 dark:text-gray-300">
+                  <li>The reset link is active for <strong>60 minutes</strong>.</li>
+                  <li>Check your <strong>Spam / Junk</strong> folder if not visible in primary inbox.</li>
+                  <li>Each reset link can only be used once for safety.</li>
+                </ul>
+              </div>
+
+              {/* SMTP LIVE CONFIRMATION or DEV HELPER */}
+              {devInfo?.isSmtpLive ? (
+                <div className="my-4 rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 p-4 text-center text-xs text-emerald-800 dark:text-emerald-300 animate-pop">
+                  <p className="font-bold flex items-center justify-center gap-1.5 text-[#1B5E20] dark:text-[#4ADE80] text-sm">
+                    <Mail size={16} />
+                    <span>Real Email Dispatched via SMTP</span>
+                  </p>
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                    A password reset email from <strong className="text-gray-900 dark:text-white">krushimitra.project1@gmail.com</strong> has been delivered to your inbox.
+                  </p>
+                </div>
+              ) : devInfo?.token ? (
+                <div className="my-4 rounded-xl border border-dashed border-emerald-400 bg-[#F4F9F2] dark:bg-[#112015] p-3.5 text-left text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#1B5E20] dark:text-[#4ADE80]">
+                      🛠️ Instant Reset Link (Dev Preview):
+                    </span>
+                    <span className="text-[10px] text-gray-500">Auto Generated</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      nav?.("reset-password", { token: devInfo.token });
+                    }}
+                    className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#2E7D32] px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
+                  >
+                    <span>Click to Set New Password Now</span>
+                    <ExternalLink size={13} />
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="mt-6 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitted(false);
+                    setError("");
+                  }}
+                  className="text-xs font-bold text-gray-500 hover:text-[#2E7D32] dark:text-gray-400 dark:hover:text-[#4ADE80] transition cursor-pointer"
+                >
+                  Did not receive email? Resend request
+                </button>
+              </div>
             </div>
           )}
 
           {/* BACK TO LOGIN FOOTER */}
-          {step !== 4 && (
-            <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">
-              <button
-                type="button"
-                onClick={() => nav("login")}
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#2E7D32] hover:text-[#1B5E20] hover:underline focus:outline-none cursor-pointer"
-              >
-                <ArrowLeft size={15} />
-                <span>Back to {t("login") || "Login"}</span>
-              </button>
-            </div>
-          )}
+          <div className="mt-6 border-t border-gray-200 dark:border-gray-700/60 pt-4 text-center">
+            <button
+              type="button"
+              onClick={() => nav?.("login")}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] dark:text-[#4ADE80] hover:underline cursor-pointer"
+            >
+              <ArrowLeft size={13} />
+              <span>{t("backToLogin") || "Back to Login"}</span>
+            </button>
+          </div>
         </div>
 
         {/* SECURITY NOTE */}

@@ -17,6 +17,8 @@ import {
   FileText,
   Clock,
   ArrowRight,
+  TrendingUp,
+  Lock,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -311,11 +313,11 @@ export default function Topbar({ title, nav }) {
                   type="button"
                   onClick={() => {
                     setShowNotifications(false);
-                    nav?.("reports");
+                    nav?.("notifications");
                   }}
                   className="font-bold text-[#2E7D32] hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <span>View reports</span>
+                  <span>All notifications</span>
                   <ArrowRight size={12} />
                 </button>
               </div>
@@ -344,7 +346,7 @@ export default function Topbar({ title, nav }) {
                 {userName}
               </p>
               <p className="text-[10px] font-medium text-gray-400">
-                {userRole}
+                {userRole === "Admin" ? (t("superAdminBadge") || "Super-Admin") : (t("farmer") || "Farmer")}
               </p>
             </div>
 
@@ -368,7 +370,7 @@ export default function Topbar({ title, nav }) {
                   {userEmail}
                 </p>
                 <span className="mt-1.5 inline-block rounded-full bg-[#E5F7EA] px-2 py-0.5 text-[9px] font-bold text-[#2E7D32]">
-                  🌾 {userRole}
+                  🌾 {userRole === "Admin" ? (t("superAdminBadge") || "Super-Admin") : (t("farmer") || "Farmer")}
                 </span>
               </div>
 
@@ -383,7 +385,7 @@ export default function Topbar({ title, nav }) {
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 transition hover:bg-[#F0F8ED] hover:text-[#2E7D32] cursor-pointer"
                 >
                   <User size={15} className="text-[#2E7D32]" />
-                  <span>Farmer Profile Details</span>
+                  <span>{t("myProfile") || "Farmer Profile Details"}</span>
                 </button>
 
                 <button
@@ -395,7 +397,7 @@ export default function Topbar({ title, nav }) {
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 transition hover:bg-[#F0F8ED] hover:text-[#2E7D32] cursor-pointer"
                 >
                   <SettingsIcon size={15} className="text-[#2E7D32]" />
-                  <span>Settings & Appearance</span>
+                  <span>{t("settings") || "Settings & Appearance"}</span>
                 </button>
 
                 {user?.role === "Admin" && (
@@ -408,7 +410,7 @@ export default function Topbar({ title, nav }) {
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 transition hover:bg-[#F0F8ED] hover:text-[#2E7D32] cursor-pointer"
                   >
                     <Shield size={15} className="text-[#2E7D32]" />
-                    <span>Admin & RBAC Controls</span>
+                    <span>{t("admin") || "Admin & RBAC Controls"}</span>
                   </button>
                 )}
               </div>
@@ -424,7 +426,7 @@ export default function Topbar({ title, nav }) {
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-red-600 transition hover:bg-red-50 cursor-pointer"
                 >
                   <LogOut size={15} />
-                  <span>Sign Out</span>
+                  <span>{t("logout") || "Sign Out"}</span>
                 </button>
               </div>
             </div>

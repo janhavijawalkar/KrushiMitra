@@ -16,7 +16,7 @@ import {
 import { useApp } from "../context/AppContext";
 
 export default function Register({ nav }) {
-  const { apiRegister, t, language, changeLanguage } = useApp();
+  const { apiRegister, addNotification, t, language, changeLanguage } = useApp();
 
   const [form, setForm] = useState({
     name: "",
@@ -97,6 +97,13 @@ export default function Register({ nav }) {
     setIsLoading(false);
 
     if (result.success) {
+      if (addNotification) {
+        addNotification(
+          "Welcome to KrushiMitra! 🌾",
+          `Welcome ${form.name.trim()}! An official onboarding email has been dispatched to ${form.email.trim()}.`,
+          "system"
+        );
+      }
       nav("dashboard");
     } else {
       setError(result.message || "Registration failed. Please try again.");

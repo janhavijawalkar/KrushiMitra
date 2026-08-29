@@ -18,8 +18,15 @@ import {
   Trash2,
   CheckCircle2,
   BookOpen,
-  Cpu,
-  Database,
+  Sprout,
+  TrendingUp,
+  CloudSun,
+  FileText,
+  Award,
+  Users,
+  Target,
+  ShieldCheck,
+  Lock,
   ExternalLink,
   LifeBuoy,
 } from "lucide-react";
@@ -68,16 +75,27 @@ export default function Settings() {
     showFeedback(`Font size updated to ${newSize.toUpperCase()}`);
   };
 
-  const handleSupportSubmit = (e) => {
+  const handleSupportSubmit = async (e) => {
     e.preventDefault();
     if (!ticketForm.subject.trim() || !ticketForm.message.trim()) {
       return;
     }
 
-    const created = submitSupportTicket(ticketForm);
-    setTicketSuccess(`Support request submitted! Ticket ID: ${created.id}`);
-    setTicketForm({ subject: "", category: "Crop Prediction", message: "" });
-    setTimeout(() => setTicketSuccess(""), 5000);
+    try {
+      const created = await submitSupportTicket(ticketForm);
+      const ticketId = created?.ticket_id || created?.id || "TICK-" + Date.now().toString().slice(-6);
+      setTicketSuccess(
+        language === "mr"
+          ? `आपली विनंती यशस्वीपणे पाठवली गेली! तिकीट आयडी: ${ticketId}`
+          : language === "hi"
+          ? `आपका अनुरोध सफलतापूर्वक भेज दिया गया! टिकट आईडी: ${ticketId}`
+          : `Support request submitted! Ticket ID: ${ticketId}`
+      );
+      setTicketForm({ subject: "", category: "Crop Prediction", message: "" });
+      setTimeout(() => setTicketSuccess(""), 6000);
+    } catch (err) {
+      showFeedback("Failed to submit support inquiry.");
+    }
   };
 
   const handleResetData = () => {
@@ -94,14 +112,48 @@ export default function Settings() {
     { id: "privacy", icon: Shield, label: t("privacy") || "Privacy & Storage" },
   ];
 
-  const faqs = [
+  const faqs = language === "mr" ? [
     {
-      q: "How does the Crop Recommendation model work?",
-      a: "The Crop Recommendation engine utilizes a Random Forest classifier trained on thousands of agricultural soil records. It evaluates Soil Nitrogen (N), Phosphorus (P), Potassium (K), Soil pH, Ambient Temperature, Humidity, and Rainfall to determine the optimal crop with an accuracy exceeding 95%.",
+      q: "पीक शिफारस प्रणाली कशी काम करते?",
+      a: "पीक शिफारस प्रणाली आपल्या शेतातील माती घटकांचे (N, P, K, pH) आणि हवामानाचे (तापमान, आर्द्रता, पाऊस) विश्लेषण करून आपल्या जमिनीसाठी सर्वात योग्य व फायदेशीर पिकाची शिफारस करते.",
+    },
+    {
+      q: "पीक उत्पादकता / उत्पन्न अंदाज कसा काढला जातो?",
+      a: "महाराष्ट्रातील विविध जिल्ह्यांच्या शेतीविषयक माहितीच्या आधारे जिल्हा, पीक, हंगाम, क्षेत्रफळ, पाऊस आणि तापमानाचा विचार करून हेक्टरी अंदाजित उत्पादन (टन/हेक्टर) काढले जाते.",
+    },
+    {
+      q: "अधिकृत शेती PDF अहवाल कसा डाउनलोड करावा?",
+      a: "अहवाल (Reports) किंवा इतिहास (History) पानावर जाऊन 'PDF डाऊनलोड करा' किंवा 'संपूर्ण शेती अहवाल बंडल' बटनावर क्लिक करा. आपल्या शेताचा प्रमाणित A4 PDF अहवाल तयार होईल.",
+    },
+    {
+      q: "हवामानाची माहिती कुठून मिळवली जाते?",
+      a: "थेट हवामान माहिती OpenWeatherMap API द्वारे रिअल-टाइममध्ये मिळवली जाते, ज्यामध्ये तापमान, आर्द्रता, वारा आणि पावसाचा अचूक अंदाज समाविष्ट असतो.",
+    },
+  ] : language === "hi" ? [
+    {
+      q: "फसल सिफारिश प्रणाली कैसे काम करती है?",
+      a: "फसल सिफारिश प्रणाली खेत की मिट्टी के घटकों (N, P, K, pH) और मौसम (तापमान, आर्द्रता, वर्षा) का विश्लेषण करके आपकी भूमि के लिए सर्वोत्तम फसल की सिफारिश करती है।",
+    },
+    {
+      q: "फसल उपज / उत्पादकता पूर्वानुमान कैसे काम करता है?",
+      a: "महाराष्ट्र के जिलावार कृषि डेटा के आधार पर जिला, फसल, मौसम, बुवाई क्षेत्रफल, वर्षा और तापमान को ध्यान में रखकर अपेक्षित फसल उत्पादन (टन/हेक्टेयर) का अनुमान लगाया जाता है।",
+    },
+    {
+      q: "आधिकारिक कृषि पीडीएफ रिपोर्ट कैसे डाउनलोड करें?",
+      a: "रिपोर्ट्स (Reports) या इतिहास (History) पृष्ठ पर जाकर 'पीडीएफ डाउनलोड करें' बटन पर क्लिक करें। आपका आधिकारिक A4 कृषि दस्तावेज तुरंत तैयार हो जाएगा।",
+    },
+    {
+      q: "मौसम का पूर्वानुमान कहाँ से प्राप्त होता है?",
+      a: "वास्तविक समय का मौसम डेटा OpenWeatherMap API के माध्यम से प्राप्त किया जाता है, जिसमें तापमान, आर्द्रता, हवा की गति और वर्षा की जानकारी शामिल है।",
+    },
+  ] : [
+    {
+      q: "How does the Crop Recommendation engine work?",
+      a: "The Crop Recommendation engine analyzes agricultural soil records. It evaluates Soil Nitrogen (N), Phosphorus (P), Potassium (K), Soil pH, Ambient Temperature, Humidity, and Rainfall to determine the optimal crop for your farmland.",
     },
     {
       q: "How does the Crop Productivity / Yield predictor work?",
-      a: "Yield predictions are calculated using a Random Forest regressor with historical district-level datasets in Maharashtra. It takes district name, crop type, year, season, cultivated area, rainfall, and max temperature to output expected yield in tonnes per hectare.",
+      a: "Yield predictions are calculated using regional agricultural datasets across Maharashtra. It takes district name, crop type, year, season, cultivated area, rainfall, and temperature to estimate expected harvest productivity in tonnes per hectare.",
     },
     {
       q: "How do I export official farm reports in PDF?",
@@ -159,7 +211,7 @@ export default function Settings() {
         </div>
 
         {/* SETTINGS CONTENT CONTAINER */}
-        <div className="rounded-3xl border border-[#DCE8D9] bg-white p-6 sm:p-8 shadow-sm">
+        <div key={section} className="rounded-3xl border border-[#DCE8D9] bg-white p-6 sm:p-8 shadow-sm animate-fade-in-up">
           {/* =========================================================
               1. APPEARANCE & THEME
              ========================================================= */}
@@ -178,14 +230,14 @@ export default function Settings() {
               <div>
                 <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                   <Palette size={16} className="text-[#2E7D32]" />
-                  <span>Color Theme</span>
+                  <span>{language === "mr" ? "रंग थीम निवडा" : language === "hi" ? "रंग थीम चुनें" : "Color Theme"}</span>
                 </h3>
 
                 <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                   {[
-                    { id: "light", icon: Sun, label: t("lightMode") || "Light Forest", desc: "Crisp emerald daytime palette" },
-                    { id: "dark", icon: Moon, label: t("darkMode") || "Dark Midnight", desc: "High contrast dark emerald theme" },
-                    { id: "auto", icon: Laptop, label: t("systemDefault") || "System Sync", desc: "Matches device operating system" },
+                    { id: "light", icon: Sun, label: t("lightMode") || "Light Forest", desc: language === "mr" ? "हिरवा प्रसन्न दिवस मोड" : language === "hi" ? "उज्ज्वल हरा दिन मोड" : "Crisp emerald daytime palette" },
+                    { id: "dark", icon: Moon, label: t("darkMode") || "Dark Midnight", desc: language === "mr" ? "गडद हिरवा रात्र मोड" : language === "hi" ? "गहरा हरा रात मोड" : "High contrast dark emerald theme" },
+                    { id: "auto", icon: Monitor, label: t("systemDefault") || "System Sync", desc: language === "mr" ? "डिव्हाइसनुसार आपोआप" : language === "hi" ? "डिवाइस अनुसार स्वचालित" : "Matches device operating system" },
                   ].map((item) => {
                     const Icon = item.icon;
                     const isSelected = theme === item.id;
@@ -217,7 +269,7 @@ export default function Settings() {
                         </span>
                         {isSelected && (
                           <span className="mt-2.5 flex items-center gap-1 text-[10px] font-bold text-[#2E7D32]">
-                            <Check size={13} /> Active
+                            <Check size={13} /> {language === "mr" ? "सक्रिय" : language === "hi" ? "सक्रिय" : "Active"}
                           </span>
                         )}
                       </button>
@@ -229,14 +281,14 @@ export default function Settings() {
               {/* FONT SIZE SELECTOR */}
               <div className="pt-2 border-t border-[#EEF2EC]">
                 <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <span>Font Scaling</span>
+                  <span>{language === "mr" ? "फॉन्ट आकार स्केलिंग" : language === "hi" ? "फ़ॉन्ट आकार स्केलिंग" : "Font Scaling"}</span>
                 </h3>
 
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { id: "small", label: "Compact (Small)", sample: "14px" },
-                    { id: "medium", label: "Standard (Default)", sample: "15px" },
-                    { id: "large", label: "Accessible (Large)", sample: "16.5px" },
+                    { id: "small", label: language === "mr" ? "लहान (Compact)" : language === "hi" ? "छोटा (Compact)" : "Compact (Small)", sample: "14px" },
+                    { id: "medium", label: language === "mr" ? "मध्यम (Standard)" : language === "hi" ? "मध्यम (Standard)" : "Standard (Default)", sample: "15px" },
+                    { id: "large", label: language === "mr" ? "मोठा (Accessible)" : language === "hi" ? "बड़ा (Accessible)" : "Accessible (Large)", sample: "16.5px" },
                   ].map((item) => {
                     const isSelected = fontSize === item.id;
                     return (
@@ -261,7 +313,7 @@ export default function Settings() {
               {/* LIVE PREVIEW BOX */}
               <div className="rounded-2xl border border-[#DCE8D9] bg-[#F8FAF7] p-4.5">
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  Live Visual Preview
+                  {language === "mr" ? "थेट दृश्य पूर्वावलोकन" : language === "hi" ? "लाइव दृश्य पूर्वावलोकन" : "Live Visual Preview"}
                 </span>
                 <div className="mt-2 flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2E7D32] text-white">
@@ -269,10 +321,14 @@ export default function Settings() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-[#1B5E20]">
-                      KrushiMitra Precision Advisory
+                      {language === "mr" ? "कृषीमित्र अचूक कृषी सल्ला" : language === "hi" ? "कृषि-मित्र सटीक कृषि परामर्श" : "KrushiMitra Precision Advisory"}
                     </h4>
                     <p className="text-xs text-gray-600">
-                      The chosen theme and font size are applied in real-time across all prediction and reporting dashboards.
+                      {language === "mr"
+                        ? "निवडलेली थीम आणि फॉन्ट आकार सर्व अंदाज, शिफारसी आणि अहवाल पृष्ठांवर त्वरित लागू होतो."
+                        : language === "hi"
+                        ? "चुनी गई थीम और फ़ॉन्ट आकार सभी पूर्वानुमान, सिफारिश और रिपोर्ट पृष्ठों पर तुरंत लागू होता है।"
+                        : "The chosen theme and font size are applied in real-time across all prediction and reporting dashboards."}
                     </p>
                   </div>
                 </div>
@@ -290,15 +346,19 @@ export default function Settings() {
                   {t("language") || "Language & Regional Settings"}
                 </h2>
                 <p className="mt-1 text-xs text-gray-500">
-                  Select your primary language for farmer advisories, form labels, and notifications.
+                  {language === "mr"
+                    ? "शेती सल्ला, फॉर्म लेबल्स आणि सूचनांसाठी आपली मुख्य भाषा निवडा."
+                    : language === "hi"
+                    ? "कृषि सलाह, फॉर्म लेबल और सूचनाओं के लिए अपनी प्राथमिक भाषा चुनें।"
+                    : "Select your primary language for farmer advisories, form labels, and notifications."}
                 </p>
               </div>
 
               <div className="space-y-3 pt-2">
                 {[
                   { id: "en", native: "English", english: "English (Global)", badge: "EN", flag: "🌐" },
-                  { id: "hi", native: "हिन्दी", english: "Hindi (Rashtrabhasha)", badge: "HI", flag: "🇮🇳" },
-                  { id: "mr", native: "मराठी", english: "Marathi (Maharashtra Regional)", badge: "MR", flag: "🚩" },
+                  { id: "hi", native: "हिन्दी", english: "Hindi (राष्ट्रभाषा)", badge: "HI", flag: "🇮🇳" },
+                  { id: "mr", native: "मराठी", english: "Marathi (महाराष्ट्र प्रादेशिक)", badge: "MR", flag: "🚩" },
                 ].map((item) => {
                   const isSelected = language === item.id;
                   return (
@@ -352,7 +412,11 @@ export default function Settings() {
                   {t("helpSupport") || "Help & Farmer Support"}
                 </h2>
                 <p className="mt-1 text-xs text-gray-500">
-                  Get instant answers, view farming guides, or reach our agricultural AI support desk.
+                  {language === "mr"
+                    ? "त्वरित उत्तरे मिळवा, शेती मार्गदर्शक पहा किंवा आमच्या कृषी तज्ज्ञ मदत केंद्राशी संपर्क साधा."
+                    : language === "hi"
+                    ? "त्वरित उत्तर प्राप्त करें, कृषि मार्गदर्शिका देखें या हमारे कृषि विशेषज्ञ सहायता केंद्र से संपर्क करें।"
+                    : "Get instant answers, view farming guides, or reach our agricultural AI support desk."}
                 </p>
               </div>
 
@@ -363,20 +427,33 @@ export default function Settings() {
                     <PhoneCall size={20} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-700">Kisan Toll-Free Helpline</h4>
+                    <h4 className="text-xs font-bold text-gray-700">
+                      {language === "mr" ? "किसान टोल-फ्री हेल्पलाइन" : language === "hi" ? "किसान टोल-फ्री हेल्पलाइन" : "Kisan Toll-Free Helpline"}
+                    </h4>
                     <p className="text-sm font-extrabold text-[#1B5E20]">1800-180-1551</p>
-                    <p className="text-[10px] text-gray-500">Available 24x7 in All Languages</p>
+                    <p className="text-[10px] text-gray-500">
+                      {language === "mr" ? "२४x७ सर्व भाषांमध्ये उपलब्ध" : language === "hi" ? "24x7 सभी भाषाओं में उपलब्ध" : "Available 24x7 in All Languages"}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3.5 rounded-2xl border border-[#DCE8D9] bg-white p-4.5 shadow-sm">
+                <div className="flex items-center gap-3.5 rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-white dark:bg-[#152319] p-4.5 shadow-sm">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#10B981] text-white shadow-sm">
                     <MessageSquare size={20} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-700">Agronomist Email Support</h4>
-                    <p className="text-xs font-bold text-[#1B5E20]">support@krushimitra.gov.in</p>
-                    <p className="text-[10px] text-gray-500">Average response time: &lt; 2 hours</p>
+                    <h4 className="text-xs font-bold text-gray-700 dark:text-gray-200">
+                      {language === "mr" ? "कृषी तज्ज्ञ ईमेल सपोर्ट" : language === "hi" ? "कृषि विशेषज्ञ ईमेल सहायता" : "Agronomist Email Support"}
+                    </h4>
+                    <a
+                      href="mailto:krushimitra.project1@gmail.com"
+                      className="text-xs font-bold text-[#1B5E20] dark:text-[#4ADE80] hover:underline"
+                    >
+                      krushimitra.project1@gmail.com
+                    </a>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                      {language === "mr" ? "प्रतिसाद वेळ: २ तासांच्या आत" : language === "hi" ? "प्रतिक्रिया समय: 2 घंटे के भीतर" : "Average response time: < 2 hours"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -385,7 +462,7 @@ export default function Settings() {
               <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5">
                   <BookOpen size={16} className="text-[#2E7D32]" />
-                  <span>Frequently Asked Questions (FAQ)</span>
+                  <span>{t("faqHeading") || "Frequently Asked Questions (FAQ)"}</span>
                 </h3>
 
                 <div className="space-y-2.5">
@@ -423,10 +500,14 @@ export default function Settings() {
               <div className="rounded-2xl border border-[#DCE8D9] bg-[#FAFDF9] p-5">
                 <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-1.5">
                   <LifeBuoy size={16} className="text-[#2E7D32]" />
-                  <span>Submit Support or Agronomy Query</span>
+                  <span>{language === "mr" ? "मदत किंवा शेती विषयक प्रश्न विचारा" : language === "hi" ? "सहायता या कृषि संबंधी प्रश्न पूछें" : "Submit Support or Agronomy Query"}</span>
                 </h3>
                 <p className="text-xs text-gray-500 mb-4">
-                  Need help with prediction accuracy or farm data? Send a note to our tech team.
+                  {language === "mr"
+                    ? "आपल्या शेतीविषयक डेटा किंवा माती चाचणीबद्दल मदत हवी असल्यास आमच्या टीमला संदेश पाठवा."
+                    : language === "hi"
+                    ? "अपने कृषि डेटा या मृदा परीक्षण के संबंध में सहायता के लिए हमारी टीम को संदेश भेजें।"
+                    : "Need help with your farm data or soil advisories? Send a note to our support team."}
                 </p>
 
                 {ticketSuccess && (
@@ -439,7 +520,7 @@ export default function Settings() {
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                        Category
+                        {language === "mr" ? "विषय श्रेणी" : language === "hi" ? "श्रेणी" : "Category"}
                       </label>
                       <select
                         value={ticketForm.category}
@@ -448,17 +529,17 @@ export default function Settings() {
                         }
                         className="w-full rounded-xl border border-[#DCE8D9] bg-white px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
                       >
-                        <option value="Crop Prediction">Crop Yield Prediction</option>
-                        <option value="Recommendation">Crop Recommendation</option>
-                        <option value="Weather Service">Weather & Climate Service</option>
-                        <option value="PDF Reports">PDF Report Downloads</option>
-                        <option value="Other">General Agronomy Query</option>
+                        <option value="Crop Prediction">{language === "mr" ? "पीक उत्पादन अंदाज" : language === "hi" ? "फसल उपज पूर्वानुमान" : "Crop Yield Prediction"}</option>
+                        <option value="Recommendation">{language === "mr" ? "पीक शिफारस व माती सल्ला" : language === "hi" ? "फसल सिफारिश एवं मृदा सलाह" : "Crop Recommendation"}</option>
+                        <option value="Weather Service">{language === "mr" ? "हवामान सेवा" : language === "hi" ? "मौसम सेवा" : "Weather & Climate Service"}</option>
+                        <option value="PDF Reports">{language === "mr" ? "PDF अहवाल डाउनलोड" : language === "hi" ? "पीडीएफ रिपोर्ट डाउनलोड" : "PDF Report Downloads"}</option>
+                        <option value="Other">{language === "mr" ? "इतर सामान्य शेती प्रश्न" : language === "hi" ? "अन्य सामान्य कृषि प्रश्न" : "General Agronomy Query"}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                        Subject
+                        {language === "mr" ? "मुख्य विषय" : language === "hi" ? "विषय" : "Subject"}
                       </label>
                       <input
                         type="text"
@@ -467,7 +548,7 @@ export default function Settings() {
                         onChange={(e) =>
                           setTicketForm({ ...ticketForm, subject: e.target.value })
                         }
-                        placeholder="e.g. Yield prediction question for Soybean"
+                        placeholder={language === "mr" ? "उदा. सोयाबीन उत्पादन अंदाज प्रश्न" : language === "hi" ? "उदा. सोयाबीन उपज संबंधी प्रश्न" : "e.g. Yield prediction question for Soybean"}
                         className="w-full rounded-xl border border-[#DCE8D9] bg-white px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
                       />
                     </div>
@@ -475,7 +556,7 @@ export default function Settings() {
 
                   <div>
                     <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                      Message Details
+                      {language === "mr" ? "तपशीलवार संदेश" : language === "hi" ? "विस्तृत संदेश" : "Message Details"}
                     </label>
                     <textarea
                       rows={3}
@@ -484,7 +565,7 @@ export default function Settings() {
                       onChange={(e) =>
                         setTicketForm({ ...ticketForm, message: e.target.value })
                       }
-                      placeholder="Describe your query or feedback in detail..."
+                      placeholder={language === "mr" ? "आपला प्रश्न किंवा अभिप्राय सविस्तरपणे लिहा..." : language === "hi" ? "अपना प्रश्न या प्रतिक्रिया विस्तार से लिखें..." : "Describe your query or feedback in detail..."}
                       className="w-full rounded-xl border border-[#DCE8D9] bg-white p-3 text-xs outline-none focus:border-[#2E7D32]"
                     />
                   </div>
@@ -494,7 +575,7 @@ export default function Settings() {
                     className="btn-shimmer flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-6 py-2.5 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
                   >
                     <Send size={14} />
-                    <span>Send Message</span>
+                    <span>{language === "mr" ? "संदेश पाठवा" : language === "hi" ? "संदेश भेजें" : "Send Message"}</span>
                   </button>
                 </form>
               </div>
@@ -502,121 +583,232 @@ export default function Settings() {
           )}
 
           {/* =========================================================
-              4. ABOUT KRUSHIMITRA
+              4. ABOUT US — KRUSHIMITRA
              ========================================================= */}
           {section === "about" && (
-            <div className="space-y-6">
+            <div className="space-y-7">
+              {/* TITLE & INTRO */}
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  {t("aboutKrushiMitra") || "About KrushiMitra"}
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>🌱</span>
+                  <span>{t("aboutUsTitle") || "About Us — KrushiMitra"}</span>
                 </h2>
-                <p className="mt-1 text-xs text-gray-500">
-                  {t("aiAgriculturePlatform") || "Smart Precision Agriculture & Machine Learning Decision Support System"}
+                <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  {language === "mr"
+                    ? "स्मार्ट तंत्रज्ञान आणि अचूक माहितीच्या आधारे शेतीला सक्षम बनवणे."
+                    : language === "hi"
+                    ? "सटीक तकनीक और डेटा-संचालित निर्णयों के माध्यम से कृषि को सशक्त बनाना।"
+                    : "Empowering agriculture through intelligent technology and data-driven decisions."}
                 </p>
               </div>
 
-              {/* HERO CARD */}
-              <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-[#EAF5E8] via-[#F4F9F2] to-[#DFF3E4] p-6">
-                <div className="flex items-center gap-3 mb-3">
+              {/* ABOUT US HERO CARD */}
+              <div className="rounded-3xl border border-[#DCE8D9] dark:border-[#24402A] bg-gradient-to-br from-[#EAF5E8] via-[#F4F9F2] to-[#DFF3E4] dark:from-[#152319] dark:via-[#1B2F21] dark:to-[#122316] p-6 sm:p-7 shadow-xs space-y-4">
+                <div className="flex items-center gap-3.5">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2E7D32] to-[#10B981] text-white shadow-md">
-                    <Sparkles size={24} />
+                    <Sprout size={24} />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-[#1B5E20]">
-                      KrushiMitra • 2026 Edition
+                    <h3 className="text-base sm:text-lg font-extrabold text-[#1B5E20] dark:text-[#4ADE80]">
+                      {language === "mr" ? "कृषीमित्र स्मार्ट शेती प्लॅटफॉर्म" : language === "hi" ? "कृषि-मित्र स्मार्ट कृषि प्लेटफॉर्म" : "KrushiMitra Smart Agriculture Platform"}
                     </h3>
-                    <p className="text-xs text-gray-600 font-medium">
-                      Version 2.4.0 (Production Release)
+                    <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
+                      {language === "mr" ? "आधुनिक तंत्रज्ञान व अचूक शेतीचा संगम" : language === "hi" ? "आधुनिक तकनीक और सटीक कृषि का संगम" : "Bridging Modern Technology & Precision Agriculture"}
                     </p>
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  KrushiMitra is an intelligent pair-farming platform designed to empower Indian farmers, agronomists, and agricultural researchers with precision AI insights. It bridges the gap between field soil chemistry, atmospheric forecasts, and machine learning models to maximize crop yields while preserving long-term soil fertility.
-                </p>
-              </div>
-
-              {/* ARCHITECTURE & DATA SOURCES GRID */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#DCE8D9] bg-white p-4.5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Cpu size={18} className="text-[#2E7D32]" />
-                    <h4 className="text-xs font-bold text-gray-800">Trained ML Models</h4>
-                  </div>
-                  <ul className="text-xs text-gray-600 space-y-1.5 list-disc list-inside">
-                    <li><strong>Crop Recommendation:</strong> Random Forest Classifier with 95%+ precision.</li>
-                    <li><strong>Crop Productivity:</strong> Random Forest Regressor trained on regional agro-data.</li>
-                    <li><strong>Backend Runtime:</strong> Flask Python Server (RESTful API).</li>
-                  </ul>
-                </div>
-
-                <div className="rounded-2xl border border-[#DCE8D9] bg-white p-4.5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Database size={18} className="text-[#2E7D32]" />
-                    <h4 className="text-xs font-bold text-gray-800">Data Sources</h4>
-                  </div>
-                  <ul className="text-xs text-gray-600 space-y-1.5 list-disc list-inside">
-                    <li>Indian Council of Agricultural Research (ICAR)</li>
-                    <li>Ministry of Agriculture & Farmers Welfare datasets</li>
-                    <li>OpenWeatherMap Real-Time API</li>
-                  </ul>
+                <div className="space-y-3 text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <p>
+                    {t("aboutUsDesc1")}
+                  </p>
+                  <p>
+                    {t("aboutUsDesc2")}
+                  </p>
                 </div>
               </div>
 
-              {/* SPECIFICATION PILLS */}
-              <div className="rounded-2xl bg-[#F6F8F4] p-4 text-xs text-gray-600 space-y-2 border border-[#E2EAE0]">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-gray-700">Frontend Technology:</span>
-                  <span>React 19 + Vite + Tailwind CSS</span>
+              {/* 🎯 WHAT WE PROVIDE (4 SMALL CARDS) */}
+              <div>
+                <h3 className="text-base font-extrabold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                  <Target size={19} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                  <span>{language === "mr" ? "🎯 आम्ही काय सेवा देतो" : language === "hi" ? "🎯 हम क्या प्रदान करते हैं" : "🎯 What We Provide"}</span>
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* CARD 1: CROP RECOMMENDATION */}
+                  <div className="rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-white dark:bg-[#152319] p-5 shadow-xs transition hover:shadow-md">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F7EA] dark:bg-[#1E3825] text-[#2E7D32] dark:text-[#4ADE80] font-bold text-base">
+                        🌾
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                        {t("recommendation") || "Crop Recommendation"}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {language === "mr"
+                        ? "माती आणि हवामानाच्या स्थितीवर आधारित योग्य पिकांची शिफारस करणे."
+                        : language === "hi"
+                        ? "मिट्टी और मौसम की स्थिति के आधार पर उपयुक्त फसलों का सुझाव देना।"
+                        : "Suggest suitable crops based on soil and environmental conditions."}
+                    </p>
+                  </div>
+
+                  {/* CARD 2: YIELD PREDICTION */}
+                  <div className="rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-white dark:bg-[#152319] p-5 shadow-xs transition hover:shadow-md">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F7EA] dark:bg-[#1E3825] text-[#2E7D32] dark:text-[#4ADE80] font-bold text-base">
+                        📊
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                        {t("prediction") || "Yield Prediction"}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {language === "mr"
+                        ? "जिल्हा, पाऊस आणि शेती क्षेत्रावरून पीक उत्पादकतेचा अंदाज काढणे."
+                        : language === "hi"
+                        ? "जिला, वर्षा और बुवाई क्षेत्र से फसल उत्पादकता का सटीक अनुमान लगाना।"
+                        : "Estimate crop productivity from relevant agricultural factors."}
+                    </p>
+                  </div>
+
+                  {/* CARD 3: WEATHER INSIGHTS */}
+                  <div className="rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-white dark:bg-[#152319] p-5 shadow-xs transition hover:shadow-md">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F7EA] dark:bg-[#1E3825] text-[#2E7D32] dark:text-[#4ADE80] font-bold text-base">
+                        🌦️
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                        {t("weather") || "Weather Insights"}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {language === "mr"
+                        ? "शेतीविषयक कामांच्या नियोजनासाठी थेट हवामान माहिती आणि सल्ला देणे."
+                        : language === "hi"
+                        ? "कृषि कार्यों की योजना के लिए वास्तविक समय मौसम की जानकारी और सलाह प्रदान करना।"
+                        : "Provide weather-related information that can support agricultural decision-making."}
+                    </p>
+                  </div>
+
+                  {/* CARD 4: DATA-DRIVEN AGRICULTURE */}
+                  <div className="rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-white dark:bg-[#152319] p-5 shadow-xs transition hover:shadow-md">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F7EA] dark:bg-[#1E3825] text-[#2E7D32] dark:text-[#4ADE80] font-bold text-base">
+                        🌱
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                        {language === "mr" ? "माहिती-आधारित शेती" : language === "hi" ? "डेटा-संचालित कृषि" : "Data-Driven Agriculture"}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {language === "mr"
+                        ? "ऐतिहासिक शेती माहिती आणि विश्लेषण मॉडेलचा वापर करून अर्थपूर्ण मार्गदर्शन तयार करणे."
+                        : language === "hi"
+                        ? "ऐतिहासिक कृषि डेटा और विश्लेषण मॉडल का उपयोग करके सार्थक मार्गदर्शन तैयार करना।"
+                        : "Use historical agricultural data and models to generate meaningful insights."}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-gray-700">PDF Generator Engine:</span>
-                  <span>jsPDF & AutoTable Vector Generator</span>
+              </div>
+
+              {/* 🌱 OUR VISION */}
+              <div className="rounded-3xl border border-[#DCE8D9] dark:border-[#24402A] bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-6 sm:p-7 text-white text-center shadow-md">
+                <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/10 mb-2">
+                  <Sparkles size={20} className="text-yellow-300" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-gray-700">License:</span>
-                  <span>Open Agriculture MIT License</span>
-                </div>
+                <h3 className="text-xs uppercase tracking-widest font-extrabold text-green-200 mb-1">
+                  🌱 {language === "mr" ? "आमचे ध्येय" : language === "hi" ? "हमारा दृष्टिकोण" : "Our Vision"}
+                </h3>
+                <blockquote className="text-base sm:text-lg font-extrabold italic text-white max-w-xl mx-auto leading-relaxed">
+                  {language === "mr"
+                    ? "“स्मार्ट तंत्रज्ञान आणि अचूक माहितीच्या आधारे शेतीला समृद्ध बनवणे.”"
+                    : language === "hi"
+                    ? "“स्मार्ट तकनीक और सटीक निर्णयों के माध्यम से कृषि को समृद्ध बनाना।”"
+                    : "“Empowering agriculture through intelligent technology and data-driven decisions.”"}
+                </blockquote>
               </div>
             </div>
           )}
 
           {/* =========================================================
-              5. PRIVACY & DATA STORAGE
+              5. PRIVACY & DATA SECURITY
              ========================================================= */}
           {section === "privacy" && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  {t("privacy") || "Privacy & Data Storage"}
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  <Shield size={20} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                  <span>{t("privacy") || "Privacy & Data Security"}</span>
                 </h2>
-                <p className="mt-1 text-xs text-gray-500">
-                  Manage how your farm prediction logs and soil records are handled.
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {language === "mr"
+                    ? "सर्वसमावेशक गोपनीयता संरक्षण, सुरक्षा मानके आणि शेतकरी डेटाचे रक्षण."
+                    : language === "hi"
+                    ? "व्यापक गोपनीयता सुरक्षा, एन्क्रिप्शन मानक और किसान डेटा का पूर्ण संरक्षण।"
+                    : "Comprehensive privacy safeguards, encryption standards, and grower data governance."}
                 </p>
               </div>
 
               <div className="space-y-4 pt-1">
-                <div className="rounded-2xl bg-[#F6F8F4] p-5 border border-[#E2EAE0]">
-                  <h4 className="text-xs font-bold text-gray-800">Local Browser Storage</h4>
-                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                    Your prediction and soil recommendation logs are securely stored in your browser’s local storage (`localStorage`). No farm data is sent to external third-party advertisers.
+                {/* CARD 1: CONFIDENTIALITY */}
+                <div className="rounded-2xl bg-[#F6F8F4] dark:bg-[#152319] p-5 border border-[#E2EAE0] dark:border-gray-800">
+                  <h4 className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                    <span>{language === "mr" ? "शेतकरी डेटा गोपनीयता" : language === "hi" ? "किसान डेटा गोपनीयता" : "Farmer Data Confidentiality"}</span>
+                  </h4>
+                  <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {language === "mr"
+                      ? "आपला शेतीविषयक डेटा, जमिनीचे क्षेत्रफळ, माती परीक्षण अहवाल आणि पीक अंदाज पूर्णपणे गोपनीय आहेत. कृषीमित्र कोणत्याही बाहेरील व्यावसायिक संस्थांना शेतकरी डेटा विकत किंवा भाड्याने देत नाही."
+                      : language === "hi"
+                      ? "आपका संपूर्ण कृषि डेटा, भूमि क्षेत्र, मृदा परीक्षण रिपोर्ट और फसल पूर्वानुमान पूरी तरह गोपनीय हैं। कृषि-मित्र किसी भी तीसरे पक्ष को किसान डेटा नहीं बेचता।"
+                      : "All agricultural data, farm acreage records, soil test chemistry, and expected yield forecasts are strictly confidential. KrushiMitra does not sell, lease, or monetize individual farmer data or telemetry to commercial third parties."}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-[#F6F8F4] p-5 border border-[#E2EAE0]">
-                  <h4 className="text-xs font-bold text-gray-800">Model Inference Privacy</h4>
-                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                    API calls sent to your local backend machine (`http://127.0.0.1:5000`) are processed locally in memory for immediate computation.
+                {/* CARD 2: ENCRYPTION */}
+                <div className="rounded-2xl bg-[#F6F8F4] dark:bg-[#152319] p-5 border border-[#E2EAE0] dark:border-gray-800">
+                  <h4 className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Lock size={16} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                    <span>{language === "mr" ? "सुरक्षित एन्क्रिप्शन आणि डेटा संरक्षण" : language === "hi" ? "एंड-टू-एंड एन्क्रिप्शन एवं क्लाउड सुरक्षा" : "End-to-End Encryption & Cloud Security"}</span>
+                  </h4>
+                  <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {language === "mr"
+                      ? "आपला ब्राउझर आणि कृषीमित्र सर्व्हर दरम्यानचे संप्रेषण आधुनिक TLS एन्क्रिप्शनने सुरक्षित आहे. संकेतशब्द सुरक्षित क्रिप्टोग्राफिक अल्गोरिदमने हॅश केले जातात."
+                      : language === "hi"
+                      ? "आपके ब्राउज़र और कृषि-मित्र सर्वर के बीच संचार आधुनिक टीएलएस एन्क्रिप्शन द्वारा सुरक्षित है। पासवर्ड क्रिप्टोग्राफिक रूप से सुरक्षित हैं।"
+                      : "Communication between your browser and KrushiMitra servers is secured using modern TLS encryption. Passwords and credentials are cryptographically hashed using standard salted cryptographic algorithms."}
+                  </p>
+                </div>
+
+                {/* CARD 3: GROWER DATA OWNERSHIP */}
+                <div className="rounded-2xl bg-[#F6F8F4] dark:bg-[#152319] p-5 border border-[#E2EAE0] dark:border-gray-800">
+                  <h4 className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-[#2E7D32] dark:text-[#4ADE80]" />
+                    <span>{language === "mr" ? "शेतकरी हक्क आणि डेटा पोर्टेबिलिटी" : language === "hi" ? "किसान अधिकार और डेटा पोर्टेबिलिटी" : "Grower Rights & Data Portability"}</span>
+                  </h4>
+                  <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {language === "mr"
+                      ? "आपल्या शेती नोंदींवर आपला पूर्ण मालकी हक्क आहे. आपण कोणत्याही वेळी मागील माती सल्ला आणि उत्पादन इतिहासाचे संपूर्ण PDF अहवाल डाउनलोड करू शकता."
+                      : language === "hi"
+                      ? "अपने कृषि अभिलेखों पर आपका पूर्ण अधिकार है। आप कभी भी अपनी पिछली मृदा सलाह और उपज इतिहास की पूरी पीडीएफ रिपोर्ट डाउनलोड कर सकते हैं।"
+                      : "You maintain complete ownership of your farm archives. You may download full PDF reports of your past soil advisories and yield history at any time or request complete record deletion."}
                   </p>
                 </div>
 
                 {/* DANGER ZONE: CLEAR FARM DATA */}
-                <div className="rounded-2xl border border-red-200 bg-red-50/50 p-5 mt-6">
-                  <h4 className="text-xs font-bold text-red-700 flex items-center gap-1.5">
-                    <Trash2 size={15} /> Clear Saved Farm History
+                <div className="rounded-2xl border border-red-200 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 p-5 mt-6">
+                  <h4 className="text-xs font-bold text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                    <Trash2 size={15} /> {language === "mr" ? "जतन केलेला शेती इतिहास साफ करा" : language === "hi" ? "सहेजा गया कृषि इतिहास हटाएं" : "Clear Saved Farm History"}
                   </h4>
-                  <p className="mt-1 text-xs text-red-600/80">
-                    This will permanently clear all saved crop predictions and soil recommendation records from your local storage.
+                  <p className="mt-1 text-xs text-red-600/80 dark:text-red-300/80 leading-relaxed">
+                    {language === "mr"
+                      ? "आपल्या सक्रिय सत्रातील सर्व जतन केलेले पीक उत्पादन अंदाज आणि माती शिफारसी कायमस्वरूपी रीसेट करा."
+                      : language === "hi"
+                      ? "अपने सक्रिय सत्र के सभी सहेजे गए फसल पूर्वानुमान और मृदा सिफारिशों को स्थायी रूप से रीसेट करें।"
+                      : "Permanently reset all saved crop prediction calculations and soil nutrient recommendations for your active session."}
                   </p>
 
                   <button
@@ -624,7 +816,7 @@ export default function Settings() {
                     onClick={() => setShowResetModal(true)}
                     className="mt-4 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-red-700 transition cursor-pointer"
                   >
-                    Clear All Saved Records
+                    {language === "mr" ? "सर्व नोंदी साफ करा" : language === "hi" ? "सभी रिकॉर्ड हटाएं" : "Clear All Saved Records"}
                   </button>
                 </div>
               </div>
@@ -642,10 +834,14 @@ export default function Settings() {
             </div>
 
             <h3 className="mt-4 text-center text-base font-bold text-gray-800">
-              Clear All Farm Records?
+              {language === "mr" ? "सर्व शेती नोंदी साफ करायच्या का?" : language === "hi" ? "क्या सभी कृषि रिकॉर्ड मिटाएं?" : "Clear All Farm Records?"}
             </h3>
             <p className="mt-1 text-center text-xs text-gray-500">
-              This action cannot be undone. All saved predictions and recommendation histories will be erased.
+              {language === "mr"
+                ? "ही कृती पूर्ववत केली जाऊ शकत नाही. सर्व जतन केलेले अंदाज आणि शिफारस नोंदी कायमच्या मिटवल्या जातील."
+                : language === "hi"
+                ? "यह क्रिया पूर्ववत नहीं की जा सकती। सभी सहेजे गए पूर्वानुमान और सिफारिश रिकॉर्ड हमेशा के लिए मिटा दिए जाएंगे।"
+                : "This action cannot be undone. All saved predictions and recommendation histories will be erased."}
             </p>
 
             <div className="mt-6 flex gap-2.5">
@@ -654,14 +850,14 @@ export default function Settings() {
                 onClick={() => setShowResetModal(false)}
                 className="w-1/2 rounded-xl border border-gray-200 bg-white py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 cursor-pointer"
               >
-                Cancel
+                {t("cancel") || "Cancel"}
               </button>
               <button
                 type="button"
                 onClick={handleResetData}
                 className="w-1/2 rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white hover:bg-red-700 cursor-pointer"
               >
-                Yes, Clear All
+                {language === "mr" ? "होय, सर्व साफ करा" : language === "hi" ? "हाँ, सभी हटाएं" : "Yes, Clear All"}
               </button>
             </div>
           </div>

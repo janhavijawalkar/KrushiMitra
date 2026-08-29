@@ -6,34 +6,67 @@ import {
   Sprout,
   TrendingUp,
   Target,
+  CloudSun,
 } from "lucide-react";
 
 import StatCard from "../components/StatCard";
 import { useApp } from "../context/AppContext";
 
+function formatHistoryDate(dateStr) {
+  if (!dateStr) return "—";
+  if (typeof dateStr === "string") {
+    const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, yyyy, mm, dd] = match;
+      return `${dd}/${mm}/${yyyy}`;
+    }
+  }
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "—";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  } catch {
+    return "—";
+  }
+}
+
 export default function Dashboard({ nav }) {
   const {
     user,
     t,
+    tCrop,
+    tDistrict,
     predictionHistory,
     recommendationHistory,
   } = useApp();
 
-  const name = user?.name || "Farmer";
+  const name = user?.name || (user?.role === "Admin" ? "Admin" : "Farmer");
   const userRole = user?.role || "Farmer";
-  const userDistrict = user?.district || "Maharashtra";
-  const userFarmSize = user?.farmSize ? `${user.farmSize} ${user?.farmUnit || "Acres"}` : "Farmland Profile";
+  const userDistrictRaw = user?.district || "Amravati";
+  const userDistrict = tDistrict ? tDistrict(userDistrictRaw) : userDistrictRaw;
+  const userFarmSize = user?.farmSize
+    ? `${user.farmSize} ${t("acresUnit") || user?.farmUnit || "Acres"}`
+    : t("farmlandProfileBadge") || "Farmland Profile";
+
+  const userEmail = user?.email?.toLowerCase()?.trim();
 
   // Filter history strictly for the logged-in user (or all if Super-Admin)
   const userPredictions =
     userRole === "Admin"
       ? predictionHistory
-      : predictionHistory.filter((p) => !p.user_email || p.user_email.toLowerCase() === user?.email?.toLowerCase());
+      : predictionHistory.filter(
+          (p) => p.user_email && p.user_email.toLowerCase() === userEmail
+        );
 
   const userRecommendations =
     userRole === "Admin"
       ? recommendationHistory
-      : recommendationHistory.filter((r) => !r.user_email || r.user_email.toLowerCase() === user?.email?.toLowerCase());
+      : recommendationHistory.filter(
+          (r) => r.user_email && r.user_email.toLowerCase() === userEmail
+        );
 
   const recentPredictions = userPredictions.slice(0, 4);
   const totalPredictions = userPredictions.length;
@@ -59,46 +92,64 @@ export default function Dashboard({ nav }) {
     ? userRecommendations[0]
     : null;
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 12) {
+      return t("goodMorning") || "Good Morning";
+    }
+    if (hour >= 12 && hour < 17) {
+      return t("goodAfternoon") || "Good Afternoon";
+    }
+    if (hour >= 17 && hour < 22) {
+      return t("goodEvening") || "Good Evening";
+    }
+    return t("goodNight") || "Namaste";
+  };
+
+  const bannerSubtitle =
+    userRole === "Admin"
+      ? t("dashboardAdminBannerSub") ||
+        "Administrator Overview: Monitor ML inference throughput, registered farmers directory, and system health."
+      : (t("dashboardFarmerBannerSub") || "Smart AI Agronomy Dashboard for your farm in {district}. Get instant crop predictions, nutrient advisories, and weather forecasts.").replace("{district}", userDistrict);
+
   return (
     <div className="space-y-6">
 
       {/* =====================================================
-          WELCOME HERO
+          HERO BANNER
       ===================================================== */}
 
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-7 text-white shadow-[0_12px_35px_rgba(46,125,50,0.14)]">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-7 text-white shadow-[0_16px_40px_rgba(46,125,50,0.22)] animate-zoom-fade depth-3">
 
-        <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-white/15 blur-2xl animate-float-slow" />
 
-        <div className="pointer-events-none absolute -bottom-20 right-28 h-44 w-44 rounded-full bg-[#B9E8B8]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 right-28 h-44 w-44 rounded-full bg-[#B9E8B8]/15 blur-3xl" />
 
         <div className="relative z-10">
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold backdrop-blur-md">
-              📍 {userDistrict} District
+            <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold backdrop-blur-md transition-transform hover:scale-105">
+              📍 {userDistrict} {t("districtBadgeSuffix") || "District"}
             </span>
-            <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold backdrop-blur-md">
+            <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold backdrop-blur-md transition-transform hover:scale-105">
               🌾 {userFarmSize}
             </span>
-            <span className="rounded-full bg-emerald-900/40 px-3 py-0.5 text-xs font-bold backdrop-blur-md">
-              {userRole === "Admin" ? "🛡️ Super-Admin" : "🌾 Registered Farmer"}
+            <span className="rounded-full bg-emerald-900/40 px-3 py-0.5 text-xs font-bold backdrop-blur-md border border-white/20 transition-transform hover:scale-105">
+              {userRole === "Admin" ? (t("superAdminBadge") || "🛡️ Super-Admin") : (t("registeredFarmerBadge") || "🌾 Registered Farmer")}
             </span>
           </div>
 
           <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
-            {t("goodMorning")}, {name} 👋
+            {getGreeting()}, {name} 👋
           </h1>
 
           <p className="mt-2 max-w-xl text-xs leading-6 text-green-50/90 sm:text-sm">
-            {userRole === "Admin"
-              ? "Administrator Overview: Monitor ML inference throughput, registered farmers directory, and system health."
-              : `AI Agronomy Dashboard for your farm in ${userDistrict}. Get instant crop predictions, nutrient advisories, and weather forecasts.`}
+            {bannerSubtitle}
           </p>
 
           <button
             onClick={() => nav?.("prediction")}
-            className="btn-shimmer mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-[#2E7D32] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:bg-[#F7FFF5] hover:shadow-lg active:scale-95 cursor-pointer"
+            className="btn-shimmer btn-glow mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-[#2E7D32] shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#F7FFF5] active:scale-95 cursor-pointer"
           >
             <Sprout size={15} />
             {t("makePrediction")}
@@ -121,16 +172,20 @@ export default function Dashboard({ nav }) {
           value={totalPredictions}
           change={
             totalPredictions
-              ? "Live"
+              ? (t("liveBadge") || "Live")
               : "—"
           }
         />
 
         <StatCard
-          icon="🎯"
-          title="Model R² Score"
-          value="20.15%"
-          change="RF"
+          icon="🧪"
+          title={t("soilAdvisories") || "Soil Recommendations"}
+          value={userRecommendations.length || "—"}
+          change={
+            userRecommendations.length
+              ? (t("liveBadge") || "Live")
+              : "—"
+          }
         />
 
         <StatCard
@@ -139,7 +194,7 @@ export default function Dashboard({ nav }) {
           value={uniqueCrops || "—"}
           change={
             uniqueCrops
-              ? "Live"
+              ? (t("liveBadge") || "Live")
               : "—"
           }
         />
@@ -150,7 +205,7 @@ export default function Dashboard({ nav }) {
           value={averageProductivity}
           change={
             userPredictions.length
-              ? "Live"
+              ? (t("liveBadge") || "Live")
               : "—"
           }
         />
@@ -216,7 +271,7 @@ export default function Dashboard({ nav }) {
               </p>
 
               <h3 className="mt-1 text-lg font-extrabold text-[#1F2937] group-hover:text-[#2E7D32] transition-colors">
-                {latestRecommendation?.crop || "—"}
+                {latestRecommendation?.crop ? tCrop(latestRecommendation.crop) : "—"}
               </h3>
 
             </div>
@@ -242,54 +297,33 @@ export default function Dashboard({ nav }) {
         </div>
 
 
-        {/* Model Information */}
-
+        {/* Weather & Farm Advisory */}
         <div className="card card-interactive p-5 group">
-
           <div className="flex items-center gap-3">
-
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF3E6] text-[#2E7D32] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-xs">
-              <Target size={19} />
+              <CloudSun size={19} />
             </div>
-
             <div>
-
               <p className="text-[11px] font-medium text-gray-400">
-                Productivity Model
+                {t("weatherAdvisory") || "Farm Weather Outlook"}
               </p>
-
               <h3 className="mt-1 text-lg font-extrabold text-[#1F2937] group-hover:text-[#2E7D32] transition-colors">
-                Random Forest
+                {userDistrict}
               </h3>
-
             </div>
-
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <p className="mt-4 text-[11px] leading-5 text-gray-500">
+            {(t("dashboardWeatherCardSub") || "Real-time district weather data, humidity alerts, and customized farming advice for {district}.").replace("{district}", userDistrict)}
+          </p>
 
-            <div className="rounded-xl bg-[#F8FAF7] p-3 transition hover:bg-[#EAF3E6]">
-              <p className="text-[9px] text-gray-400 font-bold">
-                R²
-              </p>
-
-              <p className="mt-1 text-sm font-bold text-[#2E7D32]">
-                0.2015
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-[#F8FAF7] p-3 transition hover:bg-[#EAF3E6]">
-              <p className="text-[9px] text-gray-400 font-bold">
-                MAE
-              </p>
-
-              <p className="mt-1 text-sm font-bold text-[#2E7D32]">
-                0.8606
-              </p>
-            </div>
-
-          </div>
-
+          <button
+            onClick={() => nav?.("weather")}
+            className="key-cap mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-[#2E7D32] cursor-pointer"
+          >
+            <span>{t("viewWeather") || "View Weather & Forecast"}</span>
+            <ArrowRight size={13} />
+          </button>
         </div>
 
       </section>
@@ -411,7 +445,7 @@ export default function Dashboard({ nav }) {
                           </span>
 
                           <span className="font-bold text-gray-700">
-                            {item.crop}
+                            {tCrop(item.crop)}
                           </span>
 
                         </div>
@@ -419,12 +453,10 @@ export default function Dashboard({ nav }) {
                       </td>
 
                       <td className="px-5 py-4">
-
                         <div className="flex items-center gap-1.5 text-gray-500">
                           <MapPin size={13} />
-                          {item.district}
+                          {tDistrict ? tDistrict(item.district) : item.district}
                         </div>
-
                       </td>
 
                       <td className="px-5 py-4 font-bold text-gray-700">
@@ -435,81 +467,51 @@ export default function Dashboard({ nav }) {
                       </td>
 
                       <td className="px-5 py-4">
-
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-[10px] font-semibold text-[#15803D]">
                           <CheckCircle2 size={11} />
-                          Completed
+                          {t("completedStatus") || "Completed"}
                         </span>
-
                       </td>
 
                       <td className="px-5 py-4">
-
                         <div className="flex items-center gap-1.5 text-gray-400">
-
                           <Clock3 size={12} />
-
-                          {new Date(
-                            item.createdAt
-                          ).toLocaleDateString()}
-
+                          {formatHistoryDate(item.createdAt)}
                         </div>
-
                       </td>
-
                     </tr>
-
                   ))}
-
                 </tbody>
-
               </table>
-
             </div>
 
-
             {/* MOBILE */}
-
             <div className="divide-y divide-[#EEF2EC] md:hidden">
-
               {recentPredictions.map((item) => (
-
                 <div
                   key={item.id}
                   className="p-5"
                 >
-
                   <div className="flex items-start justify-between">
-
                     <div>
-
                       <div className="flex items-center gap-2">
-
                         <span className="text-xl">
                           🌾
                         </span>
-
                         <h3 className="text-sm font-bold text-gray-800">
-                          {item.crop}
+                          {tCrop(item.crop)}
                         </h3>
-
                       </div>
 
                       <p className="mt-1 text-[11px] text-gray-400">
-                        {item.district} •{" "}
-                        {new Date(
-                          item.createdAt
-                        ).toLocaleDateString()}
+                        {tDistrict ? tDistrict(item.district) : item.district} •{" "}
+                        {formatHistoryDate(item.createdAt)}
                       </p>
-
                     </div>
-
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-
                     <div className="rounded-xl bg-[#F8FAF7] p-3">
-
                       <p className="text-[10px] text-gray-400">
                         {t("predictedYield")}
                       </p>
@@ -520,28 +522,21 @@ export default function Dashboard({ nav }) {
                         ).toFixed(2)}{" "}
                         t/ha
                       </p>
-
                     </div>
 
                     <div className="rounded-xl bg-[#F8FAF7] p-3">
-
                       <p className="text-[10px] text-gray-400">
                         {t("status")}
                       </p>
 
                       <p className="mt-1 flex items-center gap-1 text-sm font-bold text-[#15803D]">
                         <CheckCircle2 size={14} />
-                        Completed
+                        {t("completedStatus") || "Completed"}
                       </p>
-
                     </div>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
 
           </>

@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import VoiceChatbot from "./VoiceChatbot";
 
 import { useApp } from "../context/AppContext";
 
@@ -24,6 +25,7 @@ export default function Layout({
 
     profile: t("profile"),
     settings: t("settings"),
+    notifications: t("notifications") || "Notifications",
     admin: t("admin"),
 
     result: t("predictionResult"),
@@ -64,6 +66,7 @@ export default function Layout({
           "
         >
           <div
+            key={page}
             className="
               mx-auto
               w-full
@@ -75,6 +78,9 @@ export default function Layout({
           </div>
         </main>
       </div>
+
+      {/* KRUSHIMITRA MULTILINGUAL VOICE CHATBOT */}
+      <VoiceChatbot />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   History,
   User,
   Settings,
+  Bell,
   Shield,
   Menu,
   LogOut,
@@ -21,7 +22,9 @@ export default function Sidebar({
   collapsed,
   setCollapsed,
 }) {
-  const { user, t, logout } = useApp();
+  const { user, t, logout, notifications } = useApp();
+
+  const unreadCount = (notifications || []).filter((n) => n.unread).length;
 
   const items = [
     {
@@ -61,6 +64,12 @@ export default function Sidebar({
       id: "profile",
       label: t("profile"),
       icon: User,
+    },
+    {
+      id: "notifications",
+      label: t("notifications") || "Alerts",
+      icon: Bell,
+      badge: unreadCount,
     },
     {
       id: "settings",
@@ -317,6 +326,16 @@ export default function Sidebar({
                   <span className="text-[13px] font-semibold">
                     {item.label}
                   </span>
+                )}
+
+                {item.badge > 0 && !collapsed && (
+                  <span className="ml-auto rounded-full bg-[#E11D48] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs">
+                    {item.badge}
+                  </span>
+                )}
+
+                {item.badge > 0 && collapsed && (
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-[#E11D48] ring-2 ring-white" />
                 )}
 
               </button>

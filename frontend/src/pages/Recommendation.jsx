@@ -16,12 +16,11 @@ import {
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
+import VoiceMicButton from "../components/VoiceMicButton";
+import { parseSpokenSoilData, convertDevanagariDigits } from "../utils/voiceParser";
 
 export default function Recommendation({ nav }) {
-  const {
-    t,
-    addRecommendation,
-  } = useApp();
+  const { addRecommendation, language, t, tCrop } = useApp();
 
   const [form, setForm] = useState({
     nitrogen: "",
@@ -36,6 +35,42 @@ export default function Recommendation({ nav }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [voiceToast, setVoiceToast] = useState("");
+
+  const handleVoiceSoilAutoFill = (transcript) => {
+    const extracted = parseSpokenSoilData(transcript);
+    if (Object.keys(extracted).length > 0) {
+      setForm((prev) => ({
+        ...prev,
+        ...extracted,
+      }));
+      const keysCount = Object.keys(extracted).length;
+      setVoiceToast(
+        language === "mr"
+          ? `✅ व्हॉइस इनपुटवरून ${keysCount} घटक भरले गेले!`
+          : language === "hi"
+          ? `✅ वॉइस इनपुट से ${keysCount} पैरामीटर भरे गए!`
+          : `✅ Auto-filled ${keysCount} soil parameters from voice!`
+      );
+      setTimeout(() => setVoiceToast(""), 4500);
+    } else {
+      setVoiceToast(
+        language === "mr"
+          ? "कोणतेही माती घटक ओळखले नाहीत. कृपया उदा. 'नायट्रोजन ५०, फॉस्फरस ३०, पाऊस १२०' असे बोला."
+          : language === "hi"
+          ? "कोई पोषक तत्व नहीं पहचाने गए। कृपया उदा. 'नाइट्रोजन 50, फास्फोरस 30, वर्षा 120' बोलें।"
+          : "No parameters detected. Try saying 'Nitrogen 50, Phosphorus 30, Rainfall 120'."
+      );
+      setTimeout(() => setVoiceToast(""), 4500);
+    }
+  };
+
+  const handleSingleFieldVoice = (field, val) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: val,
+    }));
+  };
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -234,39 +269,61 @@ export default function Recommendation({ nav }) {
         <div className="overflow-hidden rounded-3xl border border-[#DCE8D9] bg-white shadow-sm">
 
           <div className="border-b border-[#E8EFE6] bg-gradient-to-r from-[#F7FBF5] to-white p-6">
-
             <div className="flex items-center gap-3">
-
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF3E6] text-[#2E7D32]">
                 <Sprout size={23} />
               </div>
-
               <div>
-
                 <h2 className="text-sm font-extrabold text-gray-800">
                   {t("soilClimateInformation")}
                 </h2>
-
                 <p className="mt-1 text-[11px] text-gray-400">
                   {t("enterFarmConditions")}
                 </p>
-
               </div>
-
             </div>
-
           </div>
 
           <form
             onSubmit={handleRecommend}
             className="grid gap-5 p-6 sm:grid-cols-2"
           >
+            {/* SMART VOICE AUTO-FILL BANNER */}
+            <div className="col-span-1 sm:col-span-2 rounded-2xl border border-green-200 bg-gradient-to-r from-[#F0F8ED] via-[#F7FCF5] to-white p-4 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <VoiceMicButton onTranscript={handleVoiceSoilAutoFill} size="md" />
+                  <div>
+                    <h4 className="text-xs font-bold text-[#1B5E20]">
+                      {language === "mr"
+                        ? "🎙️ बोलून माती घटक भरा (Voice Auto-Fill)"
+                        : language === "hi"
+                        ? "🎙️ बोलकर मृदा पैरामीटर भरें (Voice Auto-Fill)"
+                        : "🎙️ Dictate Soil & Climate Parameters (Voice Auto-Fill)"}
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      {language === "mr"
+                        ? 'उदा. "नायट्रोजन ५०, फॉस्फरस ३०, पोटॅशियम ४०, पाऊस १२०, सामू ६.५"'
+                        : language === "hi"
+                        ? 'उदा. "नाइट्रोजन 50, फास्फोरस 30, पोटाश 40, वर्षा 120, पीएच 6.5"'
+                        : 'e.g. "Nitrogen 50, Phosphorus 30, Potassium 40, Rainfall 120, pH 6.5"'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {voiceToast && (
+                <div className="mt-2.5 rounded-xl bg-white border border-green-300 p-2 text-xs font-semibold text-[#1B5E20] animate-fade-in flex items-center gap-1.5">
+                  <span>{voiceToast}</span>
+                </div>
+              )}
+            </div>
 
             <NumberInput
               label={t("nitrogen")}
               name="nitrogen"
               value={form.nitrogen}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("nitrogen", val)}
               placeholder="e.g. 90"
               icon={<Activity size={15} />}
               suffix="kg/ha"
@@ -277,6 +334,7 @@ export default function Recommendation({ nav }) {
               name="phosphorus"
               value={form.phosphorus}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("phosphorus", val)}
               placeholder="e.g. 42"
               icon={<Activity size={15} />}
               suffix="kg/ha"
@@ -287,6 +345,7 @@ export default function Recommendation({ nav }) {
               name="potassium"
               value={form.potassium}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("potassium", val)}
               placeholder="e.g. 43"
               icon={<Activity size={15} />}
               suffix="kg/ha"
@@ -297,6 +356,7 @@ export default function Recommendation({ nav }) {
               name="temperature"
               value={form.temperature}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("temperature", val)}
               placeholder="e.g. 27"
               icon={<Thermometer size={15} />}
               suffix="°C"
@@ -308,6 +368,7 @@ export default function Recommendation({ nav }) {
               name="humidity"
               value={form.humidity}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("humidity", val)}
               placeholder="e.g. 75"
               icon={<Droplets size={15} />}
               suffix="%"
@@ -319,6 +380,7 @@ export default function Recommendation({ nav }) {
               name="ph"
               value={form.ph}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("ph", val)}
               placeholder="e.g. 6.5"
               icon={<FlaskConical size={15} />}
               suffix="pH"
@@ -330,7 +392,8 @@ export default function Recommendation({ nav }) {
               name="rainfall"
               value={form.rainfall}
               onChange={handleChange}
-              placeholder="e.g. 200"
+              onVoiceInput={(val) => handleSingleFieldVoice("rainfall", val)}
+              placeholder="e.g. 202"
               icon={<CloudRain size={15} />}
               suffix="mm"
               step="0.1"
@@ -490,17 +553,20 @@ export default function Recommendation({ nav }) {
       {/* RESULT */}
 
       {result && (
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#174B1B] via-[#2E7D32] to-[#10B981] p-6 text-white shadow-lg sm:p-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#174B1B] via-[#2E7D32] to-[#10B981] p-6 text-white shadow-[0_20px_50px_rgba(46,125,50,0.3)] sm:p-8 animate-zoom-fade depth-3 glow-emerald border border-white/20">
 
-          <div className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/15 blur-2xl animate-float-slow" />
+          <div className="pointer-events-none absolute -bottom-20 right-20 h-48 w-48 rounded-full bg-yellow-300/15 blur-3xl" />
 
           <div className="relative z-10">
 
             <div className="flex items-center gap-2 text-green-100">
 
-              <CheckCircle2 size={16} />
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
+                <CheckCircle2 size={14} className="text-white" />
+              </span>
 
-              <span className="text-[10px] font-bold uppercase tracking-widest">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest bg-white/15 px-2.5 py-1 rounded-full backdrop-blur-xs">
                 {t("aiRecommendationComplete")}
               </span>
 
@@ -508,15 +574,16 @@ export default function Recommendation({ nav }) {
 
             <div className="mt-6">
 
-              <p className="text-xs text-green-100">
+              <p className="text-xs font-semibold text-green-100">
                 {t("recommendedCrop")}
               </p>
 
-              <h2 className="mt-2 text-4xl font-black sm:text-5xl">
-                🌾 {result.crop}
+              <h2 className="mt-2 text-4xl font-black sm:text-5xl flex items-center gap-3 tracking-tight">
+                <span className="animate-float-slow inline-block select-none filter drop-shadow-md">🌾</span>
+                <span className="drop-shadow-sm">{tCrop(result.crop)}</span>
               </h2>
 
-              <p className="mt-3 max-w-xl text-xs leading-5 text-green-50/80">
+              <p className="mt-3 max-w-xl text-xs leading-5 text-green-50/90 font-medium">
                 {t("recommendationResultDescription")}
               </p>
 
@@ -526,7 +593,7 @@ export default function Recommendation({ nav }) {
 
               <button
                 onClick={resetForm}
-                className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-[11px] font-bold text-[#2E7D32] transition hover:bg-green-50"
+                className="btn-shimmer btn-glow flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-[#2E7D32] shadow-md transition hover:-translate-y-0.5 hover:bg-green-50 active:scale-95 cursor-pointer"
               >
                 <RotateCcw size={14} />
                 {t("newRecommendation")}
@@ -557,9 +624,9 @@ export default function Recommendation({ nav }) {
         />
 
         <InfoCard
-          icon="🤖"
-          title={t("machineLearning")}
-          text={t("machineLearningDescription")}
+          icon="🌱"
+          title={t("seasonalSuitability")}
+          text={t("seasonalSuitabilityDescription")}
         />
 
       </div>
@@ -590,26 +657,35 @@ function NumberInput({
   name,
   value,
   onChange,
+  onVoiceInput,
   placeholder,
   icon,
   suffix,
   step = "1",
 }) {
+  const handleSingleVoice = (spokenText) => {
+    const clean = convertDevanagariDigits(spokenText);
+    const numMatch = clean.match(/(\d+(\.\d+)?)/);
+    if (numMatch && onVoiceInput) {
+      onVoiceInput(numMatch[1]);
+    }
+  };
+
   return (
     <div>
-
-      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-
-        <span className="text-[#2E7D32]">
-          {icon}
-        </span>
-
-        {label}
-
-      </label>
+      <div className="mb-2 flex items-center justify-between">
+        <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+          <span className="text-[#2E7D32]">
+            {icon}
+          </span>
+          {label}
+        </label>
+        {onVoiceInput && (
+          <VoiceMicButton onTranscript={handleSingleVoice} size="sm" />
+        )}
+      </div>
 
       <div className="relative">
-
         <input
           type="number"
           min="0"
@@ -624,9 +700,7 @@ function NumberInput({
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-gray-500">
           {suffix}
         </span>
-
       </div>
-
     </div>
   );
 }

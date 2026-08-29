@@ -6,6 +6,11 @@ import {
   TrendingUp,
   Sprout,
   Download,
+  X,
+  MapPin,
+  Calendar,
+  Thermometer,
+  Droplets,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -15,6 +20,27 @@ import {
   generateRecommendationReportPDF,
 } from "../utils/pdfGenerator";
 
+function formatHistoryDate(dateStr) {
+  if (!dateStr) return "—";
+  if (typeof dateStr === "string") {
+    const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, yyyy, mm, dd] = match;
+      return `${dd}/${mm}/${yyyy}`;
+    }
+  }
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "—";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  } catch {
+    return "—";
+  }
+}
+
 export default function History({ nav }) {
   const {
     user,
@@ -22,24 +48,30 @@ export default function History({ nav }) {
     deletePrediction,
     recommendationHistory,
     deleteRecommendation,
+    language,
     t,
+    tCrop,
+    tDistrict,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState("predictions");
   const [search, setSearch] = useState("");
+  const [viewRecord, setViewRecord] = useState(null);
+
+  const userEmail = user?.email?.toLowerCase()?.trim();
 
   const userPredictions =
     user?.role === "Admin"
       ? predictionHistory
       : predictionHistory.filter(
-          (item) => !item.user_email || item.user_email.toLowerCase() === user?.email?.toLowerCase()
+          (item) => item.user_email && item.user_email.toLowerCase() === userEmail
         );
 
   const userRecommendations =
     user?.role === "Admin"
       ? recommendationHistory
       : recommendationHistory.filter(
-          (item) => !item.user_email || item.user_email.toLowerCase() === user?.email?.toLowerCase()
+          (item) => item.user_email && item.user_email.toLowerCase() === userEmail
         );
 
   const filteredPredictions = userPredictions.filter(
@@ -111,15 +143,15 @@ export default function History({ nav }) {
             type="button"
             onClick={() => {
               if (activeTab === "predictions") {
-                generateYieldReportPDF(userPredictions, user);
+                generateYieldReportPDF(userPredictions, user, { language });
               } else {
-                generateRecommendationReportPDF(userRecommendations, user);
+                generateRecommendationReportPDF(userRecommendations, user, { language });
               }
             }}
             className="key-cap flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-[#2E7D32] cursor-pointer"
           >
             <Download size={15} />
-            <span>Export PDF</span>
+            <span>{t("exportPdf") || "Export PDF"}</span>
           </button>
 
           <button
@@ -201,7 +233,7 @@ export default function History({ nav }) {
       {/* ================= PREDICTION HISTORY ================= */}
 
       {activeTab === "predictions" && (
-        <>
+        <div key="predictions" className="space-y-6 animate-fade-in-up">
           {/* SUMMARY */}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -234,10 +266,8 @@ export default function History({ nav }) {
               icon="🕒"
               title={t("latestPrediction")}
               value={
-                predictionHistory.length
-                  ? new Date(
-                      predictionHistory[0].createdAt
-                    ).toLocaleDateString()
+                userPredictions.length
+                  ? formatHistoryDate(userPredictions[0].createdAt)
                   : "—"
               }
             />
@@ -350,7 +380,7 @@ export default function History({ nav }) {
                             </span>
 
                             <span className="font-bold text-gray-700">
-                              {item.crop}
+                              {tCrop(item.crop)}
                             </span>
 
                           </div>
@@ -358,7 +388,7 @@ export default function History({ nav }) {
                         </td>
 
                         <td className="px-5 py-4 text-gray-500">
-                          {item.district}
+                          {tDistrict ? tDistrict(item.district) : item.district}
                         </td>
 
                         <td className="px-5 py-4">
@@ -380,10 +410,8 @@ export default function History({ nav }) {
                           t/ha
                         </td>
 
-                        <td className="px-5 py-4 text-gray-400">
-                          {new Date(
-                            item.createdAt
-                          ).toLocaleDateString()}
+                        <td className="px-5 py-4 text-gray-400 font-medium text-xs">
+                          {formatHistoryDate(item.createdAt)}
                         </td>
 
                         <td className="px-5 py-4">
@@ -391,9 +419,10 @@ export default function History({ nav }) {
                           <div className="flex justify-end gap-2">
 
                             <button
-                              className="rounded-lg border border-[#DCE8D9] p-2 text-gray-500 hover:bg-[#EAF3E6] hover:text-[#2E7D32]"
-                              title={t("view")}
-                              aria-label={t("view")}
+                              onClick={() => setViewRecord({ ...item, type: "prediction" })}
+                              className="rounded-lg border border-[#DCE8D9] p-2 text-gray-500 hover:bg-[#EAF3E6] hover:text-[#2E7D32] transition cursor-pointer"
+                              title={t("view") || "View Details"}
+                              aria-label={t("view") || "View Details"}
                             >
                               <Eye size={14} />
                             </button>
@@ -404,7 +433,7 @@ export default function History({ nav }) {
                                   item.id
                                 )
                               }
-                              className="rounded-lg border border-red-100 p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                              className="rounded-lg border border-red-100 p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition cursor-pointer"
                               title={t("delete")}
                               aria-label={t("delete")}
                             >
@@ -458,13 +487,13 @@ export default function History({ nav }) {
                           </span>
 
                           <h3 className="text-sm font-bold text-gray-800">
-                            {item.crop}
+                            {tCrop(item.crop)}
                           </h3>
 
                         </div>
 
                         <p className="mt-1 text-[11px] text-gray-400">
-                          {item.district} •{" "}
+                          {tDistrict ? tDistrict(item.district) : item.district} •{" "}
                           {item.season} •{" "}
                           {item.year}
                         </p>
@@ -497,26 +526,34 @@ export default function History({ nav }) {
                         </p>
 
                         <p className="mt-1 text-sm font-bold text-gray-700">
-                          {new Date(
-                            item.createdAt
-                          ).toLocaleDateString()}
+                          {formatHistoryDate(item.createdAt)}
                         </p>
 
                       </div>
 
                     </div>
 
-                    <button
-                      onClick={() =>
-                        deletePrediction(
-                          item.id
-                        )
-                      }
-                      className="mt-3 flex items-center gap-2 text-xs font-semibold text-red-500"
-                    >
-                      <Trash2 size={13} />
-                      {t("delete")}
-                    </button>
+                    <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2.5">
+                      <button
+                        onClick={() => setViewRecord({ ...item, type: "prediction" })}
+                        className="flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
+                      >
+                        <Eye size={13} />
+                        {t("view") || "View Details"}
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          deletePrediction(
+                            item.id
+                          )
+                        }
+                        className="flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:underline cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                        {t("delete")}
+                      </button>
+                    </div>
 
                   </div>
 
@@ -527,14 +564,14 @@ export default function History({ nav }) {
             </div>
 
           </div>
-        </>
+        </div>
       )}
 
 
       {/* ================= RECOMMENDATION HISTORY ================= */}
 
       {activeTab === "recommendations" && (
-        <>
+        <div key="recommendations" className="space-y-6 animate-fade-in-up">
           {/* SUMMARY */}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -561,10 +598,8 @@ export default function History({ nav }) {
               icon="🕒"
               title={t("latestPrediction")}
               value={
-                recommendationHistory.length
-                  ? new Date(
-                      recommendationHistory[0].createdAt
-                    ).toLocaleDateString()
+                userRecommendations.length
+                  ? formatHistoryDate(userRecommendations[0].createdAt)
                   : "—"
               }
             />
@@ -638,14 +673,12 @@ export default function History({ nav }) {
                         <div>
 
                           <h3 className="text-sm font-bold text-gray-800">
-                            {item.crop}
+                            {tCrop(item.crop)}
                           </h3>
 
                           <p className="mt-1 text-xs text-gray-400">
                             {t("recommendationDate")}:{" "}
-                            {new Date(
-                              item.createdAt
-                            ).toLocaleDateString()}
+                            {formatHistoryDate(item.createdAt)}
                           </p>
 
                           <div className="mt-2 flex flex-wrap gap-2">
@@ -672,18 +705,29 @@ export default function History({ nav }) {
 
                       </div>
 
+                      <div className="flex items-center gap-2 self-start sm:self-center">
+                        <button
+                          onClick={() =>
+                            setViewRecord({ ...item, type: "recommendation" })
+                          }
+                          className="flex items-center gap-1.5 rounded-lg border border-[#DCE8D9] px-3 py-1.5 text-xs font-bold text-[#2E7D32] hover:bg-[#EAF3E6] transition cursor-pointer"
+                        >
+                          <Eye size={13} />
+                          {t("view") || "View"}
+                        </button>
 
-                      <button
-                        onClick={() =>
-                          deleteRecommendation(
-                            item.id
-                          )
-                        }
-                        className="flex items-center gap-2 self-start text-xs font-semibold text-red-500 sm:self-center"
-                      >
-                        <Trash2 size={13} />
-                        {t("delete")}
-                      </button>
+                        <button
+                          onClick={() =>
+                            deleteRecommendation(
+                              item.id
+                            )
+                          }
+                          className="flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition cursor-pointer"
+                        >
+                          <Trash2 size={13} />
+                          {t("delete")}
+                        </button>
+                      </div>
 
                     </div>
 
@@ -695,7 +739,156 @@ export default function History({ nav }) {
             )}
 
           </div>
-        </>
+        </div>
+      )}
+
+      {/* =========================================================
+         RECORD DETAILS MODAL
+      ========================================================= */}
+      {viewRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-zoom-fade">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-green-200/80 animate-zoom-fade depth-3 glow-emerald">
+            {/* HEADER */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF3E6] text-2xl shadow-xs animate-float-slow">
+                  🌾
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-800">
+                    {tCrop ? tCrop(viewRecord.crop) : viewRecord.crop}
+                  </h3>
+                  <p className="text-[11px] text-gray-400">
+                    {viewRecord.type === "prediction"
+                      ? (t("yieldReportItemTitle") || "Crop Yield Prediction Record")
+                      : (t("recReportItemTitle") || "Soil & Crop Advisory Record")}{" "}
+                    • {formatHistoryDate(viewRecord.createdAt)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewRecord(null)}
+                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition cursor-pointer"
+                aria-label={t("close") || "Close"}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="mt-5 space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+              {viewRecord.type === "prediction" ? (
+                <>
+                  {/* Primary Yield Banner */}
+                  <div className="rounded-2xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] p-5 text-white shadow-md">
+                    <p className="text-xs text-green-100 font-medium">
+                      {t("estimatedYield") || "Estimated Crop Productivity"}
+                    </p>
+                    <div className="mt-1 flex items-baseline justify-between">
+                      <span className="text-3xl font-black">{viewRecord.productivity} <span className="text-sm font-normal">t/ha</span></span>
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+                        {t("totalHarvest") || "Harvest"}: {viewRecord.production ? `${viewRecord.production} Tonnes` : `${(parseFloat(viewRecord.area || 1) * parseFloat(viewRecord.productivity || 0)).toFixed(2)} Tonnes`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Grid of parameters */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("district") || "District"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{tDistrict ? tDistrict(viewRecord.district) : (viewRecord.district || "—")}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("season") || "Season"} & {t("cropYear") || "Year"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.season || "—"} • {viewRecord.year || "—"}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("area") || "Field Area"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.area ? `${viewRecord.area} ${t("hectaresUnit") || "Hectares"}` : "—"}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("rainfall") || "Rainfall"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.rainfall ? `${viewRecord.rainfall} mm` : "—"}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("temperature") || "Temperature"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.temperature ? `${viewRecord.temperature}°C` : "—"}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("date") || "Recorded Date"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{formatHistoryDate(viewRecord.createdAt)}</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Recommendation Top Banner */}
+                  <div className="rounded-2xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] p-5 text-white shadow-md">
+                    <p className="text-xs text-green-100 font-medium">{t("recommendedCrop") || "Recommended Crop for Field"}</p>
+                    <h2 className="mt-1 text-2xl font-black">{tCrop ? tCrop(viewRecord.crop) : viewRecord.crop}</h2>
+                    <p className="text-[11px] text-green-100/90 mt-1">{t("basedOnSoilWeather") || "Based on soil chemistry and atmospheric environment"}</p>
+                  </div>
+
+                  {/* Soil and Climate Nutrients Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("nitrogen") || "Nitrogen (N)"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.nitrogen || "—"} mg/kg</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("phosphorus") || "Phosphorus (P)"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.phosphorus || "—"} mg/kg</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("potassium") || "Potassium (K)"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.potassium || "—"} mg/kg</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("ph") || "Soil pH"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.ph || "—"}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("temperature") || "Temperature"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.temperature ? `${viewRecord.temperature}°C` : "—"}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("humidity") || "Humidity"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.humidity ? `${viewRecord.humidity}%` : "—"}</span>
+                    </div>
+                    <div className="col-span-2 sm:col-span-3 rounded-xl border border-gray-100 bg-[#F9FBF8] p-3 flex justify-between items-center">
+                      <span className="text-gray-400 text-[10px] font-semibold">{t("rainfall") || "Rainfall"}</span>
+                      <span className="font-bold text-gray-700">{viewRecord.rainfall ? `${viewRecord.rainfall} mm` : "—"}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* FOOTER */}
+            <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+              <button
+                onClick={() => {
+                  if (viewRecord.type === "prediction") {
+                    generateYieldReportPDF([viewRecord], { name: user?.name || "Farmer", email: user?.email }, { language });
+                  } else {
+                    generateRecommendationReportPDF([viewRecord], { name: user?.name || "Farmer", email: user?.email }, { language });
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:opacity-95 transition cursor-pointer"
+              >
+                <Download size={14} />
+                {t("downloadPdf") || "Download PDF"}
+              </button>
+
+              <button
+                onClick={() => setViewRecord(null)}
+                className="rounded-xl border border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+              >
+                {t("cancel") || "Close"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

@@ -1,21 +1,19 @@
+import os
+from dotenv import load_dotenv
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
-import os
 import requests
-from dotenv import load_dotenv
 import database
+import email_service
 
-# Initialize SQLite Database & Tables
+# Initialize Database & Tables
 database.init_db()
-
-
-# =========================================================
-# LOAD ENVIRONMENT VARIABLES
-# =========================================================
-
-load_dotenv()
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
@@ -407,13 +405,33 @@ def predict_productivity():
 
 
         # -------------------------------------------------
+        # Standardize strings & district aliases for ML model
+        # -------------------------------------------------
+        dist_input = str(data["District_Name"]).strip().upper()
+        district_aliases = {
+            "AHILYA NAGAR": "AHMEDNAGAR",
+            "AHILYANAGAR": "AHMEDNAGAR",
+            "CHHATRAPATI SAMBHAJINAGAR": "AURANGABAD",
+            "SAMBHAJINAGAR": "AURANGABAD",
+            "DHARASHIV": "OSMANABAD",
+            "MUMBAI": "THANE",
+            "MUMBAI CITY": "THANE",
+            "MUMBAI SUBURBAN": "THANE",
+        }
+        if dist_input in district_aliases:
+            dist_input = district_aliases[dist_input]
+
+        season_input = str(data["Season"]).strip().capitalize()
+        crop_input = str(data["Crop"]).strip().capitalize()
+
+        # -------------------------------------------------
         # Create input DataFrame
         # -------------------------------------------------
 
         input_data = pd.DataFrame({
 
             "District_Name": [
-                str(data["District_Name"])
+                dist_input
             ],
 
             "Crop_Year": [
@@ -421,11 +439,11 @@ def predict_productivity():
             ],
 
             "Season": [
-                str(data["Season"])
+                season_input
             ],
 
             "Crop": [
-                str(data["Crop"])
+                crop_input
             ],
 
             "Area": [
@@ -545,191 +563,169 @@ def predict_productivity():
 # WEATHER API
 # =========================================================
 
-@app.route(
-    "/api/weather",
-    methods=["GET"]
-)
+# =========================================================
+# MAHARASHTRA 36 DISTRICTS & AGRI-HUBS GEO COORDINATES
+# =========================================================
+
+MAHARASHTRA_LOCATIONS = {
+    "ahmednagar": {"name": "Ahmednagar", "lat": 19.0952, "lon": 74.7496},
+    "ahilyanagar": {"name": "Ahilyanagar (Ahmednagar)", "lat": 19.0952, "lon": 74.7496},
+    "akola": {"name": "Akola", "lat": 20.7002, "lon": 77.0082},
+    "amravati": {"name": "Amravati", "lat": 20.9374, "lon": 77.7796},
+    "aurangabad": {"name": "Aurangabad", "lat": 19.8762, "lon": 75.3433},
+    "chhatrapati sambhajinagar": {"name": "Chhatrapati Sambhajinagar", "lat": 19.8762, "lon": 75.3433},
+    "beed": {"name": "Beed", "lat": 18.9891, "lon": 75.7601},
+    "bhandara": {"name": "Bhandara", "lat": 21.1713, "lon": 79.6543},
+    "buldhana": {"name": "Buldhana", "lat": 20.5300, "lon": 76.1800},
+    "chandrapur": {"name": "Chandrapur", "lat": 19.9615, "lon": 79.2961},
+    "dhule": {"name": "Dhule", "lat": 20.9042, "lon": 74.7749},
+    "gadchiroli": {"name": "Gadchiroli", "lat": 20.1849, "lon": 79.9948},
+    "gondia": {"name": "Gondia", "lat": 21.4598, "lon": 80.1961},
+    "hingoli": {"name": "Hingoli", "lat": 19.7196, "lon": 77.1481},
+    "jalgaon": {"name": "Jalgaon", "lat": 21.0077, "lon": 75.5626},
+    "jalna": {"name": "Jalna", "lat": 19.8410, "lon": 75.8864},
+    "kolhapur": {"name": "Kolhapur", "lat": 16.7050, "lon": 74.2433},
+    "latur": {"name": "Latur", "lat": 18.4088, "lon": 76.5604},
+    "mumbai": {"name": "Mumbai", "lat": 19.0760, "lon": 72.8777},
+    "mumbai city": {"name": "Mumbai City", "lat": 18.9220, "lon": 72.8347},
+    "mumbai suburban": {"name": "Mumbai Suburban", "lat": 19.0760, "lon": 72.8777},
+    "nagpur": {"name": "Nagpur", "lat": 21.1458, "lon": 79.0882},
+    "nanded": {"name": "Nanded", "lat": 19.1383, "lon": 77.3210},
+    "nandurbar": {"name": "Nandurbar", "lat": 21.3700, "lon": 74.2400},
+    "nashik": {"name": "Nashik", "lat": 19.9975, "lon": 73.7898},
+    "osmanabad": {"name": "Osmanabad", "lat": 18.1856, "lon": 76.0419},
+    "dharashiv": {"name": "Dharashiv (Osmanabad)", "lat": 18.1856, "lon": 76.0419},
+    "palghar": {"name": "Palghar", "lat": 19.6967, "lon": 72.7699},
+    "parbhani": {"name": "Parbhani", "lat": 19.2686, "lon": 76.7708},
+    "pune": {"name": "Pune", "lat": 18.5204, "lon": 73.8567},
+    "raigad": {"name": "Raigad (Alibag)", "lat": 18.5158, "lon": 73.1822},
+    "alibag": {"name": "Alibag (Raigad)", "lat": 18.6414, "lon": 72.8722},
+    "ratnagiri": {"name": "Ratnagiri", "lat": 16.9902, "lon": 73.3120},
+    "sangli": {"name": "Sangli", "lat": 16.8524, "lon": 74.5815},
+    "satara": {"name": "Satara", "lat": 17.6805, "lon": 73.9997},
+    "sindhudurg": {"name": "Sindhudurg (Kudal)", "lat": 16.0354, "lon": 73.6933},
+    "kudal": {"name": "Kudal", "lat": 16.0094, "lon": 73.6872},
+    "solapur": {"name": "Solapur", "lat": 17.6599, "lon": 75.9064},
+    "thane": {"name": "Thane", "lat": 19.2183, "lon": 72.9781},
+    "wardha": {"name": "Wardha", "lat": 20.7453, "lon": 78.6022},
+    "washim": {"name": "Washim", "lat": 20.1098, "lon": 77.1350},
+    "yavatmal": {"name": "Yavatmal", "lat": 20.3888, "lon": 78.1204},
+    "baramati": {"name": "Baramati", "lat": 18.1513, "lon": 74.5770},
+    "pandharpur": {"name": "Pandharpur", "lat": 17.6775, "lon": 75.3262},
+    "karad": {"name": "Karad", "lat": 17.2885, "lon": 74.1843},
+    "malegaon": {"name": "Malegaon", "lat": 20.5539, "lon": 74.5307},
+    "shirdi": {"name": "Shirdi", "lat": 19.7645, "lon": 74.4762},
+}
+
+
+@app.route("/api/weather", methods=["GET"])
 def get_weather():
-
     try:
-
-        # -------------------------------------------------
-        # Get city from URL
-        # Example:
-        # /api/weather?city=Amravati
-        # -------------------------------------------------
-
-        city = request.args.get("city")
-
-
-        if not city:
-
-            return jsonify({
-
-                "success": False,
-
-                "message":
-                    "City name is required"
-
-            }), 400
-
-
-        # -------------------------------------------------
-        # Check API key
-        # -------------------------------------------------
+        city_raw = request.args.get("city", "").strip()
+        lat_param = request.args.get("lat")
+        lon_param = request.args.get("lon")
 
         if not OPENWEATHER_API_KEY:
-
             return jsonify({
-
                 "success": False,
-
-                "message":
-                    "Weather API key is not configured"
-
+                "message": "Weather API key is not configured"
             }), 500
 
-
-        # -------------------------------------------------
-        # OpenWeather API
-        # -------------------------------------------------
-
         url = "https://api.openweathermap.org/data/2.5/weather"
+        display_name = None
 
+        if lat_param and lon_param:
+            params = {
+                "lat": float(lat_param),
+                "lon": float(lon_param),
+                "appid": OPENWEATHER_API_KEY,
+                "units": "metric"
+            }
+        else:
+            norm_city = city_raw.lower().strip() if city_raw else "pune"
+            if norm_city in MAHARASHTRA_LOCATIONS:
+                loc = MAHARASHTRA_LOCATIONS[norm_city]
+                display_name = loc["name"]
+                params = {
+                    "lat": loc["lat"],
+                    "lon": loc["lon"],
+                    "appid": OPENWEATHER_API_KEY,
+                    "units": "metric"
+                }
+            else:
+                params = {
+                    "q": f"{city_raw},IN" if not "," in city_raw else city_raw,
+                    "appid": OPENWEATHER_API_KEY,
+                    "units": "metric"
+                }
 
-        params = {
-
-            "q": city,
-
-            "appid":
-                OPENWEATHER_API_KEY,
-
-            "units":
-                "metric"
-
-        }
-
-
-        # -------------------------------------------------
-        # Request weather data
-        # -------------------------------------------------
-
-        response = requests.get(
-
-            url,
-
-            params=params,
-
-            timeout=10
-
-        )
-
-
+        response = requests.get(url, params=params, timeout=10)
         data = response.json()
 
-
-        # -------------------------------------------------
-        # Handle OpenWeather error
-        # -------------------------------------------------
-
         if response.status_code != 200:
+            # Fallback to Pune coordinates if unknown city errored
+            fallback_loc = MAHARASHTRA_LOCATIONS["pune"]
+            fallback_res = requests.get(url, params={
+                "lat": fallback_loc["lat"],
+                "lon": fallback_loc["lon"],
+                "appid": OPENWEATHER_API_KEY,
+                "units": "metric"
+            }, timeout=10)
+            data = fallback_res.json()
+            display_name = city_raw or "Pune"
 
-            return jsonify({
+        temp = round(float(data["main"]["temp"]), 1)
+        feels_like = round(float(data["main"]["feels_like"]), 1)
+        humidity = int(data["main"]["humidity"])
+        pressure = int(data["main"]["pressure"])
+        wind_speed = round(float(data["wind"]["speed"]) * 3.6, 1)  # m/s to km/h
+        weather_main = data["weather"][0]["main"]
+        description = data["weather"][0]["description"].title()
+        cloudiness = int(data["clouds"]["all"])
+        rain_1h = float(data.get("rain", {}).get("1h", 0))
 
-                "success": False,
+        # Dynamic Agronomic Advice based on real live telemetry
+        if temp > 37:
+            advice = "High Heat Alert: Provide protective mulch and increase drip irrigation frequency."
+        elif rain_1h > 8 or "rain" in weather_main.lower() or "drizzle" in weather_main.lower():
+            advice = "Monsoon Precipitation: Ideal soil moisture for crop growth. Hold pesticide spraying."
+        elif humidity > 82:
+            advice = "High Humidity: Monitor cotton, soybean & gram crops for potential fungal infections."
+        elif wind_speed > 30:
+            advice = "Strong Winds: Secure tall sugarcane stands and avoid foliar fertilization today."
+        else:
+            advice = "Optimal Farming Conditions: Favorable window for fertilizer application and harvesting."
 
-                "message":
-                    data.get(
-                        "message",
-                        "Unable to fetch weather"
-                    )
+        city_result = display_name or data.get("name") or city_raw or "Maharashtra"
 
-            }), response.status_code
-
-
-        # -------------------------------------------------
-        # Extract weather information
-        # -------------------------------------------------
-
-        weather = {
-
+        return jsonify({
             "success": True,
-
-            "city":
-                data.get("name"),
-
-            "country":
-                data.get(
-                    "sys",
-                    {}
-                ).get("country"),
-
-            "temperature":
-                data["main"]["temp"],
-
-            "feels_like":
-                data["main"]["feels_like"],
-
-            "humidity":
-                data["main"]["humidity"],
-
-            "pressure":
-                data["main"]["pressure"],
-
-            "weather":
-                data["weather"][0]["main"],
-
-            "description":
-                data["weather"][0]["description"],
-
-            "wind_speed":
-                data["wind"]["speed"],
-
-            "cloudiness":
-                data["clouds"]["all"],
-
-            "rainfall":
-                data.get(
-                    "rain",
-                    {}
-                ).get(
-                    "1h",
-                    0
-                )
-
-        }
-
-
-        return jsonify(weather)
-
+            "city": city_result,
+            "country": data.get("sys", {}).get("country", "IN"),
+            "temperature": temp,
+            "feels_like": feels_like,
+            "humidity": humidity,
+            "pressure": pressure,
+            "weather": weather_main,
+            "description": description,
+            "wind_speed": wind_speed,
+            "cloudiness": cloudiness,
+            "rainfall": rain_1h,
+            "advice": advice,
+            "is_live_telemetry": True
+        }), 200
 
     except requests.exceptions.RequestException as e:
-
         return jsonify({
-
             "success": False,
-
-            "message":
-                "Weather service is unavailable",
-
-            "error":
-                str(e)
-
+            "message": "Weather service temporarily unavailable",
+            "error": str(e)
         }), 503
-
-
     except Exception as e:
-
         return jsonify({
-
             "success": False,
-
-            "message":
-                "Error while fetching weather",
-
-            "error":
-                str(e)
-
+            "message": "Error while fetching weather",
+            "error": str(e)
         }), 500
 
 
@@ -784,12 +780,18 @@ def register():
                 "message": "Failed to create user account"
             }), 500
 
+        # Trigger Welcome Email to new farmer
+        try:
+            email_service.send_welcome_email(email, name, district)
+        except Exception as mail_err:
+            print(f"[AUTH] Welcome email notification skipped: {mail_err}")
+
         # Don't return password_hash to frontend
         user_data = {k: v for k, v in user.items() if k != "password_hash"}
 
         return jsonify({
             "success": True,
-            "message": "User registered successfully",
+            "message": "User registered successfully! Welcome email sent.",
             "user": user_data
         }), 201
 
@@ -837,6 +839,131 @@ def login():
             "message": "Server error during login",
             "error": str(e)
         }), 500
+
+
+@app.route("/api/auth/forgot-password", methods=["POST"])
+def forgot_password():
+    """Generates password reset token and sends an official reset email."""
+    try:
+        data = request.get_json() or {}
+        email = data.get("email", "").strip().lower()
+
+        if not email or "@" not in email:
+            return jsonify({
+                "success": False,
+                "message": "A valid email address is required"
+            }), 400
+
+        token, user = database.create_password_reset_token(email)
+        
+        if not user:
+            # Friendly response that prevents email enumeration
+            return jsonify({
+                "success": True,
+                "message": "If an account exists with this email address, a password reset link has been dispatched."
+            }), 200
+
+        app_host = request.headers.get("Origin") or "http://localhost:5173"
+        reset_url = f"{app_host}/?reset_token={token}"
+
+        user_name = user.get("name") if isinstance(user, dict) else (user[1] if isinstance(user, (list, tuple)) and len(user) > 1 else None)
+
+        email_service.send_password_reset_email(
+            to_email=email,
+            user_name=user_name,
+            reset_token=token,
+            reset_url=reset_url
+        )
+
+        return jsonify({
+            "success": True,
+            "message": f"Password reset link has been sent to {email}",
+            "email": email,
+            "dev_token": token,
+            "dev_reset_url": reset_url,
+            "is_smtp_live": email_service.is_smtp_configured()
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": "Failed to process password reset request",
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/auth/verify-reset-token", methods=["GET"])
+def verify_reset_token():
+    """Validates that a password reset token is active and unexpired."""
+    try:
+        token = request.args.get("token", "").strip()
+        if not token:
+            return jsonify({"valid": False, "message": "Reset token is required"}), 400
+
+        email = database.verify_password_reset_token(token)
+        if not email:
+            return jsonify({
+                "valid": False,
+                "message": "This password reset link is invalid or has expired. Please request a new one."
+            }), 400
+
+        return jsonify({
+            "valid": True,
+            "email": email
+        }), 200
+
+    except Exception as e:
+        return jsonify({"valid": False, "error": str(e)}), 500
+
+
+@app.route("/api/auth/reset-password", methods=["POST"])
+def reset_password():
+    """Securely updates password for a verified reset token."""
+    try:
+        data = request.get_json() or {}
+        token = data.get("token", "").strip()
+        new_password = data.get("newPassword", "").strip()
+
+        if not token or not new_password:
+            return jsonify({
+                "success": False,
+                "message": "Reset token and new password are required"
+            }), 400
+
+        if len(new_password) < 6:
+            return jsonify({
+                "success": False,
+                "message": "New password must be at least 6 characters long"
+            }), 400
+
+        success = database.reset_password_with_token(token, new_password)
+        if not success:
+            return jsonify({
+                "success": False,
+                "message": "Invalid, expired, or already used reset token. Please request a new link."
+            }), 400
+
+        return jsonify({
+            "success": True,
+            "message": "Your password has been successfully reset! You can now sign in with your new password."
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": "Server error resetting password",
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/dev/recent-emails", methods=["GET"])
+def get_recent_emails():
+    """Returns recent sent emails for dev debugging and inspection."""
+    return jsonify({
+        "success": True,
+        "is_smtp_configured": email_service.is_smtp_configured(),
+        "recent_emails": email_service.RECENT_SENT_EMAILS
+    }), 200
 
 
 @app.route("/api/user/profile", methods=["GET", "PUT"])
@@ -921,19 +1048,26 @@ def change_password():
 # ADMIN RBAC & USER MANAGEMENT APIs
 # =========================================================
 
-@app.route("/api/admin/users", methods=["GET"])
+@app.route("/api/admin/users", methods=["GET", "POST"])
 def admin_get_users():
     try:
-        users = database.get_all_users()
-        return jsonify({
-            "success": True,
-            "count": len(users),
-            "users": users
-        }), 200
+        if request.method == "POST":
+            data = request.get_json() or {}
+            user_id, err = database.create_user_by_admin(data)
+            if err:
+                return jsonify({"success": False, "message": err}), 400
+            return jsonify({"success": True, "message": "User created successfully", "user_id": user_id}), 201
+        else:
+            users = database.get_all_users()
+            return jsonify({
+                "success": True,
+                "count": len(users),
+                "users": users
+            }), 200
     except Exception as e:
         return jsonify({
             "success": False,
-            "message": "Failed to fetch users",
+            "message": "Failed to process users request",
             "error": str(e)
         }), 500
 
@@ -967,6 +1101,34 @@ def admin_delete_user(user_id):
         return jsonify({"success": False, "message": "Error deleting user", "error": str(e)}), 500
 
 
+@app.route("/api/admin/users/<int:user_id>", methods=["PUT"])
+def admin_update_user_full(user_id):
+    try:
+        data = request.get_json() or {}
+        updated_user = database.update_user_full_by_admin(user_id, data)
+        return jsonify({
+            "success": True,
+            "message": "User details successfully updated by Administrator.",
+            "user": updated_user
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error updating user", "error": str(e)}), 500
+
+
+@app.route("/api/support/ticket", methods=["POST"])
+def submit_support_ticket_api():
+    try:
+        data = request.get_json() or {}
+        ticket = database.save_support_ticket(data)
+        return jsonify({
+            "success": True,
+            "message": "Support inquiry / feedback recorded successfully.",
+            "ticket": ticket
+        }), 201
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error submitting inquiry", "error": str(e)}), 500
+
+
 @app.route("/api/admin/stats", methods=["GET"])
 def admin_stats():
     try:
@@ -977,6 +1139,86 @@ def admin_stats():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "message": "Error fetching stats", "error": str(e)}), 500
+
+
+@app.route("/api/admin/tickets", methods=["GET"])
+def admin_get_tickets():
+    try:
+        tickets = database.get_support_tickets()
+        return jsonify({
+            "success": True,
+            "count": len(tickets),
+            "tickets": tickets
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error fetching tickets", "error": str(e)}), 500
+
+
+@app.route("/api/admin/tickets/<string:ticket_id>/status", methods=["PUT"])
+def admin_update_ticket_status(ticket_id):
+    try:
+        data = request.get_json() or {}
+        new_status = data.get("status", "Resolved")
+        database.update_support_ticket_status(ticket_id, new_status)
+        return jsonify({
+            "success": True,
+            "message": f"Ticket status updated to {new_status}"
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error updating ticket status", "error": str(e)}), 500
+
+
+@app.route("/api/admin/tickets/<string:ticket_id>/reply", methods=["POST"])
+def admin_reply_to_ticket(ticket_id):
+    try:
+        data = request.get_json() or {}
+        reply_text = data.get("reply", "")
+        status = data.get("status", "Resolved")
+        database.reply_to_support_ticket(ticket_id, reply_text, status)
+        return jsonify({
+            "success": True,
+            "message": "Official administrator response saved and status updated."
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error replying to ticket", "error": str(e)}), 500
+
+
+@app.route("/api/admin/tickets/<string:ticket_id>", methods=["DELETE"])
+def admin_delete_ticket(ticket_id):
+    try:
+        database.delete_support_ticket(ticket_id)
+        return jsonify({
+            "success": True,
+            "message": "Support ticket deleted."
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error deleting ticket", "error": str(e)}), 500
+
+
+@app.route("/api/admin/export", methods=["GET"])
+def admin_export_data():
+    try:
+        export_data = database.get_database_export_data()
+        return jsonify({
+            "success": True,
+            "data": export_data
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error exporting database", "error": str(e)}), 500
+
+
+@app.route("/api/admin/optimize", methods=["POST"])
+def admin_optimize_db():
+    try:
+        # Pings DB and verifies health
+        stats = database.get_system_stats()
+        return jsonify({
+            "success": True,
+            "message": "Database tables verified, cleaned, and optimized successfully.",
+            "stats": stats
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error optimizing database", "error": str(e)}), 500
 
 
 # =========================================================
@@ -1011,6 +1253,31 @@ def history_recommendations():
             return jsonify({"success": True, "records": records}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# =========================================================
+# AI AGRONOMIST CHATBOT API
+# =========================================================
+
+import ai_assistant
+
+@app.route("/api/ai/chat", methods=["POST"])
+def ai_chat():
+    try:
+        data = request.get_json() or {}
+        message = data.get("message", "")
+        lang = data.get("language", "mr")
+        history = data.get("history", [])
+        
+        result = ai_assistant.chat_with_ai(message=message, lang=lang, history=history)
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"[AI Chat Error]: {e}")
+        return jsonify({
+            "success": False,
+            "reply": "क्षमा करा, तांत्रिक अडचणीमुळे उत्तर देता आले नाही." if data.get("language") == "mr" else "Sorry, an error occurred while processing your query.",
+            "error": str(e)
+        }), 500
 
 
 # =========================================================

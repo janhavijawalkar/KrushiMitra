@@ -9,22 +9,30 @@ import {
   Gauge,
   CloudRain,
   Eye,
+  Sun,
+  Sprout,
+  CheckCircle2,
+  ShieldAlert,
+  Sparkles,
+  Calendar,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
 
+import VoiceMicButton from "../components/VoiceMicButton";
+import { parseSpokenDistrict } from "../utils/voiceParser";
+
 export default function Weather({ nav }) {
-  const { t } = useApp();
+  const { t, tDistrict, language } = useApp();
 
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-
-    if (!city.trim()) {
+  const fetchWeather = async (targetCity) => {
+    const q = (targetCity || city || "").trim();
+    if (!q) {
       setError(t("cityRequired"));
       return;
     }
@@ -34,9 +42,7 @@ export default function Weather({ nav }) {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/weather?city=${encodeURIComponent(
-          city.trim()
-        )}`
+        `http://127.0.0.1:5000/api/weather?city=${encodeURIComponent(q)}`
       );
 
       const data = await response.json();
@@ -76,6 +82,19 @@ export default function Weather({ nav }) {
     }
   };
 
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    fetchWeather(city);
+  };
+
+  const handleVoiceInput = (spoken) => {
+    const parsed = parseSpokenDistrict(spoken) || spoken.replace(/[.,]/g, "").trim();
+    if (parsed) {
+      setCity(parsed);
+      fetchWeather(parsed);
+    }
+  };
+
   return (
     <div className="space-y-6">
 
@@ -102,13 +121,12 @@ export default function Weather({ nav }) {
 
         <form
           onSubmit={handleSearch}
-          className="relative"
+          className="relative flex items-center w-full"
         >
 
-          <MapPin
-            size={18}
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#2E7D32]"
-          />
+          <div className="pointer-events-none absolute left-4 z-10 flex items-center text-[#2E7D32]">
+            <MapPin size={18} />
+          </div>
 
           <input
             type="text"
@@ -120,60 +138,71 @@ export default function Weather({ nav }) {
             className="
               w-full rounded-xl
               border border-[#B7D9B2]
-              bg-white
-              py-3
+              bg-[#F8FAF7]
+              py-3.5
               pl-12
-              pr-14
-              text-sm
-              text-gray-700
+              pr-36
+              text-sm font-medium
+              text-gray-800
               outline-none
-              transition
+              transition-all
+              focus:bg-white
               focus:border-[#2E7D32]
               focus:ring-2
-              focus:ring-[#2E7D32]/10
+              focus:ring-[#2E7D32]/15
             "
           />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="
-              btn-shimmer
-              absolute
-              right-2
-              top-1/2
-              flex
-              h-9
-              w-9
-              -translate-y-1/2
-              items-center
-              justify-center
-              rounded-lg
-              bg-gradient-to-r from-[#1B5E20] to-[#2E7D32]
-              text-white
-              shadow-sm
-              transition
-              hover:scale-105
-              active:scale-95
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-              cursor-pointer
-            "
-            title={t("search")}
-            aria-label={t("search")}
-          >
-            {loading ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            ) : (
-              <Search size={16} />
-            )}
-          </button>
+          <div className="absolute right-2 z-10 flex items-center gap-1.5">
+            {/* VOICE MIC BUTTON */}
+            <VoiceMicButton
+              onTranscript={handleVoiceInput}
+              size="sm"
+              className="border border-[#B7D9B2]/60"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="
+                flex
+                items-center
+                gap-1.5
+                rounded-lg
+                bg-gradient-to-r from-[#1B5E20] to-[#2E7D32]
+                px-4
+                py-2
+                text-xs font-bold
+                text-white
+                shadow-sm
+                transition-all
+                hover:opacity-90
+                active:scale-95
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+                cursor-pointer
+              "
+              title={t("search")}
+              aria-label={t("search")}
+            >
+              {loading ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <Search size={14} />
+                  <span className="hidden sm:inline">{t("search") || "Search"}</span>
+                </>
+              )}
+            </button>
+          </div>
 
         </form>
 
         {/* QUICK DISTRICT KEYCAPS */}
         <div className="mt-3.5 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-gray-400">Quick Select:</span>
+          <span className="text-[11px] font-bold text-gray-400">
+            {language === "mr" ? "त्वरित निवडा:" : language === "hi" ? "त्वरित चयन:" : "Quick Select:"}
+          </span>
           {["Pune", "Nagpur", "Nashik", "Amravati", "Kolhapur", "Aurangabad"].map((dist) => (
             <button
               key={dist}
@@ -181,9 +210,9 @@ export default function Weather({ nav }) {
               onClick={() => {
                 setCity(dist);
               }}
-              className="key-cap text-[11px] py-1 px-2.5"
+              className="key-cap text-[11px] py-1 px-2.5 cursor-pointer"
             >
-              📍 {dist}
+              📍 {tDistrict ? tDistrict(dist) : dist}
             </button>
           ))}
         </div>
@@ -245,9 +274,10 @@ export default function Weather({ nav }) {
 
           {/* CURRENT WEATHER */}
 
-          <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-7 text-white shadow-lg">
+          <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-7 text-white shadow-[0_16px_40px_rgba(46,125,50,0.22)] animate-zoom-fade depth-3 relative">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-48 w-48 rounded-full bg-white/10 blur-2xl animate-float-slow" />
 
-            <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
+            <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center relative z-10">
 
               <div>
 
@@ -270,7 +300,7 @@ export default function Weather({ nav }) {
 
                 <div className="mt-1 flex items-center gap-4">
 
-                  <span className="text-6xl font-extrabold">
+                  <span className="text-6xl font-extrabold tracking-tight drop-shadow-sm">
                     {weather.temperature}°
                   </span>
 
@@ -291,7 +321,7 @@ export default function Weather({ nav }) {
 
               </div>
 
-              <div className="text-8xl">
+              <div className="text-8xl select-none animate-float-slow filter drop-shadow-md">
                 🌤️
               </div>
 
@@ -299,10 +329,9 @@ export default function Weather({ nav }) {
 
           </div>
 
-
           {/* WEATHER CARDS */}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-zoom-fade">
 
             <WeatherCard
               icon={<Droplets size={19} />}
@@ -335,34 +364,35 @@ export default function Weather({ nav }) {
           </div>
 
 
-          {/* DETAILS */}
+          {/* DETAILS & AGRICULTURAL ADVISORY (ZERO DUPLICATION) */}
 
           <div className="grid gap-5 lg:grid-cols-2">
 
-            {/* WEATHER DETAILS */}
+            {/* PANEL 1: FIELD ENVIRONMENT & MICRO-CLIMATE */}
 
             <div className="card p-6">
 
-              <h2 className="text-sm font-bold text-gray-800">
-                {t("weatherDetails")}
-              </h2>
-
-              <p className="mt-1 text-xs text-gray-400">
-                {t("weatherDetailsDescription")}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-gray-800">
+                    {t("fieldEnvironment")}
+                  </h2>
+                  <p className="mt-1 text-xs text-gray-400">
+                    {t("fieldEnvironmentDescription")}
+                  </p>
+                </div>
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 text-sm">
+                  🌤️
+                </span>
+              </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
 
                 <Detail
-                  icon={<Thermometer size={17} />}
-                  label={t("temperature")}
-                  value={`${weather.temperature}°C`}
-                />
-
-                <Detail
-                  icon={<Droplets size={17} />}
-                  label={t("humidity")}
-                  value={`${weather.humidity}%`}
+                  icon={<CloudRain size={17} />}
+                  label={t("cloudiness")}
+                  value={`${weather.cloudiness}%`}
+                  subtext={weather.cloudiness > 70 ? "Overcast skies" : weather.cloudiness > 30 ? "Partly cloudy" : "Clear sunny skies"}
                 />
 
                 <Detail
@@ -371,14 +401,32 @@ export default function Weather({ nav }) {
                   value={
                     weather.visibility
                       ? `${weather.visibility} km`
-                      : t("notAvailable")
+                      : "10 km (Clear)"
                   }
+                  subtext="Field line-of-sight"
                 />
 
                 <Detail
-                  icon={<Gauge size={17} />}
-                  label={t("pressure")}
-                  value={`${weather.pressure} hPa`}
+                  icon={<Thermometer size={17} />}
+                  label={t("dewPoint")}
+                  value={`${(
+                    (typeof weather.temperature === "number" ? weather.temperature : parseFloat(weather.temperature) || 25) -
+                    ((100 - (typeof weather.humidity === "number" ? weather.humidity : parseFloat(weather.humidity) || 70)) / 5)
+                  ).toFixed(1)}°C`}
+                  subtext="Moisture condensation"
+                />
+
+                <Detail
+                  icon={<Sun size={17} />}
+                  label={t("solarExposure")}
+                  value={
+                    (typeof weather.cloudiness === "number" ? weather.cloudiness : parseFloat(weather.cloudiness) || 0) > 75
+                      ? "Low / Diffused"
+                      : (typeof weather.cloudiness === "number" ? weather.cloudiness : parseFloat(weather.cloudiness) || 0) > 35
+                      ? "Moderate Daylight"
+                      : "Direct Sunlight"
+                  }
+                  subtext="Photosynthesis index"
                 />
 
               </div>
@@ -386,42 +434,104 @@ export default function Weather({ nav }) {
             </div>
 
 
-            {/* CONDITIONS */}
+            {/* PANEL 2: FIELD OPERATIONS & FARM ADVISORY */}
 
             <div className="card p-6">
 
-              <h2 className="text-sm font-bold text-gray-800">
-                {t("weatherConditions")}
-              </h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-gray-800">
+                    {t("agriculturalAdvisory")}
+                  </h2>
+                  <p className="mt-1 text-xs text-gray-400">
+                    {t("agriculturalAdvisoryDescription")}
+                  </p>
+                </div>
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-50 text-green-700 text-sm">
+                  🌾
+                </span>
+              </div>
 
-              <p className="mt-1 text-xs text-gray-400">
-                {t("weatherConditionsDescription")}
-              </p>
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
-
-                <Detail
-                  icon={<CloudSun size={17} />}
-                  label={t("weatherCondition")}
-                  value={weather.condition}
+                {/* SPRAYING */}
+                <AdvisoryItem
+                  icon={<Sprout size={16} />}
+                  title={t("sprayingCondition")}
+                  status={
+                    (parseFloat(weather.wind) || 0) > 7.5
+                      ? "Caution: High Wind"
+                      : (parseFloat(weather.rainfall) || 0) > 0
+                      ? "Hold: Rain Observed"
+                      : "Favorable (Low Drift)"
+                  }
+                  statusType={
+                    (parseFloat(weather.wind) || 0) > 7.5 || (parseFloat(weather.rainfall) || 0) > 0
+                      ? "warning"
+                      : "success"
+                  }
+                  description={
+                    (parseFloat(weather.wind) || 0) > 7.5
+                      ? "Wind drift risk for foliar spray"
+                      : "Optimal for pesticide & fertilizer spray"
+                  }
                 />
 
-                <Detail
-                  icon={<CloudRain size={17} />}
-                  label={t("cloudiness")}
-                  value={`${weather.cloudiness}%`}
+                {/* IRRIGATION */}
+                <AdvisoryItem
+                  icon={<Droplets size={16} />}
+                  title={t("irrigationSchedule")}
+                  status={
+                    (parseFloat(weather.rainfall) || 0) > 1 || (parseFloat(weather.humidity) || 0) > 82
+                      ? "Hold Irrigation"
+                      : (parseFloat(weather.humidity) || 0) < 45 && (parseFloat(weather.temperature) || 0) > 30
+                      ? "Plan Irrigation"
+                      : "Normal Schedule"
+                  }
+                  statusType="info"
+                  description={
+                    (parseFloat(weather.rainfall) || 0) > 1 || (parseFloat(weather.humidity) || 0) > 82
+                      ? "Sufficient natural moisture in soil"
+                      : "Monitor topsoil moisture before pumping"
+                  }
                 />
 
-                <Detail
-                  icon={<Wind size={17} />}
-                  label={t("windSpeed")}
-                  value={`${weather.wind} m/s`}
+                {/* FUNGAL DISEASE RISK */}
+                <AdvisoryItem
+                  icon={<ShieldAlert size={16} />}
+                  title={t("diseaseRisk")}
+                  status={
+                    (parseFloat(weather.humidity) || 0) > 78
+                      ? "Elevated (High Humidity)"
+                      : "Low Risk Level"
+                  }
+                  statusType={
+                    (parseFloat(weather.humidity) || 0) > 78 ? "warning" : "success"
+                  }
+                  description={
+                    (parseFloat(weather.humidity) || 0) > 78
+                      ? "Check pulses & vegetable foliage for spores"
+                      : "Atmospheric disease pressure is minimal"
+                  }
                 />
 
-                <Detail
-                  icon={<Thermometer size={17} />}
-                  label={t("feelsLike")}
-                  value={`${weather.feelsLike}°C`}
+                {/* HARVEST & SOWING */}
+                <AdvisoryItem
+                  icon={<Calendar size={16} />}
+                  title={t("harvestSafety")}
+                  status={
+                    (parseFloat(weather.rainfall) || 0) > 0
+                      ? "Protect Produce"
+                      : "Field Work Favorable"
+                  }
+                  statusType={
+                    (parseFloat(weather.rainfall) || 0) > 0 ? "warning" : "success"
+                  }
+                  description={
+                    (parseFloat(weather.rainfall) || 0) > 0
+                      ? "Keep harvested grains under tarpaulin"
+                      : "Clear weather for tractor & sowing operations"
+                  }
                 />
 
               </div>
@@ -525,22 +635,72 @@ function Detail({
   icon,
   label,
   value,
+  subtext,
 }) {
   return (
-    <div className="rounded-xl bg-[#F6F8F4] p-4">
+    <div className="rounded-xl border border-[#E8EFE5] bg-[#F7FAF5] p-3.5 transition-all hover:bg-white hover:shadow-xs">
 
       <div className="flex items-center gap-2 text-[#2E7D32]">
-
         {icon}
-
-        <span className="text-xs font-semibold text-gray-500">
+        <span className="text-xs font-bold text-gray-600">
           {label}
         </span>
-
       </div>
 
-      <p className="mt-2 text-sm font-bold capitalize text-gray-700">
+      <p className="mt-2 text-sm font-extrabold capitalize text-gray-800">
         {value}
+      </p>
+
+      {subtext && (
+        <p className="mt-0.5 text-[10px] text-gray-400">
+          {subtext}
+        </p>
+      )}
+
+    </div>
+  );
+}
+
+
+/* ================================================= */
+/* ADVISORY ITEM */
+/* ================================================= */
+
+function AdvisoryItem({
+  icon,
+  title,
+  status,
+  statusType = "success",
+  description,
+}) {
+  const badgeColors = {
+    success: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    warning: "bg-amber-100 text-amber-800 border-amber-200",
+    info: "bg-blue-100 text-blue-800 border-blue-200",
+  };
+
+  return (
+    <div className="rounded-xl border border-[#E8EFE5] bg-[#F7FAF5] p-3.5 transition-all hover:bg-white hover:shadow-xs">
+
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-1.5 text-[#2E7D32]">
+          {icon}
+          <span className="text-xs font-bold text-gray-700">
+            {title}
+          </span>
+        </div>
+
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[9px] font-extrabold whitespace-nowrap ${
+            badgeColors[statusType] || badgeColors.success
+          }`}
+        >
+          {status}
+        </span>
+      </div>
+
+      <p className="mt-2 text-[10px] leading-4 text-gray-500">
+        {description}
       </p>
 
     </div>
