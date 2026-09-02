@@ -38,24 +38,184 @@ export const CROP_TRANSLATIONS = {
   bajra: { en: "Bajra (Pearl Millet)", hi: "बाजरा", mr: "बाजरी" },
 };
 
+export const MAHARASHTRA_DISTRICTS = [
+  "AHMEDNAGAR",
+  "AKOLA",
+  "AMRAVATI",
+  "AURANGABAD",
+  "BEED",
+  "BHANDARA",
+  "BULDHANA",
+  "CHANDRAPUR",
+  "DHULE",
+  "GADCHIROLI",
+  "GONDIA",
+  "HINGOLI",
+  "JALGAON",
+  "JALNA",
+  "KOLHAPUR",
+  "LATUR",
+  "MUMBAI",
+  "NAGPUR",
+  "NANDED",
+  "NANDURBAR",
+  "NASHIK",
+  "OSMANABAD",
+  "PALGHAR",
+  "PARBHANI",
+  "PUNE",
+  "RAIGAD",
+  "RATNAGIRI",
+  "SANGLI",
+  "SATARA",
+  "SINDHUDURG",
+  "SOLAPUR",
+  "THANE",
+  "WARDHA",
+  "WASHIM",
+  "YAVATMAL",
+];
+
 export const DISTRICT_TRANSLATIONS = {
+  // 1. Ahmednagar / Ahilyanagar
+  ahmednagar: { en: "Ahilyanagar (Ahmednagar)", hi: "अहिल्यानगर (अहमदनगर)", mr: "अहिल्यानगर (अहमदनगर)" },
+  ahilyanagar: { en: "Ahilyanagar", hi: "अहिल्यानगर", mr: "अहिल्यानगर" },
+
+  // 2. Akola
+  akola: { en: "Akola", hi: "अकोला", mr: "अकोला" },
+
+  // 3. Amravati
   amravati: { en: "Amravati", hi: "अमरावती", mr: "अमरावती" },
-  pune: { en: "Pune", hi: "पुणे", mr: "पुणे" },
-  nagpur: { en: "Nagpur", hi: "नागपुर", mr: "नागपूर" },
-  nashik: { en: "Nashik", hi: "नासिक", mr: "नाशिक" },
-  kolhapur: { en: "Kolhapur", hi: "कोल्हापुर", mr: "कोल्हापूर" },
-  solapur: { en: "Solapur", hi: "सोलापुर", mr: "सोलापूर" },
+
+  // 4. Aurangabad / Chhatrapati Sambhajinagar
   aurangabad: { en: "Chhatrapati Sambhajinagar", hi: "छत्रपति संभाजीनगर", mr: "छत्रपती संभाजीनगर" },
   chhatrapatisambhajinagar: { en: "Chhatrapati Sambhajinagar", hi: "छत्रपति संभाजीनगर", mr: "छत्रपती संभाजीनगर" },
   sambhajinagar: { en: "Chhatrapati Sambhajinagar", hi: "छत्रपति संभाजीनगर", mr: "छत्रपती संभाजीनगर" },
-  latur: { en: "Latur", hi: "लातुर", mr: "लातूर" },
-  satara: { en: "Satara", hi: "सतारा", mr: "सातारा" },
-  sangli: { en: "Sangli", hi: "सांगली", mr: "सांगली" },
-  thane: { en: "Thane", hi: "ठाणे", mr: "ठाणे" },
+
+  // 5. Beed
+  beed: { en: "Beed", hi: "बीड", mr: "बीड" },
+  bid: { en: "Beed", hi: "बीड", mr: "बीड" },
+
+  // 6. Bhandara
+  bhandara: { en: "Bhandara", hi: "भंडारा", mr: "भंडारा" },
+
+  // 7. Buldhana
+  buldhana: { en: "Buldhana", hi: "बुलढाणा", mr: "बुलढाणा" },
+  buldana: { en: "Buldhana", hi: "बुलढाणा", mr: "बुलढाणा" },
+
+  // 8. Chandrapur
+  chandrapur: { en: "Chandrapur", hi: "चंद्रपुर", mr: "चंद्रपूर" },
+
+  // 9. Dhule
+  dhule: { en: "Dhule", hi: "धुले", mr: "धुळे" },
+
+  // 10. Gadchiroli
+  gadchiroli: { en: "Gadchiroli", hi: "गडचिरोली", mr: "गडचिरोली" },
+
+  // 11. Gondia
+  gondia: { en: "Gondia", hi: "गोंदिया", mr: "गोंदिया" },
+  gondiya: { en: "Gondia", hi: "गोंदिया", mr: "गोंदिया" },
+
+  // 12. Hingoli
+  hingoli: { en: "Hingoli", hi: "हिंगोली", mr: "हिंगोली" },
+
+  // 13. Jalgaon
   jalgaon: { en: "Jalgaon", hi: "जलगांव", mr: "जळगाव" },
+
+  // 14. Jalna
+  jalna: { en: "Jalna", hi: "जालना", mr: "जालना" },
+
+  // 15. Kolhapur
+  kolhapur: { en: "Kolhapur", hi: "कोल्हापुर", mr: "कोल्हापूर" },
+
+  // 16. Latur
+  latur: { en: "Latur", hi: "लातुर", mr: "लातूर" },
+
+  // 17. Mumbai / Mumbai City / Mumbai Suburban
+  mumbai: { en: "Mumbai", hi: "मुंबई", mr: "मुंबई" },
+  mumbaicity: { en: "Mumbai City", hi: "मुंबई शहर", mr: "मुंबई शहर" },
+  mumbaisuburban: { en: "Mumbai Suburban", hi: "मुंबई उपनगर", mr: "मुंबई उपनगर" },
+  bombay: { en: "Mumbai", hi: "मुंबई", mr: "मुंबई" },
+
+  // 18. Nagpur
+  nagpur: { en: "Nagpur", hi: "नागपुर", mr: "नागपूर" },
+
+  // 19. Nanded
   nanded: { en: "Nanded", hi: "नांदेड़", mr: "नांदेड" },
-  ahmednagar: { en: "Ahilyanagar", hi: "अहिल्यानगर", mr: "अहिल्यानगर" },
-  ahilyanagar: { en: "Ahilyanagar", hi: "अहिल्यानगर", mr: "अहिल्यानगर" },
+
+  // 20. Nandurbar
+  nandurbar: { en: "Nandurbar", hi: "नंदुरबार", mr: "नंदुरबार" },
+
+  // 21. Nashik
+  nashik: { en: "Nashik", hi: "नासिक", mr: "नाशिक" },
+  nasik: { en: "Nashik", hi: "नासिक", mr: "नाशिक" },
+
+  // 22. Osmanabad / Dharashiv
+  osmanabad: { en: "Dharashiv (Osmanabad)", hi: "धाराशिव (उस्मानाबाद)", mr: "धाराशिव (उस्मानाबाद)" },
+  dharashiv: { en: "Dharashiv", hi: "धाराशिव", mr: "धाराशिव" },
+
+  // 23. Palghar
+  palghar: { en: "Palghar", hi: "पालघर", mr: "पालघर" },
+
+  // 24. Parbhani
+  parbhani: { en: "Parbhani", hi: "परभणी", mr: "परभणी" },
+
+  // 25. Pune
+  pune: { en: "Pune", hi: "पुणे", mr: "पुणे" },
+  poona: { en: "Pune", hi: "पुणे", mr: "पुणे" },
+
+  // 26. Raigad
+  raigad: { en: "Raigad", hi: "रायगढ़", mr: "रायगड" },
+  raigarh: { en: "Raigad", hi: "रायगढ़", mr: "रायगड" },
+  alibag: { en: "Alibaug (Raigad)", hi: "अलिबाग", mr: "अलिबाग" },
+
+  // 27. Ratnagiri
+  ratnagiri: { en: "Ratnagiri", hi: "रत्नागिरि", mr: "रत्नागिरी" },
+
+  // 28. Sangli
+  sangli: { en: "Sangli", hi: "सांगली", mr: "सांगली" },
+
+  // 29. Satara
+  satara: { en: "Satara", hi: "सतारा", mr: "सातारा" },
+
+  // 30. Sindhudurg
+  sindhudurg: { en: "Sindhudurg", hi: "सिंधुदुर्ग", mr: "सिंधुदुर्ग" },
+
+  // 31. Solapur
+  solapur: { en: "Solapur", hi: "सोलापुर", mr: "सोलापूर" },
+  sholapur: { en: "Solapur", hi: "सोलापुर", mr: "सोलापूर" },
+
+  // 32. Thane
+  thane: { en: "Thane", hi: "ठाणे", mr: "ठाणे" },
+  thana: { en: "Thane", hi: "ठाणे", mr: "ठाणे" },
+
+  // 33. Wardha
+  wardha: { en: "Wardha", hi: "वर्धा", mr: "वर्धा" },
+
+  // 34. Washim
+  washim: { en: "Washim", hi: "वाशिम", mr: "वाशीम" },
+  wasim: { en: "Washim", hi: "वाशिम", mr: "वाशीम" },
+
+  // 35. Yavatmal
+  yavatmal: { en: "Yavatmal", hi: "यवतमाल", mr: "यवतमाळ" },
+  yeotmal: { en: "Yavatmal", hi: "यवतमाल", mr: "यवतमाळ" },
+
+  // Major Sub-districts / APMC Agricultural Hubs
+  baramati: { en: "Baramati", hi: "बारामती", mr: "बारामती" },
+  lasalgaon: { en: "Lasalgaon", hi: "लासलगांव", mr: "लासलगाव" },
+  shirdi: { en: "Shirdi", hi: "शिर्डी", mr: "शिर्डी" },
+  pandharpur: { en: "Pandharpur", hi: "पंढरपुर", mr: "पंढरपूर" },
+  malegaon: { en: "Malegaon", hi: "मालेगांव", mr: "मालेगाव" },
+  kalyan: { en: "Kalyan", hi: "कल्याण", mr: "कल्याण" },
+  navimumbai: { en: "Navi Mumbai", hi: "नवी मुंबई", mr: "नवी मुंबई" },
+  vashi: { en: "Vashi", hi: "वाशी", mr: "वाशी" },
+  panvel: { en: "Panvel", hi: "पनवेल", mr: "पनवेल" },
+  sangamner: { en: "Sangamner", hi: "संगमनेर", mr: "संगमनेर" },
+  shrirampur: { en: "Shrirampur", hi: "श्रीरामपुर", mr: "श्रीरामपूर" },
+  karad: { en: "Karad", hi: "कराड", mr: "कराड" },
+  ichalkaranji: { en: "Ichalkaranji", hi: "इचलकरंजी", mr: "इचलकरंजी" },
+
+  // Region & Country
   maharashtra: { en: "Maharashtra", hi: "महाराष्ट्र", mr: "महाराष्ट्र" },
   india: { en: "India", hi: "भारत", mr: "भारत" },
 };
@@ -82,20 +242,34 @@ export const getLocalizedCropName = (crop, lang = "en") => {
 export const getLocalizedDistrictName = (district, lang = "en") => {
   if (!district) return "—";
   const raw = district.toString().trim();
-  const key = raw.toLowerCase().replace(/[\s\-_()]/g, "");
-  
+  const clean = raw
+    .replace(/,\s*(IN|India|Maharashtra|महाराष्ट्र|भारत)/gi, "")
+    .replace(/\s+(District|जिल्हा|जिला)/gi, "")
+    .trim();
+  const key = clean.toLowerCase().replace(/[\s\-_(),]/g, "");
+
   if (DISTRICT_TRANSLATIONS[key]) {
-    return DISTRICT_TRANSLATIONS[key][lang] || DISTRICT_TRANSLATIONS[key]["en"] || raw;
+    return DISTRICT_TRANSLATIONS[key][lang] || DISTRICT_TRANSLATIONS[key]["en"] || clean;
   }
-  
+
   const foundKey = Object.keys(DISTRICT_TRANSLATIONS).find(
     (k) => key.includes(k) || k.includes(key)
   );
   if (foundKey && DISTRICT_TRANSLATIONS[foundKey]) {
-    return DISTRICT_TRANSLATIONS[foundKey][lang] || DISTRICT_TRANSLATIONS[foundKey]["en"] || raw;
+    return DISTRICT_TRANSLATIONS[foundKey][lang] || DISTRICT_TRANSLATIONS[foundKey]["en"] || clean;
   }
-  
-  return raw;
+
+  return clean;
+};
+
+export const getLocalizedSeasonName = (season, lang = "en") => {
+  if (!season) return "—";
+  const s = season.toString().trim().toLowerCase();
+  if (s.includes("kharif")) return lang === "mr" ? "खरीप" : lang === "hi" ? "खरीफ" : "Kharif";
+  if (s.includes("rabi")) return lang === "mr" ? "रब्बी" : lang === "hi" ? "रबी" : "Rabi";
+  if (s.includes("summer") || s.includes("jayad") || s.includes("zaid")) return lang === "mr" ? "उन्हाळी" : lang === "hi" ? "जायद/गर्मी" : "Summer";
+  if (s.includes("annual") || s.includes("year")) return lang === "mr" ? "वार्षिक" : lang === "hi" ? "वार्षिक" : "Annual";
+  return season;
 };
 
 const translations = {
@@ -3128,6 +3302,9 @@ export function AppProvider({ children }) {
         tDistrict: (districtName) => getLocalizedDistrictName(districtName, language),
         getLocalizedDistrictName,
         DISTRICT_TRANSLATIONS,
+        MAHARASHTRA_DISTRICTS,
+        tSeason: (seasonName) => getLocalizedSeasonName(seasonName, language),
+        getLocalizedSeasonName,
       }}
     >
       {children}

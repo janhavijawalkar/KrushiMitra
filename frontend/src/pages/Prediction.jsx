@@ -13,7 +13,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-import { useApp } from "../context/AppContext";
+import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenYieldData, convertDevanagariDigits } from "../utils/voiceParser";
 
@@ -22,6 +22,7 @@ export default function Prediction({ nav }) {
     t,
     tCrop,
     tDistrict,
+    tSeason,
     language,
     addPrediction,
   } = useApp();
@@ -304,44 +305,11 @@ export default function Prediction({ nav }) {
               value={form.district}
               onChange={handleChange}
               icon={<MapPin size={15} />}
-              options={[
-                { value: "AHMEDNAGAR", label: "Ahmednagar (Ahilyanagar)" },
-                { value: "AKOLA", label: "Akola" },
-                { value: "AMRAVATI", label: "Amravati" },
-                { value: "AURANGABAD", label: "Aurangabad (Chhatrapati Sambhajinagar)" },
-                { value: "BEED", label: "Beed" },
-                { value: "BHANDARA", label: "Bhandara" },
-                { value: "BULDHANA", label: "Buldhana" },
-                { value: "CHANDRAPUR", label: "Chandrapur" },
-                { value: "DHULE", label: "Dhule" },
-                { value: "GADCHIROLI", label: "Gadchiroli" },
-                { value: "GONDIA", label: "Gondia" },
-                { value: "HINGOLI", label: "Hingoli" },
-                { value: "JALGAON", label: "Jalgaon" },
-                { value: "JALNA", label: "Jalna" },
-                { value: "KOLHAPUR", label: "Kolhapur" },
-                { value: "LATUR", label: "Latur" },
-                { value: "MUMBAI", label: "Mumbai (City & Suburban)" },
-                { value: "NAGPUR", label: "Nagpur" },
-                { value: "NANDED", label: "Nanded" },
-                { value: "NANDURBAR", label: "Nandurbar" },
-                { value: "NASHIK", label: "Nashik" },
-                { value: "OSMANABAD", label: "Osmanabad (Dharashiv)" },
-                { value: "PALGHAR", label: "Palghar" },
-                { value: "PARBHANI", label: "Parbhani" },
-                { value: "PUNE", label: "Pune" },
-                { value: "RAIGAD", label: "Raigad" },
-                { value: "RATNAGIRI", label: "Ratnagiri" },
-                { value: "SANGLI", label: "Sangli" },
-                { value: "SATARA", label: "Satara" },
-                { value: "SINDHUDURG", label: "Sindhudurg" },
-                { value: "SOLAPUR", label: "Solapur" },
-                { value: "THANE", label: "Thane" },
-                { value: "WARDHA", label: "Wardha" },
-                { value: "WASHIM", label: "Washim" },
-                { value: "YAVATMAL", label: "Yavatmal" },
-              ]}
-              selectText={t("select")}
+              options={MAHARASHTRA_DISTRICTS.map((d) => ({
+                value: d,
+                label: tDistrict ? tDistrict(d) : d,
+              }))}
+              selectText={t("selectDistrict") || t("select") || "Select District"}
             />
 
             <SelectInput
@@ -358,8 +326,11 @@ export default function Prediction({ nav }) {
                 "Sugarcane",
                 "Tur",
                 "Wheat",
-              ]}
-              selectText={t("select")}
+              ].map((c) => ({
+                value: c,
+                label: tCrop ? tCrop(c) : c,
+              }))}
+              selectText={t("selectCrop") || t("select") || "Select Crop"}
             />
 
             <SelectInput
@@ -375,7 +346,7 @@ export default function Prediction({ nav }) {
                 "2023",
                 "2022",
               ]}
-              selectText={t("select")}
+              selectText={t("selectYear") || t("select") || "Select Year"}
             />
 
             <SelectInput
@@ -384,11 +355,11 @@ export default function Prediction({ nav }) {
               value={form.season}
               onChange={handleChange}
               options={[
-                "Kharif",
-                "Rabi",
-                "Summer",
+                { value: "Kharif", label: tSeason ? tSeason("Kharif") : "Kharif" },
+                { value: "Rabi", label: tSeason ? tSeason("Rabi") : "Rabi" },
+                { value: "Summer", label: tSeason ? tSeason("Summer") : "Summer" },
               ]}
-              selectText={t("select")}
+              selectText={t("selectSeason") || t("select") || "Select Season"}
             />
 
             <Input

@@ -17,7 +17,7 @@ import {
   Calendar,
 } from "lucide-react";
 
-import { useApp } from "../context/AppContext";
+import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
 
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenDistrict } from "../utils/voiceParser";
@@ -198,23 +198,47 @@ export default function Weather({ nav }) {
 
         </form>
 
-        {/* QUICK DISTRICT KEYCAPS */}
-        <div className="mt-3.5 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-gray-400">
-            {language === "mr" ? "त्वरित निवडा:" : language === "hi" ? "त्वरित चयन:" : "Quick Select:"}
-          </span>
-          {["Pune", "Nagpur", "Nashik", "Amravati", "Kolhapur", "Aurangabad"].map((dist) => (
-            <button
-              key={dist}
-              type="button"
-              onClick={() => {
-                setCity(dist);
+        {/* QUICK DISTRICT KEYCAPS & SELECT */}
+        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-[#E8EFE6] pt-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-gray-400">
+              {language === "mr" ? "त्वरित शहरे:" : language === "hi" ? "त्वरित शहर:" : "Quick Cities:"}
+            </span>
+            {["Pune", "Nagpur", "Nashik", "Amravati", "Kolhapur", "Aurangabad", "Solapur", "Latur", "Satara", "Jalgaon"].map((dist) => (
+              <button
+                key={dist}
+                type="button"
+                onClick={() => {
+                  setCity(dist);
+                  fetchWeather(dist);
+                }}
+                className="key-cap text-[11px] py-1 px-2.5 cursor-pointer hover:border-[#2E7D32] hover:text-[#2E7D32]"
+              >
+                📍 {tDistrict ? tDistrict(dist) : dist}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={city}
+              onChange={(e) => {
+                const chosen = e.target.value;
+                setCity(chosen);
+                if (chosen) fetchWeather(chosen);
               }}
-              className="key-cap text-[11px] py-1 px-2.5 cursor-pointer"
+              className="rounded-xl border border-[#B7D9B2] bg-[#F8FAF7] px-3 py-1.5 text-xs font-semibold text-gray-700 outline-none focus:border-[#2E7D32] focus:bg-white cursor-pointer"
             >
-              📍 {tDistrict ? tDistrict(dist) : dist}
-            </button>
-          ))}
+              <option value="">
+                {language === "mr" ? "🏛️ सर्व ३६ जिल्हे यादी..." : language === "hi" ? "🏛️ सभी 36 जिले सूची..." : "🏛️ All 36 Districts..."}
+              </option>
+              {MAHARASHTRA_DISTRICTS.map((d) => (
+                <option key={d} value={d}>
+                  {tDistrict ? tDistrict(d) : d}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* ERROR */}
@@ -286,9 +310,9 @@ export default function Weather({ nav }) {
                   <MapPin size={16} />
 
                   <span className="text-sm font-semibold">
-                    {weather.city}
+                    {tDistrict ? tDistrict(weather.city) : weather.city}
                     {weather.country
-                      ? `, ${weather.country}`
+                      ? `, ${weather.country === "IN" ? (language === "mr" ? "भारत" : language === "hi" ? "भारत" : "India") : weather.country}`
                       : ""}
                   </span>
 

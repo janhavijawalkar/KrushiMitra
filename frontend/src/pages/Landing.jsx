@@ -1155,15 +1155,11 @@ export default function Landing({ nav }) {
                       className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 cursor-pointer"
                     >
                       <option value="Pune">{t("selectDistrict") || "Select District"}</option>
-                      <option value="Pune">Pune</option>
-                      <option value="Nagpur">Nagpur</option>
-                      <option value="Nashik">Nashik</option>
-                      <option value="Chhatrapati Sambhajinagar">Chhatrapati Sambhajinagar</option>
-                      <option value="Kolhapur">Kolhapur</option>
-                      <option value="Amravati">Amravati</option>
-                      <option value="Solapur">Solapur</option>
-                      <option value="Latur">Latur</option>
-                      <option value="Satara">Satara</option>
+                      {["Pune", "Nagpur", "Nashik", "Chhatrapati Sambhajinagar", "Kolhapur", "Amravati", "Solapur", "Latur", "Satara", "Jalgaon", "Nanded", "Ahmednagar"].map((d) => (
+                        <option key={d} value={d}>
+                          {tDistrict ? tDistrict(d) : d}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
