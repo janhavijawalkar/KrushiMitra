@@ -167,23 +167,23 @@ export default function ForgotPassword({ nav }) {
               </div>
 
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                Password Reset Link Dispatched!
+                {language === "mr" ? "पासवर्ड रीसेट लिंक पाठवली आहे!" : language === "hi" ? "पासवर्ड रीसेट लिंक भेजी गई!" : "Password Reset Link Dispatched!"}
               </h2>
 
               <p className="mt-2 text-xs text-gray-600 dark:text-gray-300 leading-relaxed max-w-sm mx-auto">
-                We have sent secure password reset instructions to{" "}
+                {language === "mr" ? "आम्ही सुरक्षित पासवर्ड रीसेट सूचना या ईमेलवर पाठवल्या आहेत: " : language === "hi" ? "हमने सुरक्षित पासवर्ड रीसेट निर्देश इस ईमेल पर भेजे हैं: " : "We have sent secure password reset instructions to "}
                 <strong className="text-[#1B5E20] dark:text-[#4ADE80] font-bold">{email}</strong>.
               </p>
 
               <div className="my-5 rounded-2xl bg-emerald-50/80 dark:bg-[#183321]/60 border border-emerald-200 dark:border-emerald-800 p-4 text-left text-xs text-emerald-900 dark:text-emerald-200 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-[#1B5E20] dark:text-[#4ADE80]">
                   <ShieldCheck size={16} />
-                  <span>Security Information:</span>
+                  <span>{language === "mr" ? "सुरक्षा माहिती:" : language === "hi" ? "सुरक्षा जानकारी:" : "Security Information:"}</span>
                 </div>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-gray-600 dark:text-gray-300">
-                  <li>The reset link is active for <strong>60 minutes</strong>.</li>
-                  <li>Check your <strong>Spam / Junk</strong> folder if not visible in primary inbox.</li>
-                  <li>Each reset link can only be used once for safety.</li>
+                  <li>{language === "mr" ? "रीसेट लिंक ६० मिनिटांसाठी वैध आहे." : language === "hi" ? "रीसेट लिंक 60 मिनट के लिए मान्य है।" : "The reset link is active for 60 minutes."}</li>
+                  <li>{language === "mr" ? "इनबॉक्समध्ये न दिसल्यास स्पॅम (Spam) फोल्डर तपासा." : language === "hi" ? "यदि इनबॉक्स में न दिखे तो स्पैम (Spam) फ़ोल्डर देखें।" : "Check your Spam / Junk folder if not visible in primary inbox."}</li>
+                  <li>{language === "mr" ? "सुरक्षेसाठी प्रत्येक लिंक फक्त एकदाच वापरता येईल." : language === "hi" ? "सुरक्षा के लिए प्रत्येक लिंक का उपयोग केवल एक बार किया जा सकता है।" : "Each reset link can only be used once for safety."}</li>
                 </ul>
               </div>
 
@@ -192,10 +192,10 @@ export default function ForgotPassword({ nav }) {
                 <div className="my-4 rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 p-4 text-center text-xs text-emerald-800 dark:text-emerald-300 animate-pop">
                   <p className="font-bold flex items-center justify-center gap-1.5 text-[#1B5E20] dark:text-[#4ADE80] text-sm">
                     <Mail size={16} />
-                    <span>Real Email Dispatched via SMTP</span>
+                    <span>{language === "mr" ? "ईमेल यशस्वीरित्या पाठवला" : language === "hi" ? "ईमेल सफलतापूर्वक भेजा गया" : "Real Email Dispatched via SMTP"}</span>
                   </p>
                   <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                    A password reset email from <strong className="text-gray-900 dark:text-white">krushimitra.project1@gmail.com</strong> has been delivered to your inbox.
+                    {language === "mr" ? "पासवर्ड रीसेट ईमेल आपल्या इनबॉक्समध्ये प्राप्त झाला आहे." : language === "hi" ? "पासवर्ड रीसेट ईमेल आपके इनबॉक्स में प्राप्त हो गया है।" : "A password reset email has been delivered to your inbox."}
                   </p>
                 </div>
               ) : devInfo?.token ? (
@@ -228,7 +228,7 @@ export default function ForgotPassword({ nav }) {
                   }}
                   className="text-xs font-bold text-gray-500 hover:text-[#2E7D32] dark:text-gray-400 dark:hover:text-[#4ADE80] transition cursor-pointer"
                 >
-                  Did not receive email? Resend request
+                  {language === "mr" ? "ईमेल मिळाला नाही का? पुन्हा विनंती पाठवा" : language === "hi" ? "ईमेल नहीं मिला? दोबारा अनुरोध भेजें" : "Did not receive email? Resend request"}
                 </button>
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function ForgotPassword({ nav }) {
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] dark:text-[#4ADE80] hover:underline cursor-pointer"
             >
               <ArrowLeft size={13} />
-              <span>{t("backToLogin") || "Back to Login"}</span>
+              <span>{t("backToLogin") || (language === "mr" ? "लॉगिनकडे परत जा" : language === "hi" ? "लॉगिन पर वापस जाएं" : "Back to Login")}</span>
             </button>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function ForgotPassword({ nav }) {
         {/* SECURITY NOTE */}
         <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-gray-500 font-medium">
           <ShieldCheck size={13} className="text-[#2E7D32]" />
-          <span>Protected by KrushiMitra Security</span>
+          <span>{language === "mr" ? "कृषीमित्र सुरक्षा प्रणालीद्वारे संरक्षित" : language === "hi" ? "कृषि मित्र सुरक्षा द्वारा संरक्षित" : "Protected by KrushiMitra Security"}</span>
         </div>
       </div>
     </div>

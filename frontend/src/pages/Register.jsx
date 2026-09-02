@@ -16,7 +16,7 @@ import {
 import { useApp } from "../context/AppContext";
 
 export default function Register({ nav }) {
-  const { apiRegister, addNotification, t, language, changeLanguage } = useApp();
+  const { apiRegister, addNotification, t, tDistrict, language, changeLanguage } = useApp();
 
   const [form, setForm] = useState({
     name: "",
@@ -126,7 +126,7 @@ export default function Register({ nav }) {
             onClick={() => nav?.("landing")}
             className="key-cap flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
           >
-            <span>← Home</span>
+            <span>← {t("home") || (language === "mr" ? "मुख्यपृष्ठ" : language === "hi" ? "होम" : "Home")}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -156,17 +156,17 @@ export default function Register({ nav }) {
             </h1>
 
             <p className="mt-0.5 text-xs text-gray-500 font-medium">
-              {t("aiPoweredAgriculture") || "AI-Powered Agriculture Platform"}
+              {t("aiPoweredAgriculture") || (language === "mr" ? "स्मार्ट AI कृषी तंत्रज्ञान व्यासपीठ" : language === "hi" ? "स्मार्ट AI कृषि प्रौद्योगिकी मंच" : "AI-Powered Agriculture Platform")}
             </p>
           </div>
 
           {/* SECTION TITLE */}
           <div className="mb-5 text-left">
             <h2 className="text-xl font-bold text-gray-800">
-              Create New Account
+              {language === "mr" ? "नवीन खाते तयार करा" : language === "hi" ? "नया खाता बनाएं" : "Create New Account"}
             </h2>
             <p className="mt-0.5 text-xs text-gray-500">
-              Get personalized AI crop advisory and yield predictions
+              {language === "mr" ? "वैयक्तिक AI पीक सल्ला आणि उत्पादन अंदाज मिळवा" : language === "hi" ? "व्यक्तिगत AI फसल सलाह और उपज अनुमान प्राप्त करें" : "Get personalized AI crop advisory and yield predictions"}
             </p>
           </div>
 
@@ -183,7 +183,7 @@ export default function Register({ nav }) {
             {/* FULL NAME */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Full Name *
+                {language === "mr" ? "पूर्ण नाव *" : language === "hi" ? "पूरा नाम *" : "Full Name *"}
               </label>
               <div className="relative">
                 <User
@@ -195,7 +195,7 @@ export default function Register({ nav }) {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="e.g. Ramesh Patil"
+                  placeholder={language === "mr" ? "उदा. रमेश पाटील" : language === "hi" ? "उदा. रमेश पाटिल" : "e.g. Ramesh Patil"}
                   className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-2.5 pl-10 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
                 />
               </div>
@@ -204,7 +204,7 @@ export default function Register({ nav }) {
             {/* EMAIL */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-gray-700">
-                {t("emailLabel") || "Email Address"} *
+                {t("emailLabel") || (language === "mr" ? "ईमेल पत्ता *" : language === "hi" ? "ईमेल पता *" : "Email Address *")}
               </label>
               <div className="relative">
                 <Mail
@@ -225,7 +225,7 @@ export default function Register({ nav }) {
             {/* DISTRICT / REGION */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-gray-700">
-                District / Region (Optional)
+                {t("district") || (language === "mr" ? "जिल्हा (पर्यायी)" : language === "hi" ? "जिला (वैकल्पिक)" : "District / Region (Optional)")}
               </label>
               <div className="relative">
                 <MapPin
@@ -238,10 +238,10 @@ export default function Register({ nav }) {
                   onChange={handleChange}
                   className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-2.5 pl-10 text-sm text-gray-800 outline-none transition focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
                 >
-                  <option value="">Select your district</option>
+                  <option value="">{t("selectDistrict") || (language === "mr" ? "आपला जिल्हा निवडा" : language === "hi" ? "अपना जिला चुनें" : "Select your district")}</option>
                   {districts.map((d) => (
                     <option key={d} value={d}>
-                      {d}
+                      {tDistrict ? tDistrict(d) : d}
                     </option>
                   ))}
                 </select>
@@ -251,7 +251,7 @@ export default function Register({ nav }) {
             {/* PASSWORD */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-gray-700">
-                {t("passwordLabel") || "Password"} *
+                {t("passwordLabel") || (language === "mr" ? "पासवर्ड *" : language === "hi" ? "पासवर्ड *" : "Password *")}
               </label>
               <div className="relative">
                 <LockKeyhole
@@ -263,7 +263,7 @@ export default function Register({ nav }) {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  placeholder="Min. 6 characters"
+                  placeholder={language === "mr" ? "किमान ६ अक्षरे" : language === "hi" ? "न्यूनतम 6 अक्षर" : "Min. 6 characters"}
                   className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-2.5 pl-10 pr-10 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
                 />
                 <button
@@ -284,9 +284,11 @@ export default function Register({ nav }) {
                     <div className={`h-1 flex-1 rounded-full ${strength >= 3 ? "bg-emerald-600" : "bg-gray-200"}`} />
                   </div>
                   <span className="text-[10px] text-gray-500 font-medium">
-                    {strength === 1 && "Weak"}
-                    {strength === 2 && "Medium"}
-                    {strength >= 3 && "Strong"}
+                    {language === "mr"
+                      ? (strength === 1 ? "कमकुवत" : strength === 2 ? "मध्यम" : "मजबूत")
+                      : language === "hi"
+                      ? (strength === 1 ? "कमजोर" : strength === 2 ? "मध्यम" : "मजबूत")
+                      : (strength === 1 ? "Weak" : strength === 2 ? "Medium" : "Strong")}
                   </span>
                 </div>
               )}
@@ -295,7 +297,7 @@ export default function Register({ nav }) {
             {/* CONFIRM PASSWORD */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Confirm Password *
+                {language === "mr" ? "पासवर्डची पुष्टी करा *" : language === "hi" ? "पासवर्ड की पुष्टि करें *" : "Confirm Password *"}
               </label>
               <div className="relative">
                 <LockKeyhole
@@ -307,7 +309,7 @@ export default function Register({ nav }) {
                   name="confirmPassword"
                   value={form.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Re-enter your password"
+                  placeholder={language === "mr" ? "पासवर्ड पुन्हा टाका" : language === "hi" ? "पासवर्ड दोबारा दर्ज करें" : "Re-enter your password"}
                   className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-4 py-2.5 pl-10 pr-10 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:bg-white focus:ring-4 focus:ring-[#2E7D32]/10"
                 />
                 <button
@@ -331,7 +333,11 @@ export default function Register({ nav }) {
                   className="mt-0.5 h-4 w-4 rounded border-[#DCE8D9] text-[#2E7D32] accent-[#2E7D32] focus:ring-[#2E7D32]"
                 />
                 <span className="text-xs text-gray-600 leading-snug">
-                  I agree to KrushiMitra’s Terms of Service and Privacy Policy.
+                  {language === "mr"
+                    ? "मी कृषीमित्राच्या नियम व गोपनीयता धोरणाशी सहमत आहे."
+                    : language === "hi"
+                    ? "मैं कृषि मित्र के नियम और गोपनीयता नीति से सहमत हूँ।"
+                    : "I agree to KrushiMitra’s Terms of Service and Privacy Policy."}
                 </span>
               </label>
             </div>
@@ -346,7 +352,7 @@ export default function Register({ nav }) {
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
                 <>
-                  <span>Create Account</span>
+                  <span>{language === "mr" ? "नवीन खाते तयार करा" : language === "hi" ? "खाता बनाएं" : "Create Account"}</span>
                   <ArrowRight size={16} />
                 </>
               )}
@@ -356,14 +362,14 @@ export default function Register({ nav }) {
           {/* BACK TO LOGIN */}
           <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">
             <span className="text-xs sm:text-sm text-gray-500">
-              Already have an account?
+              {language === "mr" ? "आधीच खाते आहे का?" : language === "hi" ? "क्या आपका पहले से खाता है?" : "Already have an account?"}
             </span>
             <button
               type="button"
               onClick={() => nav("login")}
               className="ml-1.5 text-xs sm:text-sm font-bold text-[#2E7D32] hover:text-[#1B5E20] hover:underline focus:outline-none cursor-pointer"
             >
-              {t("login") || "Log In"}
+              {t("login") || (language === "mr" ? "येथे लॉगिन करा" : language === "hi" ? "यहाँ लॉगिन करें" : "Log In")}
             </button>
           </div>
         </div>
@@ -371,7 +377,7 @@ export default function Register({ nav }) {
         {/* FOOTER */}
         <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-gray-500 font-medium">
           <ShieldCheck size={13} className="text-[#2E7D32]" />
-          <span>Your agricultural and farm data is kept private & secure</span>
+          <span>{language === "mr" ? "आपली शेतीविषयक माहिती पूर्णपणे खाजगी आणि सुरक्षित ठेवली जाते" : language === "hi" ? "आपकी कृषि और खेत की जानकारी पूरी तरह सुरक्षित रखी जाती है" : "Your agricultural and farm data is kept private & secure"}</span>
         </div>
       </div>
     </div>

@@ -224,11 +224,11 @@ export default function Topbar({ title, nav }) {
                 <div className="flex items-center gap-1.5">
                   <Bell size={16} className="text-[#2E7D32]" />
                   <h3 className="text-sm font-bold text-gray-800">
-                    Farm Alerts & Updates
+                    {language === "mr" ? "शेतकरी सूचना व अपडेट्स" : language === "hi" ? "किसान अलर्ट और अपडेट" : "Farm Alerts & Updates"}
                   </h3>
                   {unreadCount > 0 && (
                     <span className="rounded-full bg-[#E5F7EA] px-2 py-0.5 text-[10px] font-bold text-[#2E7D32]">
-                      {unreadCount} new
+                      {unreadCount} {language === "mr" ? "नवीन" : language === "hi" ? "नए" : "new"}
                     </span>
                   )}
                 </div>
@@ -240,7 +240,7 @@ export default function Topbar({ title, nav }) {
                       onClick={markAllNotificationsAsRead}
                       className="text-[11px] font-semibold text-[#2E7D32] hover:underline cursor-pointer"
                     >
-                      Mark read
+                      {language === "mr" ? "वाचलेले चिन्हांकित करा" : language === "hi" ? "पढ़ा हुआ चिह्नित करें" : "Mark read"}
                     </button>
                   )}
                   <button
@@ -257,7 +257,7 @@ export default function Topbar({ title, nav }) {
               <div className="divide-y divide-[#EEF2EC] max-h-72 overflow-y-auto my-2">
                 {notifsList.length === 0 ? (
                   <div className="py-8 text-center text-xs text-gray-400">
-                    No new notifications for your account.
+                    {language === "mr" ? "आपल्या खात्यासाठी नवीन सूचना नाहीत." : language === "hi" ? "आपके खाते के लिए कोई नई सूचना नहीं है।" : "No new notifications for your account."}
                   </div>
                 ) : (
                   notifsList.map((item) => {
@@ -284,7 +284,7 @@ export default function Topbar({ title, nav }) {
                               {item.title}
                             </p>
                             <span className="text-[10px] text-gray-400">
-                              {item.time || "Just now"}
+                              {item.time || (language === "mr" ? "आत्ताच" : language === "hi" ? "अभी" : "Just now")}
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
@@ -307,7 +307,7 @@ export default function Topbar({ title, nav }) {
                   onClick={clearAllNotifications}
                   className="font-medium text-gray-400 hover:text-red-500 cursor-pointer"
                 >
-                  Clear all
+                  {language === "mr" ? "सर्व हटवा" : language === "hi" ? "सभी हटाएं" : "Clear all"}
                 </button>
                 <button
                   type="button"
@@ -317,7 +317,7 @@ export default function Topbar({ title, nav }) {
                   }}
                   className="font-bold text-[#2E7D32] hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <span>All notifications</span>
+                  <span>{t("notifications") || (language === "mr" ? "सर्व सूचना" : language === "hi" ? "सभी सूचनाएं" : "All notifications")}</span>
                   <ArrowRight size={12} />
                 </button>
               </div>

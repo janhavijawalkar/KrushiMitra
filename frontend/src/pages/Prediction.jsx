@@ -309,7 +309,7 @@ export default function Prediction({ nav }) {
                 value: d,
                 label: tDistrict ? tDistrict(d) : d,
               }))}
-              selectText={t("selectDistrict") || t("select") || "Select District"}
+              selectText={t("selectDistrict") || (language === "mr" ? "जिल्हा निवडा" : language === "hi" ? "जिला चुनें" : "Select District")}
             />
 
             <SelectInput
@@ -330,7 +330,7 @@ export default function Prediction({ nav }) {
                 value: c,
                 label: tCrop ? tCrop(c) : c,
               }))}
-              selectText={t("selectCrop") || t("select") || "Select Crop"}
+              selectText={t("selectCrop") || (language === "mr" ? "पीक निवडा" : language === "hi" ? "फसल चुनें" : "Select Crop")}
             />
 
             <SelectInput
@@ -346,7 +346,7 @@ export default function Prediction({ nav }) {
                 "2023",
                 "2022",
               ]}
-              selectText={t("selectYear") || t("select") || "Select Year"}
+              selectText={t("selectYear") || (language === "mr" ? "वर्ष निवडा" : language === "hi" ? "वर्ष चुनें" : "Select Year")}
             />
 
             <SelectInput
@@ -359,7 +359,7 @@ export default function Prediction({ nav }) {
                 { value: "Rabi", label: tSeason ? tSeason("Rabi") : "Rabi" },
                 { value: "Summer", label: tSeason ? tSeason("Summer") : "Summer" },
               ]}
-              selectText={t("selectSeason") || t("select") || "Select Season"}
+              selectText={t("selectSeason") || (language === "mr" ? "हंगाम निवडा" : language === "hi" ? "मौसम चुनें" : "Select Season")}
             />
 
             <Input
@@ -655,7 +655,7 @@ function SelectInput({
       >
 
         <option value="" className="text-gray-500 bg-white">
-          {selectText} {label}
+          {selectText || label}
         </option>
 
         {options.map((option) => {

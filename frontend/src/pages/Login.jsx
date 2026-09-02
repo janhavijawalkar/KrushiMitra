@@ -72,7 +72,7 @@ export default function Login({ nav }) {
             onClick={() => nav?.("landing")}
             className="key-cap flex items-center gap-1.5 text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
           >
-            <span>← Home</span>
+            <span>← {t("home") || (language === "mr" ? "मुख्यपृष्ठ" : language === "hi" ? "होम" : "Home")}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function Login({ nav }) {
                   className="h-4 w-4 rounded border-[#DCE8D9] text-[#2E7D32] accent-[#2E7D32] focus:ring-[#2E7D32]"
                 />
                 <span className="text-xs text-gray-600 font-medium">
-                  Remember my session
+                  {t("rememberMe") || (language === "mr" ? "माझे लॉगिन लक्षात ठेवा" : language === "hi" ? "मुझे याद रखें" : "Remember my session")}
                 </span>
               </label>
             </div>
@@ -212,7 +212,7 @@ export default function Login({ nav }) {
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
                 <>
-                  <span>{t("login") || "Login to Account"}</span>
+                  <span>{t("login") || (language === "mr" ? "खात्यात लॉगिन करा" : language === "hi" ? "खाते में लॉगिन करें" : "Login to Account")}</span>
                   <ArrowRight size={16} />
                 </>
               )}
@@ -222,14 +222,14 @@ export default function Login({ nav }) {
           {/* REGISTER LINK */}
           <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">
             <span className="text-xs sm:text-sm text-gray-500">
-              {t("dontHaveAccount") || "Don't have an account?"}
+              {t("dontHaveAccount") || (language === "mr" ? "नवीन शेतकरी आहात का?" : language === "hi" ? "क्या आपका खाता नहीं है?" : "Don't have an account?")}
             </span>
             <button
               type="button"
               onClick={() => nav("register")}
               className="ml-1.5 text-xs sm:text-sm font-bold text-[#2E7D32] hover:text-[#1B5E20] hover:underline focus:outline-none cursor-pointer"
             >
-              {t("register") || "Create an Account"}
+              {t("register") || (language === "mr" ? "नवीन खाते तयार करा" : language === "hi" ? "नया खाता बनाएं" : "Create an Account")}
             </button>
           </div>
         </div>
@@ -238,12 +238,12 @@ export default function Login({ nav }) {
         <div className="mt-4 flex items-center justify-center gap-6 text-[11px] font-medium text-gray-500">
           <div className="flex items-center gap-1">
             <ShieldCheck size={13} className="text-[#2E7D32]" />
-            <span>Secure Access</span>
+            <span>{language === "mr" ? "सुरक्षित शेतकरी प्रवेश" : language === "hi" ? "सुरक्षित किसान पहुंच" : "Secure Access"}</span>
           </div>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Sprout size={13} className="text-[#2E7D32]" />
-            <span>ML Crop Intelligence</span>
+            <span>{language === "mr" ? "स्मार्ट AI कृषी तंत्रज्ञान" : language === "hi" ? "स्मार्ट AI कृषि तकनीक" : "ML Crop Intelligence"}</span>
           </div>
         </div>
       </div>
