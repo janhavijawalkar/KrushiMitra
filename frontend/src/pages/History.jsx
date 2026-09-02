@@ -52,6 +52,7 @@ export default function History({ nav }) {
     t,
     tCrop,
     tDistrict,
+    tSeason,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState("predictions");
@@ -394,7 +395,7 @@ export default function History({ nav }) {
                         <td className="px-5 py-4">
 
                           <span className="rounded-full bg-[#F3F8F0] px-2 py-1 text-[10px] font-semibold text-[#2E7D32]">
-                            {item.season}
+                            {tSeason ? tSeason(item.season) : item.season}
                           </span>
 
                         </td>
@@ -407,7 +408,7 @@ export default function History({ nav }) {
                           {Number(
                             item.productivity
                           ).toFixed(2)}{" "}
-                          t/ha
+                          {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
                         </td>
 
                         <td className="px-5 py-4 text-gray-400 font-medium text-xs">
@@ -494,7 +495,7 @@ export default function History({ nav }) {
 
                         <p className="mt-1 text-[11px] text-gray-400">
                           {tDistrict ? tDistrict(item.district) : item.district} •{" "}
-                          {item.season} •{" "}
+                          {tSeason ? tSeason(item.season) : item.season} •{" "}
                           {item.year}
                         </p>
 
@@ -514,7 +515,7 @@ export default function History({ nav }) {
                           {Number(
                             item.productivity
                           ).toFixed(2)}{" "}
-                          t/ha
+                          {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
                         </p>
 
                       </div>
@@ -782,12 +783,12 @@ export default function History({ nav }) {
                   {/* Primary Yield Banner */}
                   <div className="rounded-2xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] p-5 text-white shadow-md">
                     <p className="text-xs text-green-100 font-medium">
-                      {t("estimatedYield") || "Estimated Crop Productivity"}
+                      {t("estimatedYield") || (language === "mr" ? "अंदाजित पीक उत्पादन" : language === "hi" ? "अनुमानित फसल उपज" : "Estimated Crop Productivity")}
                     </p>
                     <div className="mt-1 flex items-baseline justify-between">
-                      <span className="text-3xl font-black">{viewRecord.productivity} <span className="text-sm font-normal">t/ha</span></span>
+                      <span className="text-3xl font-black">{viewRecord.productivity} <span className="text-sm font-normal">{language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}</span></span>
                       <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
-                        {t("totalHarvest") || "Harvest"}: {viewRecord.production ? `${viewRecord.production} Tonnes` : `${(parseFloat(viewRecord.area || 1) * parseFloat(viewRecord.productivity || 0)).toFixed(2)} Tonnes`}
+                        {t("totalHarvest") || (language === "mr" ? "एकूण उत्पादन" : language === "hi" ? "कुल पैदावार" : "Harvest")}: {viewRecord.production ? `${viewRecord.production} ${language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}` : `${(parseFloat(viewRecord.area || 1) * parseFloat(viewRecord.productivity || 0)).toFixed(2)} ${language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}`}
                       </span>
                     </div>
                   </div>
@@ -795,12 +796,12 @@ export default function History({ nav }) {
                   {/* Grid of parameters */}
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
-                      <span className="text-gray-400 block text-[10px] font-semibold">{t("district") || "District"}</span>
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("district") || (language === "mr" ? "जिल्हा" : language === "hi" ? "जिला" : "District")}</span>
                       <span className="font-bold text-gray-700 mt-0.5 block">{tDistrict ? tDistrict(viewRecord.district) : (viewRecord.district || "—")}</span>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
-                      <span className="text-gray-400 block text-[10px] font-semibold">{t("season") || "Season"} & {t("cropYear") || "Year"}</span>
-                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.season || "—"} • {viewRecord.year || "—"}</span>
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("season") || (language === "mr" ? "हंगाम" : language === "hi" ? "मौसम" : "Season")} & {t("cropYear") || (language === "mr" ? "वर्ष" : language === "hi" ? "वर्ष" : "Year")}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{tSeason ? tSeason(viewRecord.season) : (viewRecord.season || "—")} • {viewRecord.year || "—"}</span>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("area") || "Field Area"}</span>

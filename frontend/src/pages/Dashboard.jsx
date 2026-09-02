@@ -36,6 +36,7 @@ function formatHistoryDate(dateStr) {
 export default function Dashboard({ nav }) {
   const {
     user,
+    language,
     t,
     tCrop,
     tDistrict,
@@ -463,7 +464,7 @@ export default function Dashboard({ nav }) {
                         {Number(
                           item.productivity
                         ).toFixed(2)}{" "}
-                        t/ha
+                        {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
                       </td>
 
                       <td className="px-5 py-4">
@@ -520,7 +521,7 @@ export default function Dashboard({ nav }) {
                         {Number(
                           item.productivity
                         ).toFixed(2)}{" "}
-                        t/ha
+                        {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
                       </p>
                     </div>
 

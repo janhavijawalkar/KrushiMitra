@@ -363,7 +363,7 @@ export default function Prediction({ nav }) {
             />
 
             <Input
-              label={`${t("area")} (hectares)`}
+              label={`${t("area")} (${language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "hectares"})`}
               name="area"
               value={form.area}
               onChange={handleChange}
@@ -474,7 +474,7 @@ export default function Prediction({ nav }) {
               </h2>
 
               <p className="mt-1 text-sm font-bold text-gray-500">
-                t/ha ({tCrop(result.crop)})
+                {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"} ({tCrop ? tCrop(result.crop) : result.crop})
               </p>
 
               <div className="mt-5 rounded-2xl bg-gradient-to-b from-[#F3F8F0] to-[#EAF5E8] p-4 border border-green-200/80 shadow-2xs">
@@ -495,7 +495,7 @@ export default function Prediction({ nav }) {
                   </span>
 
                   <span className="font-bold text-gray-800">
-                    {result.season}
+                    {tSeason ? tSeason(result.season) : result.season}
                   </span>
                 </div>
 
@@ -511,11 +511,11 @@ export default function Prediction({ nav }) {
 
                 <div className="mt-3 flex justify-between text-xs border-t border-[#DCE8D9] pt-2.5">
                   <span className="font-bold text-[#1B5E20]">
-                    Total Harvest Estimate:
+                    {t("totalHarvestEstimate") || (language === "mr" ? "एकूण अंदाजित उत्पादन" : language === "hi" ? "कुल अनुमानित पैदावार" : "Total Harvest Estimate")}:
                   </span>
 
                   <span className="font-extrabold text-[#2E7D32]">
-                    {result.production ? `${result.production} Tonnes` : "—"}
+                    {result.production ? `${result.production} ${language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}` : "—"}
                   </span>
                 </div>
 
@@ -525,7 +525,7 @@ export default function Prediction({ nav }) {
                 onClick={() => nav?.("history")}
                 className="mt-5 block w-full text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
               >
-                {t("viewAll")} →
+                {t("viewAll") || (language === "mr" ? "सर्व इतिहास पाहा" : language === "hi" ? "पूरा इतिहास देखें" : "View All")} →
               </button>
 
             </div>
