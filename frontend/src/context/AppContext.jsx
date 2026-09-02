@@ -3156,6 +3156,10 @@ export function AppProvider({ children }) {
       title: `${prediction.crop || "Crop"} Yield Forecast Ready`,
       desc: `Estimated yield: ${prediction.productivity || "—"} t/ha for ${prediction.district || "your farm"} (${prediction.season || "Season"}).`,
       type: "prediction",
+      crop: prediction.crop,
+      productivity: prediction.productivity,
+      district: prediction.district,
+      season: prediction.season,
     });
   };
 
@@ -3222,6 +3226,7 @@ export function AppProvider({ children }) {
       title: `Recommended Crop: ${recommendation.crop || "Crop"}`,
       desc: `High match recommendation for your soil N-P-K nutrient & weather levels.`,
       type: "recommendation",
+      crop: recommendation.crop,
     });
   };
 

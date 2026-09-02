@@ -29,6 +29,9 @@ export default function Notifications({ nav }) {
     clearAllNotifications,
     language,
     t,
+    tCrop,
+    tDistrict,
+    tSeason,
   } = useApp();
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -40,6 +43,91 @@ export default function Notifications({ nav }) {
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3500);
+  };
+
+  const getTranslatedTitle = (item) => {
+    if (!item?.title) return "";
+    const cropName = item.crop ? (tCrop ? tCrop(item.crop) : item.crop) : "";
+    if (language === "mr") {
+      if (item.type === "prediction") {
+        return cropName ? `${cropName} पीक अंदाज तयार` : "पीक उत्पादन अंदाज तयार";
+      }
+      if (item.type === "recommendation") {
+        return cropName ? `शिफारस केलेले पीक: ${cropName}` : "माती परीक्षण पीक शिफारस";
+      }
+      if (item.type === "welcome" || item.title.includes("Welcome")) {
+        return "कृषीमित्र प्लॅटफॉर्मवर आपले स्वागत आहे! 🌾";
+      }
+      if (item.type === "weather") {
+        return "हवामान व पर्जन्यमान अलर्ट";
+      }
+      if (item.type === "report") {
+        return "शेती अहवाल तयार";
+      }
+      return item.title;
+    }
+    if (language === "hi") {
+      if (item.type === "prediction") {
+        return cropName ? `${cropName} फसल पूर्वानुमान तैयार` : "फसल उपज पूर्वानुमान तैयार";
+      }
+      if (item.type === "recommendation") {
+        return cropName ? `सिफारिश की गई फसल: ${cropName}` : "मृदा परीक्षण फसल सिफारिश";
+      }
+      if (item.type === "welcome" || item.title.includes("Welcome")) {
+        return "कृषि-मित्र मंच पर आपका स्वागत है! 🌾";
+      }
+      if (item.type === "weather") {
+        return "मौसम व वर्षा चेतावनी";
+      }
+      if (item.type === "report") {
+        return "कृषि रिपोर्ट तैयार";
+      }
+      return item.title;
+    }
+    return item.title;
+  };
+
+  const getTranslatedDesc = (item) => {
+    if (!item?.desc) return "";
+    const districtName = item.district ? (tDistrict ? tDistrict(item.district) : item.district) : "";
+    const seasonName = item.season ? (tSeason ? tSeason(item.season) : item.season) : "";
+    if (language === "mr") {
+      if (item.type === "prediction") {
+        return `अंदाजित उत्पादन: ${item.productivity || "—"} टन/हेक्टर (${districtName || "आपले शेत"}, ${seasonName || "हंगाम"}).`;
+      }
+      if (item.type === "recommendation") {
+        return "आपल्या जमिनीतील N-P-K पोषक घटक आणि हवामानानुसार उच्च अनुकूलता असलेली शिफारस.";
+      }
+      if (item.type === "welcome" || item.desc.includes("Welcome")) {
+        return `आपले अधिकृत खाते तयार झाले आहे. आपण आता पीक अंदाज, माती परीक्षण सल्ला आणि हवामान अंदाज वापरू शकता.`;
+      }
+      if (item.type === "weather") {
+        return "आपल्या जिल्ह्यातील थेट हवामान माहिती आणि शेती सल्ला उपलब्ध झाला आहे.";
+      }
+      if (item.type === "report") {
+        return "आपल्या शेताचा अधिकृत A4 PDF शेती अहवाल डाउनलोड करण्यासाठी उपलब्ध आहे.";
+      }
+      return item.desc;
+    }
+    if (language === "hi") {
+      if (item.type === "prediction") {
+        return `अनुमानित उपज: ${item.productivity || "—"} टन/हेक्टेयर (${districtName || "आपका खेत"}, ${seasonName || "मौसम"}).`;
+      }
+      if (item.type === "recommendation") {
+        return "आपकी मिट्टी के N-P-K पोषक तत्वों और जलवायु स्तर के लिए अत्यधिक अनुशंसित फसल।";
+      }
+      if (item.type === "welcome" || item.desc.includes("Welcome")) {
+        return `आपका आधिकारिक खाता सक्रिय हो गया है। अब आप फसल पूर्वानुमान, मृदा सलाह और मौसम रिपोर्ट देख सकते हैं।`;
+      }
+      if (item.type === "weather") {
+        return "आपके जिले के लिए वास्तविक समय मौसम अद्यतन और कृषि सलाह उपलब्ध है।";
+      }
+      if (item.type === "report") {
+        return "आपके खेत की आधिकारिक A4 कृषि रिपोर्ट डाउनलोड के लिए उपलब्ध है।";
+      }
+      return item.desc;
+    }
+    return item.desc;
   };
 
   const getNotifIcon = (type) => {
@@ -316,7 +404,7 @@ export default function Notifications({ nav }) {
                         {badge.label}
                       </span>
                       <h4 className="text-xs sm:text-sm font-bold text-gray-800">
-                        {item.title}
+                        {getTranslatedTitle(item)}
                       </h4>
                       {item.unread && (
                         <span className="flex h-2 w-2 rounded-full bg-[#2E7D32] animate-ping" />
@@ -324,12 +412,12 @@ export default function Notifications({ nav }) {
                     </div>
 
                     <p className="text-xs text-gray-600 leading-relaxed max-w-2xl">
-                      {item.desc}
+                      {getTranslatedDesc(item)}
                     </p>
 
                     <div className="flex items-center gap-2 pt-1 text-[10px] text-gray-400">
                       <Clock size={11} />
-                      <span>{item.time || "Recent"}</span>
+                      <span>{item.time || (language === "mr" ? "आत्ताच" : language === "hi" ? "हाल ही में" : "Recent")}</span>
                     </div>
                   </div>
                 </div>

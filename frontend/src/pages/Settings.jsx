@@ -67,12 +67,24 @@ export default function Settings() {
 
   const handleThemeChange = (newTheme) => {
     changeTheme(newTheme);
-    showFeedback(`Theme updated to ${newTheme.toUpperCase()}`);
+    showFeedback(
+      language === "mr"
+        ? `थीम यशस्वीरित्या ${newTheme === "dark" ? "डार्क मोड" : newTheme === "light" ? "लाईट मोड" : "सिस्टम मोड"} वर बदलली.`
+        : language === "hi"
+        ? `थीम बदलकर ${newTheme === "dark" ? "डार्क मोड" : newTheme === "light" ? "लाइट मोड" : "सिस्टम मोड"} कर दी गई।`
+        : `Theme updated to ${newTheme.toUpperCase()}`
+    );
   };
 
   const handleFontSizeChange = (newSize) => {
     changeFontSize(newSize);
-    showFeedback(`Font size updated to ${newSize.toUpperCase()}`);
+    showFeedback(
+      language === "mr"
+        ? `फॉन्ट आकार यशस्वीरित्या बदलला (${newSize}).`
+        : language === "hi"
+        ? `फ़ॉन्ट आकार अपडेट किया गया (${newSize})।`
+        : `Font size updated to ${newSize.toUpperCase()}`
+    );
   };
 
   const handleSupportSubmit = async (e) => {
@@ -94,14 +106,14 @@ export default function Settings() {
       setTicketForm({ subject: "", category: "Crop Prediction", message: "" });
       setTimeout(() => setTicketSuccess(""), 6000);
     } catch (err) {
-      showFeedback("Failed to submit support inquiry.");
+      showFeedback(language === "mr" ? "मदत संदेश पाठवणे अयशस्वी झाले." : language === "hi" ? "सहायता अनुरोध भेजने में विफल।" : "Failed to submit support inquiry.");
     }
   };
 
   const handleResetData = () => {
     resetFarmData();
     setShowResetModal(false);
-    showFeedback("All local predictions and recommendations have been cleared.");
+    showFeedback(language === "mr" ? "सर्व जतन केलेल्या पीक अंदाज आणि शिफारस नोंदी साफ केल्या." : language === "hi" ? "सभी सहेजे गए फसल पूर्वानुमान और सिफारिश रिकॉर्ड हटा दिए गए।" : "All local predictions and recommendations have been cleared.");
   };
 
   const sections = [
@@ -235,9 +247,9 @@ export default function Settings() {
 
                 <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                   {[
-                    { id: "light", icon: Sun, label: t("lightMode") || "Light Forest", desc: language === "mr" ? "हिरवा प्रसन्न दिवस मोड" : language === "hi" ? "उज्ज्वल हरा दिन मोड" : "Crisp emerald daytime palette" },
-                    { id: "dark", icon: Moon, label: t("darkMode") || "Dark Midnight", desc: language === "mr" ? "गडद हिरवा रात्र मोड" : language === "hi" ? "गहरा हरा रात मोड" : "High contrast dark emerald theme" },
-                    { id: "auto", icon: Monitor, label: t("systemDefault") || "System Sync", desc: language === "mr" ? "डिव्हाइसनुसार आपोआप" : language === "hi" ? "डिवाइस अनुसार स्वचालित" : "Matches device operating system" },
+                    { id: "light", icon: Sun, label: language === "mr" ? "लाईट मोड (दिवस)" : language === "hi" ? "लाइट मोड (दिन)" : "Light Forest", desc: language === "mr" ? "हिरवा प्रसन्न दिवस मोड" : language === "hi" ? "उज्ज्वल हरा दिन मोड" : "Crisp emerald daytime palette" },
+                    { id: "dark", icon: Moon, label: language === "mr" ? "डार्क मोड (रात्र)" : language === "hi" ? "डार्क मोड (रात)" : "Dark Midnight", desc: language === "mr" ? "गडद हिरवा रात्र मोड" : language === "hi" ? "गहरा हरा रात मोड" : "High contrast dark emerald theme" },
+                    { id: "auto", icon: Monitor, label: language === "mr" ? "सिस्टम डिफॉल्ट" : language === "hi" ? "सिस्टम अनुसार" : "System Sync", desc: language === "mr" ? "डिव्हाइसनुसार आपोआप" : language === "hi" ? "डिवाइस अनुसार स्वचालित" : "Matches device operating system" },
                   ].map((item) => {
                     const Icon = item.icon;
                     const isSelected = theme === item.id;
@@ -367,7 +379,13 @@ export default function Settings() {
                       type="button"
                       onClick={() => {
                         changeLanguage(item.id);
-                        showFeedback(`Language switched to ${item.native}`);
+                        showFeedback(
+                          item.id === "mr"
+                            ? `भाषा यशस्वीरित्या मराठी वर बदलली.`
+                            : item.id === "hi"
+                            ? `भाषा बदलकर हिन्दी कर दी गई।`
+                            : `Language switched to ${item.native}`
+                        );
                       }}
                       className={`flex w-full items-center justify-between rounded-2xl border-2 p-5 transition cursor-pointer ${
                         isSelected
