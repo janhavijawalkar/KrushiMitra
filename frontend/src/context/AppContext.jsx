@@ -676,6 +676,7 @@ const translations = {
     register: "Register",
     aiPoweredAgriculture:
       "AI-Powered Agriculture Platform",
+    rememberMe: "Remember my session",
     loginRequired:
       "Please enter email and password.",
 
@@ -1324,6 +1325,7 @@ const translations = {
     register: "रजिस्टर",
     aiPoweredAgriculture:
       "AI आधारित कृषि प्लेटफॉर्म",
+    rememberMe: "मुझे याद रखें",
     loginRequired:
       "कृपया ईमेल और पासवर्ड दर्ज करें।",
 
@@ -2061,6 +2063,7 @@ const translations = {
       "नोंदणी करा",
     aiPoweredAgriculture:
       "AI आधारित कृषी प्लॅटफॉर्म",
+    rememberMe: "माझे लॉगिन लक्षात ठेवा",
     loginRequired:
       "कृपया ईमेल आणि पासवर्ड भरा.",
 
