@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE_URL, buildApiUrl } from "../utils/apiConfig";
 
 const AppContext = createContext(null);
 
@@ -2530,8 +2531,8 @@ export function AppProvider({ children }) {
 
     if (user?.email) {
       const emailParam = encodeURIComponent(user.email.toLowerCase().trim());
-      // Sync Predictions from SQLite DB
-      fetch(`http://127.0.0.1:5000/api/history/predictions?email=${emailParam}`)
+      // Sync Predictions from DB
+      fetch(buildApiUrl(`/history/predictions?email=${emailParam}`))
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.records) && data.records.length > 0) {
@@ -2558,8 +2559,8 @@ export function AppProvider({ children }) {
         })
         .catch(() => {});
 
-      // Sync Recommendations from SQLite DB
-      fetch(`http://127.0.0.1:5000/api/history/recommendations?email=${emailParam}`)
+      // Sync Recommendations from DB
+      fetch(buildApiUrl(`/history/recommendations?email=${emailParam}`))
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.records) && data.records.length > 0) {
@@ -2628,7 +2629,7 @@ export function AppProvider({ children }) {
     localStorage.setItem(userKey, JSON.stringify([]));
   };
 
-  const API_BASE = "http://127.0.0.1:5000/api";
+  const API_BASE = API_BASE_URL;
 
   // Real Database Login
   const apiLogin = async (email, password) => {

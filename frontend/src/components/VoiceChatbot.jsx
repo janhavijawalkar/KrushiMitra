@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useVoiceInput } from "../hooks/useVoiceInput";
+import { buildApiUrl } from "../utils/apiConfig";
 
 export default function VoiceChatbot() {
   const { language } = useApp();
@@ -108,7 +109,7 @@ export default function VoiceChatbot() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/ai/chat", {
+      const response = await fetch(buildApiUrl("/ai/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

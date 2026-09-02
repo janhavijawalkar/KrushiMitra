@@ -21,6 +21,7 @@ import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
 
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenDistrict } from "../utils/voiceParser";
+import { buildApiUrl } from "../utils/apiConfig";
 
 export default function Weather({ nav }) {
   const { t, tDistrict, language } = useApp();
@@ -42,7 +43,7 @@ export default function Weather({ nav }) {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/weather?city=${encodeURIComponent(q)}`
+        buildApiUrl(`/weather?city=${encodeURIComponent(q)}`)
       );
 
       const data = await response.json();

@@ -28,6 +28,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { buildApiUrl } from "../utils/apiConfig";
 import ImageSlider from "../components/ImageSlider";
 import VoiceChatbot from "../components/VoiceChatbot";
 
@@ -308,7 +309,7 @@ export default function Landing({ nav }) {
           try {
             const { latitude, longitude } = position.coords;
             const res = await fetch(
-              `http://127.0.0.1:5000/api/weather?lat=${latitude}&lon=${longitude}`
+              buildApiUrl(`/weather?lat=${latitude}&lon=${longitude}`)
             );
             const data = await res.json();
             if (res.ok && data.success) {
@@ -346,7 +347,7 @@ export default function Landing({ nav }) {
     setWeatherLoading(true);
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/weather?city=${encodeURIComponent(districtName)}`
+        buildApiUrl(`/weather?city=${encodeURIComponent(districtName)}`)
       );
       const data = await res.json();
       if (res.ok && data.success) {

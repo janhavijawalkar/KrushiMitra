@@ -16,6 +16,7 @@ import {
 import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenYieldData, convertDevanagariDigits } from "../utils/voiceParser";
+import { buildApiUrl } from "../utils/apiConfig";
 
 export default function Prediction({ nav }) {
   const {
@@ -121,7 +122,7 @@ export default function Prediction({ nav }) {
       };
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/predict-productivity",
+        buildApiUrl("/predict-productivity"),
         {
           method: "POST",
           headers: {

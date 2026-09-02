@@ -18,6 +18,7 @@ import {
 import { useApp } from "../context/AppContext";
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenSoilData, convertDevanagariDigits } from "../utils/voiceParser";
+import { buildApiUrl } from "../utils/apiConfig";
 
 export default function Recommendation({ nav }) {
   const { addRecommendation, language, t, tCrop } = useApp();
@@ -125,7 +126,7 @@ export default function Recommendation({ nav }) {
       };
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/recommend",
+        buildApiUrl("/recommend"),
         {
           method: "POST",
           headers: {
