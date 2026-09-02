@@ -84,6 +84,7 @@ export default function Landing({ nav }) {
     apiLogin,
     t,
     tCrop,
+    tDistrict,
   } = useApp();
 
   const [faqOpen, setFaqOpen] = useState(null);
@@ -618,37 +619,37 @@ export default function Landing({ nav }) {
               href="#features"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              {t("landingSolutions") || "Solutions"}
+              {t("landingSolutions") || (language === "mr" ? "वैशिष्ट्ये" : language === "hi" ? "समाधान" : "Solutions")}
             </a>
             <a
               href="#simulator"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              Live Demo
+              {language === "mr" ? "थेट डेमो" : language === "hi" ? "लाइव डेमो" : "Live Demo"}
             </a>
             <a
               href="#how-it-works"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              {t("landingHowItWorks") || "How It Works"}
+              {t("landingHowItWorks") || (language === "mr" ? "कसे कार्य करते" : language === "hi" ? "यह कैसे काम करता है" : "How It Works")}
             </a>
             <a
               href="#crops"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              {t("landingSupportedCrops") || "Supported Crops"}
+              {t("landingSupportedCrops") || (language === "mr" ? "समर्थित पिके" : language === "hi" ? "समर्थित फसलें" : "Supported Crops")}
             </a>
             <a
               href="#testimonials"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              {t("landingFarmers") || "Farmers"}
+              {t("landingFarmers") || (language === "mr" ? "शेतकरी अनुभव" : language === "hi" ? "किसान अनुभव" : "Farmers")}
             </a>
             <a
               href="#faq"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
-              {t("landingFaq") || "FAQ"}
+              {t("landingFaq") || (language === "mr" ? "प्रश्नोत्तरे" : language === "hi" ? "अक्सर पूछे जाने वाले सवाल" : "FAQ")}
             </a>
           </nav>
 
@@ -802,9 +803,9 @@ export default function Landing({ nav }) {
                       <TrendingUp size={18} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("yieldForecast") || "Yield Forecast"}</p>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("yieldForecast") || (language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "पैदावार अनुमान" : "Yield Forecast")}</p>
                       <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-                        3.42 t/ha <span className="text-[10px] text-gray-400 font-normal">(Soybean)</span>
+                        3.42 t/ha <span className="text-[10px] text-gray-400 font-normal">({tCrop ? tCrop("Soybean") : "Soybean"})</span>
                       </p>
                     </div>
                   </div>
@@ -817,9 +818,9 @@ export default function Landing({ nav }) {
                       <Sprout size={18} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("optimalMatch") || "Optimal Crop"}</p>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("optimalMatch") || (language === "mr" ? "योग्य पीक शिफारस" : language === "hi" ? "उपयुक्त फसल सिफारिश" : "Optimal Crop")}</p>
                       <p className="text-sm font-black text-gray-900 dark:text-white">
-                        🌱 Cotton (Bt Hybrid) <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">95.2%</span>
+                        🌱 {tCrop ? tCrop("Cotton") : "Cotton"} <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">95.2%</span>
                       </p>
                     </div>
                   </div>
@@ -828,7 +829,7 @@ export default function Landing({ nav }) {
                 {/* FLOATING CARD 3: LIVE CLIMATE BADGE */}
                 <div className="absolute bottom-4 left-4 rounded-xl bg-black/65 backdrop-blur-md px-3.5 py-1.5 text-white flex items-center gap-2 text-xs font-semibold shadow-md">
                   <CloudSun size={15} className="text-amber-400" />
-                  <span>28°C • {t("sowingWindow") || "Optimal Kharif Sowing Window"}</span>
+                  <span>28°C • {t("sowingWindow") || (language === "mr" ? "खरीप पेरणीसाठी सर्वोत्तम वेळ" : language === "hi" ? "खरीफ बुवाई के लिए सही समय" : "Optimal Kharif Sowing Window")}</span>
                 </div>
               </div>
             </div>
@@ -852,10 +853,10 @@ export default function Landing({ nav }) {
         <ZoomFadeReveal delay={80} className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-8">
             <h2 className="text-2xl sm:text-3xl font-black text-[#172B18] dark:text-white">
-              {t("simHeader") || "Live Agricultural Telemetry & Crop Forecast"}
+              {t("simHeader") || (language === "mr" ? "थेट कृषी आकडेवारी आणि पीक अंदाज" : language === "hi" ? "लाइव कृषि डेटा और फसल पूर्वानुमान" : "Live Agricultural Telemetry & Crop Forecast")}
             </h2>
             <p className="mt-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-              {t("simSub") || "Real-time crop yield models, soil nutrient profiling, and live weather conditions."}
+              {t("simSub") || (language === "mr" ? "रिअल-टाइम पीक उत्पादन मॉडेल, माती पोषण विश्लेषण आणि थेट हवामान अंदाज." : language === "hi" ? "वास्तविक समय फसल उपज मॉडल, मृदा पोषण विश्लेषण और लाइव मौसम स्थितियां।" : "Real-time crop yield models, soil nutrient profiling, and live weather conditions.")}
             </p>
           </div>
 
@@ -874,7 +875,7 @@ export default function Landing({ nav }) {
                   }`}
                 >
                   <TrendingUp size={15} />
-                  <span>{t("yieldPredictorTab") || "Yield Predictor"}</span>
+                  <span>{t("yieldPredictorTab") || (language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "उपज अनुमान" : "Yield Predictor")}</span>
                 </button>
                 <button
                   type="button"
@@ -886,7 +887,7 @@ export default function Landing({ nav }) {
                   }`}
                 >
                   <Sprout size={15} />
-                  <span>{t("soilAdvisoryTab") || "Soil Advisory"}</span>
+                  <span>{t("soilAdvisoryTab") || (language === "mr" ? "माती परीक्षण सल्ला" : language === "hi" ? "मृदा सलाह" : "Soil Advisory")}</span>
                 </button>
                 <button
                   type="button"
@@ -903,12 +904,12 @@ export default function Landing({ nav }) {
                   }`}
                 >
                   <CloudSun size={15} />
-                  <span>{t("liveWeatherTab") || "Live Weather"}</span>
+                  <span>{t("liveWeatherTab") || (language === "mr" ? "थेट हवामान" : language === "hi" ? "लाइव मौसम" : "Live Weather")}</span>
                 </button>
               </div>
 
               <span className="key-cap text-[11px] py-1 px-3 bg-[#E5F7EA] dark:bg-[#183321] text-[#2E7D32] dark:text-[#4ADE80] flex items-center gap-1">
-                <Activity size={13} className="animate-pulse" /> {t("liveTelemetry") || "Live Telemetry"}
+                <Activity size={13} className="animate-pulse" /> {t("liveTelemetry") || (language === "mr" ? "थेट आकडेवारी" : language === "hi" ? "लाइव डेटा" : "Live Telemetry")}
               </span>
             </div>
 
@@ -949,7 +950,7 @@ export default function Landing({ nav }) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
-                        {t("district") || "District"}:
+                        {t("district") || (language === "mr" ? "जिल्हा" : language === "hi" ? "जिला" : "District")}:
                       </label>
                       <select
                         value={simDistrict}
@@ -987,10 +988,10 @@ export default function Landing({ nav }) {
                 <div className="sm:col-span-6 rounded-3xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-6 text-white shadow-xl space-y-4 transition-transform hover:scale-[1.02] duration-300">
                   <div className="flex items-center justify-between border-b border-white/20 pb-3">
                     <span className="text-xs font-bold text-green-100 uppercase tracking-wider">
-                      {t("predictedYieldBanner") || "Predicted Crop Yield Output"}
+                      {t("predictedYieldBanner") || (language === "mr" ? "अपेक्षित पीक उत्पादन अंदाज" : language === "hi" ? "अनुमानित फसल उपज आउटपुट" : "Predicted Crop Yield Output")}
                     </span>
                     <span className="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full">
-                      {simDistrict} • {tCrop ? tCrop(simCrop) : simCrop}
+                      {tDistrict ? tDistrict(simDistrict) : simDistrict} • {tCrop ? tCrop(simCrop) : simCrop}
                     </span>
                   </div>
 
@@ -999,7 +1000,7 @@ export default function Landing({ nav }) {
                       {simYieldResult.yieldPerHa} {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
                     </p>
                     <p className="text-xs text-green-100">
-                      {t("totalHarvest") || "Total Farm Harvest"}: <span className="font-extrabold text-white">{simYieldResult.totalProduction} {language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span> ({language === "mr" ? "क्षेत्र" : language === "hi" ? "क्षेत्रफल" : "across"} {simArea} {language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "ha"})
+                      {t("totalHarvest") || (language === "mr" ? "एकूण शेत उत्पादन" : language === "hi" ? "कुल खेत पैदावार" : "Total Farm Harvest")}: <span className="font-extrabold text-white">{simYieldResult.totalProduction} {language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span> ({language === "mr" ? "क्षेत्र" : language === "hi" ? "क्षेत्रफल" : "across"} {simArea} {language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "ha"})
                     </p>
                   </div>
 
@@ -1009,7 +1010,7 @@ export default function Landing({ nav }) {
                       <p className="font-extrabold text-white mt-0.5">{simYieldResult.status}</p>
                     </div>
                     <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur-xs">
-                      <p className="text-[10px] text-green-200 font-semibold">{t("suitabilityFactor") || "Regional Suitability"}</p>
+                      <p className="text-[10px] text-green-200 font-semibold">{t("suitabilityFactor") || (language === "mr" ? "प्रादेशिक अनुकूलता" : language === "hi" ? "क्षेत्रीय अनुकूलता" : "Regional Suitability")}</p>
                       <p className="font-extrabold text-white mt-0.5">{simYieldResult.confidence}</p>
                     </div>
                   </div>
@@ -1019,7 +1020,7 @@ export default function Landing({ nav }) {
                     onClick={() => (user ? nav?.("prediction") : nav?.("register"))}
                     className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-bold text-[#1B5E20] shadow-md hover:bg-[#F7FFF5] transition cursor-pointer hover:scale-102"
                   >
-                    <span>{t("estimateHarvestYield") || "Estimate Harvest Yield with Real Farm Data"}</span>
+                    <span>{t("estimateHarvestYield") || (language === "mr" ? "शेताच्या खऱ्या माहितीसह उत्पादन मोजा" : language === "hi" ? "खेत के वास्तविक डेटा के साथ उपज जांचें" : "Estimate Harvest Yield with Real Farm Data")}</span>
                     <ArrowRight size={14} />
                   </button>
                 </div>
@@ -1032,7 +1033,7 @@ export default function Landing({ nav }) {
                 <div className="grid gap-4 sm:grid-cols-4">
                   <div className="glass-step-card rounded-2xl p-4">
                     <div className="flex justify-between text-xs font-bold mb-2">
-                      <span className="text-gray-600 dark:text-gray-300">{t("nitrogen") || "Nitrogen (N)"}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{t("nitrogen") || (language === "mr" ? "नायट्रोजन (N)" : language === "hi" ? "नाइट्रोजन (N)" : "Nitrogen (N)")}</span>
                       <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilN} kg/ha</span>
                     </div>
                     <input
@@ -1047,7 +1048,7 @@ export default function Landing({ nav }) {
 
                   <div className="glass-step-card rounded-2xl p-4">
                     <div className="flex justify-between text-xs font-bold mb-2">
-                      <span className="text-gray-600 dark:text-gray-300">{t("phosphorus") || "Phosphorus (P)"}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{t("phosphorus") || (language === "mr" ? "स्फुरद (P)" : language === "hi" ? "फास्फोरस (P)" : "Phosphorus (P)")}</span>
                       <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilP} kg/ha</span>
                     </div>
                     <input
@@ -1062,7 +1063,7 @@ export default function Landing({ nav }) {
 
                   <div className="glass-step-card rounded-2xl p-4">
                     <div className="flex justify-between text-xs font-bold mb-2">
-                      <span className="text-gray-600 dark:text-gray-300">{t("potassium") || "Potassium (K)"}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{t("potassium") || (language === "mr" ? "पालाश (K)" : language === "hi" ? "पोटाश (K)" : "Potassium (K)")}</span>
                       <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilK} kg/ha</span>
                     </div>
                     <input
@@ -1077,7 +1078,7 @@ export default function Landing({ nav }) {
 
                   <div className="glass-step-card rounded-2xl p-4">
                     <div className="flex justify-between text-xs font-bold mb-2">
-                      <span className="text-gray-600 dark:text-gray-300">{t("soilPh") || "Soil pH"}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{t("soilPh") || (language === "mr" ? "सामू (pH)" : language === "hi" ? "पीएच मान (pH)" : "Soil pH")}</span>
                       <span className="text-[#2E7D32] dark:text-[#4ADE80] font-black">{soilPh} pH</span>
                     </div>
                     <input
@@ -1101,7 +1102,7 @@ export default function Landing({ nav }) {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-base font-black text-[#1B5E20] dark:text-[#4ADE80]">
-                          {t("recommendedCropBanner") || "Recommended Crop"}: {tCrop ? tCrop(soilRecResult.crop) : soilRecResult.crop}
+                          {t("recommendedCropBanner") || (language === "mr" ? "शिफारस केलेले पीक" : language === "hi" ? "अनुशंसित फसल" : "Recommended Crop")}: {tCrop ? tCrop(soilRecResult.crop) : soilRecResult.crop}
                         </h4>
                         <span className="rounded-full bg-emerald-100 dark:bg-[#183321] px-2.5 py-0.5 text-[10px] font-extrabold text-[#1B5E20] dark:text-[#4ADE80]">
                           {language === "mr" ? "योग्य पीक" : language === "hi" ? "उपयुक्त फसल" : "Optimal Match"}
@@ -1118,7 +1119,7 @@ export default function Landing({ nav }) {
                     onClick={() => (user ? nav?.("recommendation") : nav?.("register"))}
                     className="btn-shimmer shrink-0 rounded-xl bg-[#2E7D32] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#1B5E20] transition cursor-pointer hover:scale-105"
                   >
-                    {t("findOptimalCrop") || "Find Optimal Crop"}
+                    {t("findOptimalCrop") || (language === "mr" ? "सर्वोत्तम पीक शोधा" : language === "hi" ? "सर्वोत्तम फसल खोजें" : "Find Optimal Crop")}
                   </button>
                 </div>
               </div>
@@ -1131,7 +1132,7 @@ export default function Landing({ nav }) {
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl glass-panel p-3.5 border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-200">
                     <MapPin size={16} className="text-[#2E7D32] dark:text-[#4ADE80]" />
-                    <span>{t("location") || "Location"}: <span className="text-[#1B5E20] dark:text-[#4ADE80] font-black">{weatherData.location}</span></span>
+                    <span>{t("location") || (language === "mr" ? "स्थान" : language === "hi" ? "स्थान" : "Location")}: <span className="text-[#1B5E20] dark:text-[#4ADE80] font-black">{weatherData.location}</span></span>
                     {weatherData.isLiveGps && (
                       <span className="rounded-full bg-emerald-100 dark:bg-[#183321] px-2 py-0.5 text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300">
                         ● GPS Live
@@ -1147,14 +1148,14 @@ export default function Landing({ nav }) {
                       className="flex items-center gap-1 rounded-xl bg-[#2E7D32] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#1B5E20] transition cursor-pointer hover:scale-105"
                     >
                       <RefreshCw size={13} className={weatherLoading ? "animate-spin" : ""} />
-                      <span>{weatherLoading ? (t("locating") || "Locating...") : (t("useMyLiveLocation") || "📍 Use My Live Location")}</span>
+                      <span>{weatherLoading ? (t("locating") || (language === "mr" ? "शोधत आहे..." : language === "hi" ? "खोज रहे हैं..." : "Locating...")) : (t("useMyLiveLocation") || (language === "mr" ? "📍 माझे थेट स्थान वापरा" : language === "hi" ? "📍 मेरा लाइव स्थान उपयोग करें" : "📍 Use My Live Location"))}</span>
                     </button>
 
                     <select
                       onChange={(e) => fallbackDistrictWeather(e.target.value)}
                       className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 cursor-pointer"
                     >
-                      <option value="Pune">{t("selectDistrict") || "Select District"}</option>
+                      <option value="Pune">{t("selectDistrict") || (language === "mr" ? "जिल्हा निवडा" : language === "hi" ? "जिला चुनें" : "Select District")}</option>
                       {["Pune", "Nagpur", "Nashik", "Chhatrapati Sambhajinagar", "Kolhapur", "Amravati", "Solapur", "Latur", "Satara", "Jalgaon", "Nanded", "Ahmednagar"].map((d) => (
                         <option key={d} value={d}>
                           {tDistrict ? tDistrict(d) : d}
@@ -1167,24 +1168,24 @@ export default function Landing({ nav }) {
                 {/* LIVE METEOROLOGICAL METRICS */}
                 <div className="grid gap-4 sm:grid-cols-4 text-center">
                   <div className="rounded-2xl glass-panel border border-amber-200 dark:border-amber-800 p-4 transition-transform hover:scale-105">
-                    <span className="text-xs font-bold text-amber-800 dark:text-amber-300">{t("liveTemperature") || "Live Temperature"}</span>
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-300">{t("liveTemperature") || (language === "mr" ? "थेट तापमान" : language === "hi" ? "लाइव तापमान" : "Live Temperature")}</span>
                     <p className="text-2xl font-black text-amber-900 dark:text-amber-100 mt-1">{weatherData.temp}°C</p>
                     <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">{weatherData.condition}</p>
                   </div>
                   <div className="rounded-2xl glass-panel border border-blue-200 dark:border-blue-800 p-4 transition-transform hover:scale-105">
-                    <span className="text-xs font-bold text-blue-800 dark:text-blue-300">{t("relativeHumidity") || "Relative Humidity"}</span>
+                    <span className="text-xs font-bold text-blue-800 dark:text-blue-300">{t("relativeHumidity") || (language === "mr" ? "सापेक्ष आर्द्रता" : language === "hi" ? "सापेक्ष आर्द्रता" : "Relative Humidity")}</span>
                     <p className="text-2xl font-black text-blue-900 dark:text-blue-100 mt-1">{weatherData.humidity}%</p>
-                    <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">{t("atmosphericMoisture") || "Atmospheric Moisture"}</p>
+                    <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">{t("atmosphericMoisture") || (language === "mr" ? "हवेतील आर्द्रता" : language === "hi" ? "हवा में नमी" : "Atmospheric Moisture")}</p>
                   </div>
                   <div className="rounded-2xl glass-panel border border-teal-200 dark:border-teal-800 p-4 transition-transform hover:scale-105">
-                    <span className="text-xs font-bold text-teal-800 dark:text-teal-300">{t("windVelocity") || "Wind Velocity"}</span>
+                    <span className="text-xs font-bold text-teal-800 dark:text-teal-300">{t("windVelocity") || (language === "mr" ? "वाऱ्याचा वेग" : language === "hi" ? "हवा की गति" : "Wind Velocity")}</span>
                     <p className="text-2xl font-black text-teal-900 dark:text-teal-100 mt-1">{weatherData.wind} km/h</p>
-                    <p className="text-[10px] text-teal-700 dark:text-teal-300 mt-0.5">{t("breezeVelocity") || "Breeze Velocity"}</p>
+                    <p className="text-[10px] text-teal-700 dark:text-teal-300 mt-0.5">{t("breezeVelocity") || (language === "mr" ? "वाऱ्याचा प्रवाह" : language === "hi" ? "हवा की चाल" : "Breeze Velocity")}</p>
                   </div>
                   <div className="rounded-2xl glass-panel border border-green-200 dark:border-green-800 p-4 transition-transform hover:scale-105">
-                    <span className="text-xs font-bold text-green-800 dark:text-green-300">{t("farmingStatus") || "Farming Status"}</span>
+                    <span className="text-xs font-bold text-green-800 dark:text-green-300">{t("farmingStatus") || (language === "mr" ? "कृषी हवामान स्थिती" : language === "hi" ? "कृषि मौसम स्थिति" : "Farming Status")}</span>
                     <p className="text-xs font-black text-green-900 dark:text-green-100 mt-2">{weatherData.advice}</p>
-                    <p className="text-[10px] text-green-700 dark:text-green-300 mt-0.5">{t("openWeatherTelemetry") || "OpenWeather Telemetry"}</p>
+                    <p className="text-[10px] text-green-700 dark:text-green-300 mt-0.5">{t("openWeatherTelemetry") || (language === "mr" ? "थेट हवामान माहिती" : language === "hi" ? "लाइव मौसम जानकारी" : "OpenWeather Telemetry")}</p>
                   </div>
                 </div>
               </div>
@@ -1200,13 +1201,13 @@ export default function Landing({ nav }) {
         <ZoomFadeReveal delay={60} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
-              🌾 Agricultural Intelligence
+              🌾 {language === "mr" ? "कृषी बुद्धिमत्ता साधने" : language === "hi" ? "कृषि बुद्धिमत्ता उपकरण" : "Agricultural Intelligence"}
             </span>
             <h2 className="mt-3.5 text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-              {t("solutionsHeader") || "Smart Tools for Better Farming"}
+              {t("solutionsHeader") || (language === "mr" ? "उत्कृष्ट शेतीसाठी स्मार्ट AI साधने" : language === "hi" ? "बेहतर खेती के लिए स्मार्ट AI उपकरण" : "Smart Tools for Better Farming")}
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-              {t("solutionsSub") || "Simple, easy-to-use AI tools to help you pick the best crops, forecast harvest output, and check live weather for your farm."}
+              {t("solutionsSub") || (language === "mr" ? "योग्य पिकांची निवड, अचूक उत्पादन अंदाज आणि थेट हवामान माहितीसाठी सोपी व मोफत AI साधने." : language === "hi" ? "सही फसल चुनने, सटीक पैदावार अनुमान और लाइव मौसम के लिए सरल और मुफ्त AI उपकरण।" : "Simple, easy-to-use AI tools to help you pick the best crops, forecast harvest output, and check live weather for your farm.")}
             </p>
           </div>
 
@@ -1242,7 +1243,7 @@ export default function Landing({ nav }) {
                     </div>
 
                     <div className="mt-5 pt-3.5 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs font-bold text-[#2E7D32] dark:text-[#4ADE80]">
-                      <span>Explore Tool</span>
+                      <span>{language === "mr" ? "वापरून पहा" : language === "hi" ? "उपयोग करें" : "Explore Tool"}</span>
                       <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform" />
                     </div>
                   </div>
@@ -1264,13 +1265,13 @@ export default function Landing({ nav }) {
         <ZoomFadeReveal delay={60} className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
-              🌱 Simple & Streamlined Process
+              🌱 {language === "mr" ? "सोपी व सुलभ ३-टप्पे प्रक्रिया" : language === "hi" ? "सरल और आसान 3-चरण प्रक्रिया" : "Simple & Streamlined Process"}
             </span>
             <h2 className="mt-3.5 text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-              {t("howItWorksHeading") || "How KrushiMitra Works in 3 Simple Steps"}
+              {t("howItWorksHeading") || (language === "mr" ? "कृषीमित्र ३ सोप्या टप्प्यांत कसे कार्य करते" : language === "hi" ? "कृषि-मित्र 3 आसान चरणों में कैसे काम करता है" : "How KrushiMitra Works in 3 Simple Steps")}
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-              Follow three easy steps to get instant agronomic advisory for your land.
+              {language === "mr" ? "तुमच्या शेतासाठी झटपट कृषी सल्ला मिळवण्यासाठी ३ सोप्या पायऱ्यांचे अनुसरण करा." : language === "hi" ? "अपने खेत के लिए तत्काल कृषि सलाह प्राप्त करने के लिए 3 सरल चरणों का पालन करें।" : "Follow three easy steps to get instant agronomic advisory for your land."}
             </p>
           </div>
 
@@ -1360,7 +1361,7 @@ export default function Landing({ nav }) {
               onClick={() => handleTryStep(activeStep)}
               className="btn-shimmer flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1B5E20] transition cursor-pointer hover:scale-105"
             >
-              <span>Try Step {workflowSteps[activeStep].num} Now</span>
+              <span>{language === "mr" ? `टप्पा ${workflowSteps[activeStep].num} आता वापरा` : language === "hi" ? `चरण ${workflowSteps[activeStep].num} अभी उपयोग करें` : `Try Step ${workflowSteps[activeStep].num} Now`}</span>
               <ArrowRight size={13} />
             </button>
           </div>
@@ -1373,22 +1374,22 @@ export default function Landing({ nav }) {
       <section id="crops" className="py-16 sm:py-20">
         <ZoomFadeReveal delay={60} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
-            🌱 Supported Crops
+            🌱 {language === "mr" ? "समर्थित पिके" : language === "hi" ? "समर्थित फसलें" : "Supported Crops"}
           </span>
           <h2 className="mt-3.5 text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
-            {t("supportedCropsHeading") || "Supported Maharashtra Crops"}
+            {t("supportedCropsHeading") || (language === "mr" ? "महाराष्ट्रातील प्रमुख समर्थित पिके" : language === "hi" ? "महाराष्ट्र की प्रमुख समर्थित फसलें" : "Supported Maharashtra Crops")}
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
-            {t("supportedCropsSub") || "Accurate predictions for major crops grown across Maharashtra farms."}
+            {t("supportedCropsSub") || (language === "mr" ? "महाराष्ट्रातील शेतांमध्ये पिकवल्या जाणाऱ्या प्रमुख पिकांसाठी अचूक उत्पादन अंदाज आणि माती सल्ला." : language === "hi" ? "महाराष्ट्र के खेतों में उगाई जाने वाली मुख्य फसलों के लिए सटीक उपज अनुमान और मृदा सलाह।" : "Accurate predictions for major crops grown across Maharashtra farms.")}
           </p>
 
           {/* INTERACTIVE CATEGORY FILTER SLIDER TABS */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             {[
-              { id: "all", label: "🌾 All Crops" },
-              { id: "kharif", label: "🌧️ Kharif (Monsoon)" },
-              { id: "rabi", label: "❄️ Rabi (Winter)" },
-              { id: "cash", label: "💰 Cash Crops" },
+              { id: "all", label: language === "mr" ? "🌾 सर्व पिके" : language === "hi" ? "🌾 सभी फसलें" : "🌾 All Crops" },
+              { id: "kharif", label: language === "mr" ? "🌧️ खरीप (पावसाळी)" : language === "hi" ? "🌧️ खरीफ (मानसून)" : "🌧️ Kharif (Monsoon)" },
+              { id: "rabi", label: language === "mr" ? "❄️ रब्बी (हिवाळी)" : language === "hi" ? "❄️ रबी (सर्दियां)" : "❄️ Rabi (Winter)" },
+              { id: "cash", label: language === "mr" ? "💰 नगदी पिके" : language === "hi" ? "💰 नकदी फसलें" : "💰 Cash Crops" },
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -1424,9 +1425,9 @@ export default function Landing({ nav }) {
                     </div>
 
                     <h4 className="mt-4 text-base font-black text-gray-900 dark:text-white flex items-center justify-between">
-                      <span>{c.name}</span>
+                      <span>{language === "mr" ? c.marathiName : language === "hi" ? c.hindiName : c.name}</span>
                       <span className="text-xs font-bold text-gray-400 dark:text-gray-500">
-                        {language === "mr" ? c.marathiName : language === "hi" ? c.hindiName : ""}
+                        {language === "mr" ? `(${c.name})` : language === "hi" ? `(${c.name})` : ""}
                       </span>
                     </h4>
 
@@ -1435,7 +1436,8 @@ export default function Landing({ nav }) {
                         🌱 <span className="font-semibold text-gray-700 dark:text-gray-200">{c.soil}</span>
                       </p>
                       <p className="flex items-center gap-1.5">
-                        📈 Expected: <span className="font-bold text-[#2E7D32] dark:text-[#4ADE80]">{c.yieldRange}</span>
+                        📈 {language === "mr" ? "अपेक्षित उत्पादन:" : language === "hi" ? "अपेक्षित पैदावार:" : "Expected:"}{" "}
+                        <span className="font-bold text-[#2E7D32] dark:text-[#4ADE80]">{c.yieldRange}</span>
                       </p>
                     </div>
                   </div>
@@ -1458,10 +1460,10 @@ export default function Landing({ nav }) {
           <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-4">
             <div className="text-left">
               <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
-                ⭐ Farmer Experiences
+                ⭐ {language === "mr" ? "शेतकऱ्यांचे अनुभव" : language === "hi" ? "किसानों के अनुभव" : "Farmer Experiences"}
               </span>
               <h2 className="mt-3 text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
-                {t("farmerTestimonialsHeading") || "Trusted by Fellow Farmers"}
+                {t("farmerTestimonialsHeading") || (language === "mr" ? "शेतकरी बांधवांचे विश्वासू अनुभव" : language === "hi" ? "किसान भाइयों के विश्वसनीय अनुभव" : "Trusted by Fellow Farmers")}
               </h2>
             </div>
 
@@ -1542,10 +1544,10 @@ export default function Landing({ nav }) {
         <ZoomFadeReveal delay={60} className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="key-cap text-xs py-1.5 px-4 bg-white/80 dark:bg-[#183321]/80 backdrop-blur-md text-[#2E7D32] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
-              ❓ Help & Answers
+              ❓ {language === "mr" ? "मदत आणि उत्तरे" : language === "hi" ? "सहायता और उत्तर" : "Help & Answers"}
             </span>
             <h2 className="mt-3.5 text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
-              {t("faqHeading") || "Frequently Asked Questions"}
+              {t("faqHeading") || (language === "mr" ? "नेहमी विचारले जाणारे प्रश्न" : language === "hi" ? "अक्सर पूछे जाने वाले सवाल" : "Frequently Asked Questions")}
             </h2>
           </div>
 
@@ -1590,15 +1592,15 @@ export default function Landing({ nav }) {
         <ZoomFadeReveal delay={80} className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold backdrop-blur-md">
             <Sparkles size={14} className="text-yellow-300 animate-spin" />
-            <span>Join Fellow Progressive Farmers</span>
+            <span>{language === "mr" ? "प्रगतीशील शेतकरी बांधवांमध्ये सामील व्हा" : language === "hi" ? "प्रगतिशील किसान भाइयों के साथ जुड़ें" : "Join Fellow Progressive Farmers"}</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-            {t("ctaHeading") || "Ready to Grow More and Farm Smarter?"}
+            {t("ctaHeading") || (language === "mr" ? "अधिक उत्पादन आणि स्मार्ट शेतीसाठी सज्ज आहात?" : language === "hi" ? "अधिक पैदावार और स्मार्ट खेती के लिए तैयार हैं?" : "Ready to Grow More and Farm Smarter?")}
           </h2>
 
           <p className="max-w-xl mx-auto text-xs sm:text-base text-green-100 leading-relaxed font-normal">
-            {t("ctaSubtitle") || "Join fellow farmers using KrushiMitra to plan better harvests, test soil compatibility, and download farm reports."}
+            {t("ctaSubtitle") || (language === "mr" ? "कृषीमित्र सोबत शेतीचे अचूक नियोजन करा, माती परीक्षणानुसार पीक निवडा आणि मोफत अहवाल डाउनलोड करा." : language === "hi" ? "कृषि-मित्र के साथ बेहतर पैदावार की योजना बनाएं, मृदा अनुकूलता परखें और आधिकारिक रिपोर्ट डाउनलोड करें।" : "Join fellow farmers using KrushiMitra to plan better harvests, test soil compatibility, and download farm reports.")}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -1608,7 +1610,7 @@ export default function Landing({ nav }) {
               className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-sm font-black text-[#1B5E20] shadow-2xl transition duration-300 hover:-translate-y-1 hover:scale-105 active:scale-95 cursor-pointer"
             >
               <Sprout size={20} />
-              <span>{t("createFreeAccount") || "Create Free Account"}</span>
+              <span>{t("createFreeAccount") || (language === "mr" ? "मोफत खाते तयार करा" : language === "hi" ? "मुफ्त खाता बनाएं" : "Create Free Account")}</span>
               <ArrowRight size={18} />
             </button>
 
@@ -1617,7 +1619,7 @@ export default function Landing({ nav }) {
               onClick={() => handleQuickDemo("farmer")}
               className="rounded-2xl border border-white/40 bg-white/10 backdrop-blur-md px-7 py-4 text-sm font-bold text-white hover:bg-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 cursor-pointer shadow-lg"
             >
-              <span>{t("instantDemoAccess") || "Instant Demo Access"}</span>
+              <span>{t("instantDemoAccess") || (language === "mr" ? "त्वरित मोफत डेमो" : language === "hi" ? "तुरंत निःशुल्क डेमो" : "Instant Demo Access")}</span>
             </button>
           </div>
         </ZoomFadeReveal>
@@ -1638,32 +1640,36 @@ export default function Landing({ nav }) {
                 <span className="text-base font-black text-[#1B5E20] dark:text-[#4ADE80]">KrushiMitra</span>
               </div>
               <p className="text-[11px] leading-relaxed">
-                Empowering Indian Kisans with machine learning crop recommendations, yield forecasting, and meteorological intelligence.
+                {language === "mr"
+                  ? "भारतीय शेतकरी बांधवांना अत्याधुनिक AI तंत्रज्ञानाने पीक शिफारसी, उत्पादन अंदाज आणि हवामान माहिती देऊन सक्षम करणे."
+                  : language === "hi"
+                  ? "भारतीय किसान भाइयों को आधुनिक AI तकनीक द्वारा फसल सिफारिश, उपज अनुमान और मौसम सलाह प्रदान कर सशक्त बनाना।"
+                  : "Empowering Indian Kisans with machine learning crop recommendations, yield forecasting, and meteorological intelligence."}
               </p>
             </div>
 
             {/* QUICK LINKS */}
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("platformTools") || "Platform Tools"}</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("platformTools") || (language === "mr" ? "प्लॅटफॉर्म साधने" : language === "hi" ? "प्लेटफ़ॉर्म उपकरण" : "Platform Tools")}</h4>
               <ul className="space-y-2">
                 <li>
                   <button onClick={() => (user ? nav?.("prediction") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
-                    {t("cropPrediction") || "Crop Yield Prediction"}
+                    {t("cropPrediction") || (language === "mr" ? "पीक उत्पादन अंदाज" : language === "hi" ? "फसल उपज अनुमान" : "Crop Yield Prediction")}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => (user ? nav?.("recommendation") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
-                    {t("cropRecommendation") || "Soil Nutrient Advisory"}
+                    {t("cropRecommendation") || (language === "mr" ? "माती परीक्षण पीक शिफारस" : language === "hi" ? "मृदा परीक्षण फसल सिफारिश" : "Soil Nutrient Advisory")}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => (user ? nav?.("weather") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
-                    {t("weather") || "District Weather Advisory"}
+                    {t("weather") || (language === "mr" ? "जिल्हा हवामान अंदाज" : language === "hi" ? "जिला मौसम पूर्वानुमान" : "District Weather Advisory")}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => (user ? nav?.("reports") : nav?.("login"))} className="hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer">
-                    {t("reports") || "Official PDF Export"}
+                    {t("reports") || (language === "mr" ? "अधिकृत PDF अहवाल" : language === "hi" ? "आधिकारिक PDF रिपोर्ट" : "Official PDF Export")}
                   </button>
                 </li>
               </ul>
@@ -1671,11 +1677,11 @@ export default function Landing({ nav }) {
 
             {/* FARMER RESOURCES */}
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("farmerSupport") || "Farmer Support"}</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("farmerSupport") || (language === "mr" ? "शेतकरी मदत केंद्र" : language === "hi" ? "किसान सहायता केंद्र" : "Farmer Support")}</h4>
               <ul className="space-y-2">
                 <li>
                   <span className="flex items-center gap-1">
-                    <PhoneCall size={12} className="text-[#2E7D32] dark:text-[#4ADE80]" /> {t("kisanHelpline") || "Kisan Helpline"}: 1800-180-1551
+                    <PhoneCall size={12} className="text-[#2E7D32] dark:text-[#4ADE80]" /> {t("kisanHelpline") || (language === "mr" ? "किसान हेल्पलाईन" : language === "hi" ? "किसान हेल्पलाइन" : "Kisan Helpline")}: 1800-180-1551
                   </span>
                 </li>
                 <li>
@@ -1687,41 +1693,41 @@ export default function Landing({ nav }) {
                   </a>
                 </li>
                 <li>
-                  <span>IMD Mausam Weather Feed</span>
+                  <span>{language === "mr" ? "IMD हवामान विभाग थेट माहिती" : language === "hi" ? "IMD मौसम विभाग लाइव डेटा" : "IMD Mausam Weather Feed"}</span>
                 </li>
                 <li>
-                  <span>Maharashtra Agronomy Dept.</span>
+                  <span>{language === "mr" ? "महाराष्ट्र राज्य कृषी विभाग" : language === "hi" ? "महाराष्ट्र राज्य कृषि विभाग" : "Maharashtra Agronomy Dept."}</span>
                 </li>
                 <li>
-                  <span>ICAR Soil Taxonomy Standards</span>
+                  <span>{language === "mr" ? "ICAR मृदा वर्गीकरण मानके" : language === "hi" ? "ICAR मृदा वर्गीकरण मानक" : "ICAR Soil Taxonomy Standards"}</span>
                 </li>
               </ul>
             </div>
 
             {/* AUTH ACCESS */}
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("accountAccess") || "Account Access"}</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">{t("accountAccess") || (language === "mr" ? "खाते प्रवेश" : language === "hi" ? "खाता पहुंच" : "Account Access")}</h4>
               <div className="space-y-2">
                 <button
                   type="button"
                   onClick={() => nav?.("login")}
                   className="key-cap w-full text-center py-2 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer"
                 >
-                  {t("signIn") || "Sign In to Account"}
+                  {t("signIn") || (language === "mr" ? "खात्यात प्रवेश करा" : language === "hi" ? "खाते में लॉगिन करें" : "Sign In to Account")}
                 </button>
                 <button
                   type="button"
                   onClick={() => nav?.("register")}
                   className="btn-shimmer w-full text-center py-2 text-[11px] font-bold text-white bg-[#2E7D32] rounded-xl hover:bg-[#1B5E20] cursor-pointer shadow-xs hover:scale-102"
                 >
-                  {t("getStarted") || "Register New Farmer"}
+                  {t("getStarted") || (language === "mr" ? "नवीन शेतकरी नोंदणी" : language === "hi" ? "नया किसान पंजीकरण" : "Register New Farmer")}
                 </button>
               </div>
             </div>
           </div>
 
           <div className="mt-10 border-t border-[#DCE8D9] dark:border-[#24402A] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-            <p>© {new Date().getFullYear()} KrushiMitra AI. Built for Indian Agriculture & Sustainable Farming.</p>
+            <p>© {new Date().getFullYear()} {language === "mr" ? "कृषीमित्र AI. भारतीय शेती आणि शाश्वत विकासासाठी समर्पित." : language === "hi" ? "कृषि-मित्र AI. भारतीय कृषि और सतत विकास के लिए समर्पित।" : "KrushiMitra AI. Built for Indian Agriculture & Sustainable Farming."}</p>
           </div>
         </div>
       </footer>
