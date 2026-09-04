@@ -9,5 +9,7 @@ build/
 __pycache__/
 backend/__pycache__/
 *.pyc
-
 backend/models/productivity_random_forest.pkl
+
+start_project.bat
+*.bat
