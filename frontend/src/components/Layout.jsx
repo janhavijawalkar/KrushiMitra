@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import OfflineBanner from "./OfflineBanner";
 import VoiceChatbot from "./VoiceChatbot";
 
 import { useApp } from "../context/AppContext";
@@ -34,6 +35,12 @@ export default function Layout({
   const title =
     titles[page] || "KrushiMitra";
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = title ? `${title} — KrushiMitra` : "KrushiMitra";
+    }
+  }, [title]);
+
   return (
     <div className="min-h-screen bg-[#F6F8F4]">
 
@@ -53,6 +60,7 @@ export default function Layout({
           ${collapsed ? "pl-[78px]" : "pl-[260px]"}
         `}
       >
+        <OfflineBanner />
         <Topbar title={title} nav={nav} />
 
         <main

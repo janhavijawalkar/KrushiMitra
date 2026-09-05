@@ -172,7 +172,7 @@ export default function App() {
 
   return (
     <>
-      <OfflineBanner />
+      {(!user || page === "landing") && <OfflineBanner />}
       {renderContent()}
     </>
   );

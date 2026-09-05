@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "icons/*.png"],
       manifest: {
-        name: "KrushiMitra — Smart Agriculture AI Platform",
+        name: "KrushiMitra",
         short_name: "KrushiMitra",
         description:
           "AI-powered crop yield prediction, soil recommendation, and weather analysis for farmers",
