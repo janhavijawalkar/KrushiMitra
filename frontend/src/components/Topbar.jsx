@@ -19,11 +19,15 @@ import {
   ArrowRight,
   TrendingUp,
   Lock,
+  Download,
+  WifiOff,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 export default function Topbar({ title, nav }) {
+  const { isOnline, isInstallable, promptInstall } = useOnlineStatus();
   const {
     user,
     logout,
@@ -164,6 +168,32 @@ export default function Topbar({ title, nav }) {
 
       {/* RIGHT ACTION CONTROLS */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* OFFLINE STATUS BADGE */}
+        {!isOnline && (
+          <div
+            className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800 shadow-2xs"
+            title={language === "mr" ? "ऑफलाइन मोड सक्रिय" : language === "hi" ? "ऑफलाइन मोड सक्रिय" : "Offline Mode Active"}
+          >
+            <WifiOff size={13} className="text-amber-600 animate-pulse" />
+            <span className="hidden sm:inline">
+              {language === "mr" ? "ऑफलाइन" : language === "hi" ? "ऑफलाइन" : "Offline"}
+            </span>
+          </div>
+        )}
+
+        {/* PWA INSTALL BUTTON */}
+        {isInstallable && (
+          <button
+            type="button"
+            onClick={promptInstall}
+            className="hidden sm:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 shadow-2xs transition hover:bg-emerald-100 hover:shadow-sm cursor-pointer"
+            title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा" : language === "hi" ? "ऐप इंस्टॉल करें" : "Install KrushiMitra App"}
+          >
+            <Download size={13} className="text-[#2E7D32]" />
+            <span>{language === "mr" ? "अ‍ॅप इन्स्टॉल" : language === "hi" ? "ऐप इंस्टॉल" : "Install App"}</span>
+          </button>
+        )}
+
         {/* LANGUAGE SELECTOR */}
         <div className="relative">
           <select

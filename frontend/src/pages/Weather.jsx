@@ -27,7 +27,15 @@ export default function Weather({ nav }) {
   const { t, tDistrict, language } = useApp();
 
   const [city, setCity] = useState("");
-  const [weather, setWeather] = useState(null);
+  const [weather, setWeather] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("krushimitra_last_weather");
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,14 +74,34 @@ export default function Weather({ nav }) {
         pressure: data.pressure,
         visibility: data.visibility || 0,
         cloudiness: data.cloudiness,
+        isOfflineCache: false,
+        cachedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
       setWeather(weatherData);
+      try {
+        localStorage.setItem("krushimitra_last_weather", JSON.stringify(weatherData));
+      } catch (e) {}
     } catch (err) {
-      console.error("Weather Error:", err);
+      console.warn("Weather fetch failed, attempting offline cache fallback:", err);
+
+      try {
+        const cached = localStorage.getItem("krushimitra_last_weather");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setWeather({ ...parsed, isOfflineCache: true });
+          setError(
+            language === "mr"
+              ? "📴 ऑफलाइन मोड: मागील जतन केलेले हवामान दाखवत आहे."
+              : language === "hi"
+              ? "📴 ऑफलाइन मोड: पिछला सहेजा गया मौसम दिखाया जा रहा है।"
+              : "📴 Offline Mode: Displaying last cached weather telemetry."
+          );
+          return;
+        }
+      } catch (e) {}
 
       setWeather(null);
-
       setError(
         err.message ||
           t("weatherUnavailable")
@@ -317,6 +345,11 @@ export default function Weather({ nav }) {
                       : ""}
                   </span>
 
+                  {weather.isOfflineCache && (
+                    <span className="rounded-full bg-amber-400/25 px-2.5 py-0.5 text-[10px] font-bold text-amber-200 border border-amber-300/40">
+                      {language === "mr" ? "📴 ऑफलाइन कॅश" : language === "hi" ? "📴 ऑफलाइन डेटा" : "📴 Offline Cache"} {weather.cachedAt ? `(${weather.cachedAt})` : ""}
+                    </span>
+                  )}
                 </div>
 
                 <p className="mt-5 text-sm text-green-100">

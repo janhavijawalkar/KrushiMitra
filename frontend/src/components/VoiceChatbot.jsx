@@ -132,19 +132,38 @@ export default function VoiceChatbot() {
         throw new Error(data.message || "Failed to get reply");
       }
     } catch (err) {
-      console.error("AI Chat Error:", err);
-      const errorReply =
-        language === "mr"
-          ? "माफ करा, सर्व्हरशी संपर्क साधता आला नाही. कृपया बॅकएंड सुरू असल्याची खात्री करा."
-          : language === "hi"
-          ? "क्षमा करें, सर्वर से संपर्क नहीं हो सका। कृपया जांचें कि बैकएंड चालू है।"
-          : "Sorry, could not connect to server. Please verify backend is running.";
+      console.warn("AI Chat offline, generating local agronomy advice:", err);
+      const queryLower = textToSend.toLowerCase();
+
+      let offlineReply = "";
+      if (queryLower.includes("fertilizer") || queryLower.includes("खत") || queryLower.includes("खाद") || queryLower.includes("npk")) {
+        offlineReply =
+          language === "mr"
+            ? "🌾 [ऑफलाइन सल्ला]: पिकांसाठी संतुलित NPK खतांचा वापर करा. पेरणीच्या वेळी DAP किंवा 10:26:26 आणि वाढीच्या टप्प्यावर युरियाचा हप्ता देणे फायदेशीर ठरते."
+            : language === "hi"
+            ? "🌾 [ऑफलाइन सलाह]: फसलों के लिए संतुलित NPK उर्वरक का उपयोग करें। बुवाई के समय DAP या 10:26:26 और वानस्पतिक वृद्धि पर यूरिया देना लाभकारी है।"
+            : "🌾 [Offline Advisory]: Maintain balanced NPK nutrition. Use basal DAP / 10:26:26 at sowing and split urea application during vegetative growth.";
+      } else if (queryLower.includes("water") || queryLower.includes("पाणी") || queryLower.includes("सिंचाई") || queryLower.includes("पाऊस")) {
+        offlineReply =
+          language === "mr"
+            ? "💧 [ऑफलाइन सल्ला]: ठिबक सिंचनाचा (Drip) वापर करून पाण्याची बचत करा. पिकाच्या फुलोरा आणि दाणे भरण्याच्या टप्प्यावर पाण्याची कमतरता भासू देऊ नका."
+            : language === "hi"
+            ? "💧 [ऑफलाइन सलाह]: ड्रिप सिंचाई से पानी की बचत करें। फूल आने और दाना भरने के महत्वपूर्ण समय पर नियमित सिंचाई सुनिश्चित करें।"
+            : "💧 [Offline Advisory]: Drip irrigation saves 40-50% water. Ensure timely irrigation during critical flowering and grain-filling stages.";
+      } else {
+        offlineReply =
+          language === "mr"
+            ? "🌱 [ऑफलाइन कृषीमित्र]: सध्या इंटरनेट उपलब्ध नाही, पण आपण वरील 'पीक अंदाज' व 'माती सल्ला' साधनांचा वापर करू शकता. इंटरनेट परत आल्यावर संपूर्ण AI चर्चा उपलब्ध होईल."
+            : language === "hi"
+            ? "🌱 [ऑफलाइन कृषि-मित्र]: वर्तमान में इंटरनेट उपलब्ध नहीं है, परंतु आप 'फसल पूर्वानुमान' व 'मृदा सलाह' उपकरणों का उपयोग कर सकते हैं। ऑनलाइन होने पर पूर्ण AI चर्चा उपलब्ध होगी।"
+            : "🌱 [Offline KrushiMitra]: Server is offline, but you can use the Yield Predictor & Soil Advisory tabs. Full AI conversational answers will resume when back online.";
+      }
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: errorReply,
+          content: offlineReply,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);

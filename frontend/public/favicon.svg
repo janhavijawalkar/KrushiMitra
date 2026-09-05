@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="120" fill="#1B5E20"/>
+  <circle cx="256" cy="256" r="180" fill="#2E7D32"/>
+  <path d="M256 380V190" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
+  <!-- Left Leaf -->
+  <path d="M256 270 C200 250 130 200 130 140 C190 140 240 210 256 240 Z" fill="#4ADE80"/>
+  <!-- Right Leaf -->
+  <path d="M256 220 C312 200 382 150 382 90 C322 90 272 160 256 190 Z" fill="#FBBF24"/>
+  <!-- Top Sprout Bud -->
+  <path d="M256 190 C235 150 240 100 256 70 C272 100 277 150 256 190 Z" fill="#FFFFFF"/>
+</svg>
