@@ -11,9 +11,10 @@ import {
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function Login({ nav }) {
-  const { login, apiLogin, t, language, changeLanguage } = useApp();
+  const { login, apiLogin, apiGoogleAuth, addNotification, t, language, changeLanguage } = useApp();
 
   const [form, setForm] = useState({
     email: "",
@@ -54,6 +55,25 @@ export default function Login({ nav }) {
       nav("dashboard");
     } else {
       setError(result.message || "Invalid credentials. Please verify your email and password.");
+    }
+  };
+
+  const handleGoogleSuccess = async (credential) => {
+    setIsLoading(true);
+    setError("");
+    const res = await apiGoogleAuth(credential);
+    setIsLoading(false);
+    if (res.success) {
+      if (addNotification) {
+        addNotification(
+          "Welcome to KrushiMitra! 🌾",
+          `Authenticated with Google as ${res.user?.name || res.user?.email}.`,
+          "system"
+        );
+      }
+      nav("dashboard");
+    } else {
+      setError(res.message || "Google Sign-In failed. Please try again.");
     }
   };
 
@@ -218,6 +238,22 @@ export default function Login({ nav }) {
               )}
             </button>
           </form>
+
+          {/* OR DIVIDER */}
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-[1px] flex-1 bg-gray-200" />
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              {language === "mr" ? "किंवा" : language === "hi" ? "अथवा" : "or continue with"}
+            </span>
+            <div className="h-[1px] flex-1 bg-gray-200" />
+          </div>
+
+          {/* GOOGLE SIGN-IN BUTTON */}
+          <GoogleAuthButton
+            mode="signin"
+            onSuccess={handleGoogleSuccess}
+            onError={(msg) => setError(msg)}
+          />
 
           {/* REGISTER LINK */}
           <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">

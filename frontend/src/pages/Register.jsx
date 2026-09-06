@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function Register({ nav }) {
-  const { apiRegister, addNotification, t, tDistrict, language, changeLanguage } = useApp();
+  const { apiRegister, apiGoogleAuth, addNotification, t, tDistrict, language, changeLanguage } = useApp();
 
   const [form, setForm] = useState({
     name: "",
@@ -107,6 +108,25 @@ export default function Register({ nav }) {
       nav("dashboard");
     } else {
       setError(result.message || "Registration failed. Please try again.");
+    }
+  };
+
+  const handleGoogleSuccess = async (credential) => {
+    setIsLoading(true);
+    setError("");
+    const res = await apiGoogleAuth(credential);
+    setIsLoading(false);
+    if (res.success) {
+      if (addNotification) {
+        addNotification(
+          "Welcome to KrushiMitra! 🌾",
+          `Authenticated with Google as ${res.user?.name || res.user?.email}.`,
+          "system"
+        );
+      }
+      nav("dashboard");
+    } else {
+      setError(res.message || "Google registration failed.");
     }
   };
 
@@ -358,6 +378,22 @@ export default function Register({ nav }) {
               )}
             </button>
           </form>
+
+          {/* OR DIVIDER */}
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-[1px] flex-1 bg-gray-200" />
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              {language === "mr" ? "किंवा" : language === "hi" ? "अथवा" : "or continue with"}
+            </span>
+            <div className="h-[1px] flex-1 bg-gray-200" />
+          </div>
+
+          {/* GOOGLE SIGN-UP BUTTON */}
+          <GoogleAuthButton
+            mode="signup"
+            onSuccess={handleGoogleSuccess}
+            onError={(msg) => setError(msg)}
+          />
 
           {/* BACK TO LOGIN */}
           <div className="mt-6 border-t border-[#EEF2EC] pt-4 text-center">

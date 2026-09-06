@@ -2694,6 +2694,27 @@ export function AppProvider({ children }) {
     }
   };
 
+  // Google OAuth 2.0 Sign-In & Onboarding
+  const apiGoogleAuth = async (credential) => {
+    try {
+      const response = await fetch(`${API_BASE}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        return { success: false, message: data.message || "Google authentication failed" };
+      }
+      login(data.user);
+      registerUser(data.user);
+      return { success: true, user: data.user, isNewUser: data.isNewUser };
+    } catch (err) {
+      console.warn("Backend Google Auth error:", err);
+      return { success: false, message: "Server connection failed during Google Sign-In" };
+    }
+  };
+
   // Real Database Profile Update
   const apiUpdateProfile = async (profileData) => {
     try {
@@ -3362,6 +3383,7 @@ export function AppProvider({ children }) {
 
         apiLogin,
         apiRegister,
+        apiGoogleAuth,
         apiUpdateProfile,
         apiChangePassword,
         apiForgotPassword,

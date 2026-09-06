@@ -9,6 +9,7 @@ from flask_cors import CORS
 import joblib
 import pandas as pd
 import requests
+import uuid
 import database
 import email_service
 
@@ -844,6 +845,96 @@ def login():
         return jsonify({
             "success": False,
             "message": "Server error during login",
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/auth/google", methods=["POST"])
+def google_auth():
+    """Authenticates farmer using Google OAuth 2.0 Identity Services."""
+    try:
+        data = request.get_json() or {}
+        credential = data.get("credential") or data.get("token") or ""
+
+        if not credential:
+            return jsonify({
+                "success": False,
+                "message": "Google credential token is required"
+            }), 400
+
+        # Verify Google JWT token with Google's public tokeninfo endpoint
+        verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}"
+        resp = requests.get(verify_url, timeout=10)
+
+        if resp.status_code != 200:
+            return jsonify({
+                "success": False,
+                "message": "Google token validation failed"
+            }), 401
+
+        token_data = resp.json()
+
+        # Optional Client ID audience verification if configured in .env
+        client_id_env = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+        if client_id_env and token_data.get("aud") != client_id_env:
+            return jsonify({
+                "success": False,
+                "message": "Google token audience mismatch"
+            }), 401
+
+        email = token_data.get("email", "").strip().lower()
+        name = token_data.get("name") or token_data.get("given_name", "Farmer")
+        picture = token_data.get("picture", "")
+
+        if not email:
+            return jsonify({
+                "success": False,
+                "message": "No verified email found in Google profile"
+            }), 400
+
+        existing_user = database.get_user_by_email(email)
+        is_new_farmer = False
+
+        if existing_user:
+            user = existing_user
+        else:
+            is_new_farmer = True
+            dummy_password = f"GoogleOAuth_{uuid.uuid4().hex[:12]}"
+            user = database.create_user(
+                name=name,
+                email=email,
+                password=dummy_password,
+                role="Farmer",
+                district="Maharashtra",
+                phone=""
+            )
+            # Dispatch official Welcome Email
+            try:
+                kid = user.get("kisan_id") or f"MH-KISAN-{int(datetime.now().timestamp()) % 1000000:06d}"
+                email_service.send_welcome_email(
+                    to_email=email,
+                    user_name=name,
+                    district="Maharashtra",
+                    kisan_id=kid
+                )
+            except Exception as mail_err:
+                print(f"[GOOGLE AUTH] Welcome email error: {mail_err}")
+
+        user_data = {k: v for k, v in user.items() if k != "password_hash"}
+        if picture and not user_data.get("avatar"):
+            user_data["avatar"] = picture
+
+        return jsonify({
+            "success": True,
+            "message": "Google authentication successful!",
+            "isNewUser": is_new_farmer,
+            "user": user_data
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": "Server error during Google authentication",
             "error": str(e)
         }), 500
 
