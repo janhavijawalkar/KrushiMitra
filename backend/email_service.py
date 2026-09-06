@@ -97,6 +97,7 @@ def _send_email_async(to_email, subject, html_content, text_content=None):
 
     thread = threading.Thread(target=worker, daemon=True)
     thread.start()
+    return thread
 
 
 def format_display_name(name, email):
@@ -115,10 +116,14 @@ def format_display_name(name, email):
     return "Farmer"
 
 
-def send_welcome_email(to_email, user_name=None, district="Maharashtra"):
+def send_welcome_email(to_email, user_name=None, district="Maharashtra", kisan_id=None, phone=None):
     """Sends an official branded Welcome email to newly registered farmers."""
-    subject = "🌾 Welcome to KrushiMitra! Your Smart Farming Journey Begins"
+    display_name = format_display_name(user_name, to_email)
     dist_text = district if district and str(district).strip() else "Maharashtra"
+    kid_text = kisan_id if kisan_id and str(kisan_id).strip() else f"MH-KISAN-{int(datetime.now().timestamp()) % 1000000:06d}"
+    login_url = f"{APP_URL}/login"
+    
+    subject = f"🌾 Welcome to KrushiMitra, {display_name}! Your Smart Farming Account is Ready"
     
     html_content = f"""
     <!DOCTYPE html>
@@ -127,49 +132,67 @@ def send_welcome_email(to_email, user_name=None, district="Maharashtra"):
       <meta charset="utf-8">
       <style>
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F4F9F2; margin: 0; padding: 20px; }}
-        .container {{ max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #E2EAE0; }}
-        .header {{ background: linear-gradient(135deg, #1B5E20, #2E7D32, #10B981); padding: 35px 30px; text-align: center; color: #ffffff; }}
-        .logo {{ font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0; }}
-        .tagline {{ font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9; margin-top: 5px; }}
-        .body {{ padding: 35px 30px; color: #17291A; line-height: 1.6; }}
-        .welcome-title {{ font-size: 20px; font-weight: 800; color: #1B5E20; margin-top: 0; }}
-        .card {{ background: #F6F8F4; border-radius: 14px; padding: 20px; margin: 20px 0; border: 1px solid #E2EAE0; }}
-        .card-item {{ margin-bottom: 12px; }}
-        .card-item:last-child {{ margin-bottom: 0; }}
-        .btn {{ display: inline-block; background: linear-gradient(135deg, #1B5E20, #2E7D32); color: #ffffff !important; text-decoration: none; padding: 14px 30px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-top: 15px; text-align: center; box-shadow: 0 4px 15px rgba(46,125,50,0.25); }}
-        .footer {{ background: #F6F8F4; padding: 25px 30px; text-align: center; font-size: 11px; color: #7D8C80; border-top: 1px solid #E2EAE0; }}
+        .container {{ max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 12px 36px rgba(0,0,0,0.08); border: 1px solid #DCE8D9; }}
+        .header {{ background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 60%, #10B981 100%); padding: 36px 30px; text-align: center; color: #ffffff; }}
+        .logo {{ font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin: 0; }}
+        .tagline {{ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; opacity: 0.95; margin-top: 6px; color: #C8E6C9; }}
+        .body {{ padding: 36px 32px; color: #17291A; line-height: 1.6; font-size: 14px; }}
+        .welcome-title {{ font-size: 22px; font-weight: 800; color: #1B5E20; margin-top: 0; margin-bottom: 8px; }}
+        .kisan-card {{ background: linear-gradient(135deg, #EAF7EC 0%, #F4FAF5 100%); border-radius: 16px; padding: 20px 24px; margin: 24px 0; border: 1.5px solid #C8E6C9; }}
+        .kisan-row {{ display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }}
+        .kisan-label {{ color: #557258; font-weight: 600; }}
+        .kisan-value {{ color: #1B5E20; font-weight: 800; }}
+        .badge {{ display: inline-block; background: #1B5E20; color: #ffffff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }}
+        .feature-card {{ background: #FAFCFA; border-radius: 14px; padding: 18px 20px; margin: 20px 0; border: 1px solid #E2EAE0; }}
+        .feature-item {{ margin-bottom: 12px; font-size: 13px; color: #2E4B33; line-height: 1.5; }}
+        .feature-item:last-child {{ margin-bottom: 0; }}
+        .btn {{ display: inline-block; background: linear-gradient(135deg, #1B5E20, #2E7D32); color: #ffffff !important; text-decoration: none; padding: 14px 34px; border-radius: 14px; font-weight: 700; font-size: 14px; margin: 15px 0; text-align: center; box-shadow: 0 4px 18px rgba(46,125,50,0.3); }}
+        .footer {{ background: #F6F8F4; padding: 26px 30px; text-align: center; font-size: 11px; color: #7D8C80; border-top: 1px solid #E2EAE0; line-height: 1.6; }}
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h1 class="logo">🌾 KrushiMitra</h1>
-          <div class="tagline">Smart AI Agriculture & Decision Support</div>
+          <h1 class="logo">🌾 KrushiMitra | कृषीमित्र</h1>
+          <div class="tagline">Smart AI Agriculture & Precision Farming Platform</div>
         </div>
         <div class="body">
-          <h2 class="welcome-title">Namaste! 🙏</h2>
-          <p>Dear User,</p>
-          <p>Welcome to <strong>KrushiMitra</strong>, your trusted AI-powered companion for precision farming and harvest optimization in <strong>{dist_text}</strong>.</p>
+          <h2 class="welcome-title">सस्नेह नमस्कार, {display_name} ji! 🙏</h2>
+          <p>Welcome to <strong>KrushiMitra</strong>, your trusted AI-powered companion engineered for crop optimization, soil advisory, and high-yield precision farming in <strong>{dist_text}</strong>.</p>
           
-          <p>Your farmer account has been created successfully. Here is what you can do right now:</p>
-          
-          <div class="card">
-            <div style="font-weight: 700; font-size: 13px; color: #1B5E20; margin-bottom: 10px;">🌟 Core Farming Tools at Your Fingertips:</div>
-            <div class="card-item">🌱 <strong>Soil & Crop Recommendation:</strong> Test your soil nutrients (N-P-K, pH) to find the most profitable crop.</div>
-            <div class="card-item">📈 <strong>Yield Prediction:</strong> Predict exact harvest output (in tonnes/ha) based on district rainfall and land acreage.</div>
-            <div class="card-item">🌦️ <strong>Microclimate Weather:</strong> Real-time weather alerts and optimal sowing windows for your exact farm location.</div>
-            <div class="card-item">📄 <strong>Downloadable Farm PDF Reports:</strong> 1-click official agronomic reports for bank loans and crop insurance.</div>
+          <div class="kisan-card">
+            <div style="font-weight: 800; font-size: 13px; color: #1B5E20; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between;">
+              <span>🌾 Registered Farmer Dossier</span>
+              <span class="badge">ACTIVE MEMBER</span>
+            </div>
+            <div class="kisan-row"><span class="kisan-label">🆔 Kisan Identification ID:</span> <span class="kisan-value">{kid_text}</span></div>
+            <div class="kisan-row"><span class="kisan-label">👤 Farmer Name:</span> <span class="kisan-value">{display_name}</span></div>
+            <div class="kisan-row"><span class="kisan-label">📧 Login Email:</span> <span class="kisan-value">{to_email}</span></div>
+            <div class="kisan-row" style="margin-bottom:0;"><span class="kisan-label">📍 Agricultural District:</span> <span class="kisan-value">{dist_text}</span></div>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{APP_URL}" class="btn">Access Your Farmer Dashboard &rarr;</a>
+          <div class="feature-card">
+            <div style="font-weight: 800; font-size: 13px; color: #1B5E20; margin-bottom: 12px;">🌱 What You Can Do with KrushiMitra Right Now:</div>
+            <div class="feature-item">🌿 <strong>Crop & Soil Recommendation:</strong> Input soil N-P-K, pH, and rainfall to discover the most profitable crops for your land.</div>
+            <div class="feature-item">📈 <strong>AI Harvest Yield Forecasting:</strong> Predict exact harvest yields (in tonnes/hectare) using our machine learning models.</div>
+            <div class="feature-item">🌦️ <strong>Microclimate Weather Alerts:</strong> Real-time temperature, humidity, rainfall forecasts, and ideal sowing dates.</div>
+            <div class="feature-item">📄 <strong>Downloadable Agronomy PDF Reports:</strong> 1-click comprehensive soil and yield reports suitable for farm planning and credit applications.</div>
+            <div class="feature-item">👨‍🌾 <strong>Agronomist Support & Feedback Desk:</strong> Ask direct agronomy queries and review responses from certified experts in your Settings tab.</div>
           </div>
           
-          <p style="font-size: 12px; color: #666;">Need help? Call the National Kisan Helpline: <strong>1800-180-1551</strong> or reply directly to our agronomy support desk.</p>
+          <div style="text-align: center; margin: 28px 0 20px 0;">
+            <a href="{login_url}" class="btn">🚀 Login to Your Farmer Dashboard &rarr;</a>
+          </div>
+          
+          <div style="background-color: #F8FAF7; border-radius: 12px; padding: 14px 18px; border: 1px dashed #C8E6C9; margin-top: 20px; font-size: 12px; color: #4B6350;">
+            📞 <strong>24x7 Kisan Call Centre Helpline:</strong> 1800-180-1551 (Toll-Free, Multi-Language)<br>
+            ✉️ <strong>Official Agronomist Support:</strong> krushimitra.project1@gmail.com
+          </div>
         </div>
         <div class="footer">
-          &copy; {datetime.now().year} KrushiMitra Precision Agriculture Platform. Built for Indian Kisans.<br>
-          This email was sent to {to_email} because you registered on KrushiMitra.
+          &copy; {datetime.now().year} KrushiMitra Precision Agriculture Platform. Built for Indian Farmers.<br>
+          This official onboarding notification was dispatched to {to_email} upon registration.<br>
+          KrushiMitra &bull; Maharashtra, India &bull; Made with pride for Krishi Vikas.
         </div>
       </div>
     </body>
@@ -177,24 +200,31 @@ def send_welcome_email(to_email, user_name=None, district="Maharashtra"):
     """
 
     text_content = f"""
-    Namaste!
+    Namaste {display_name} ji!
     
-    Dear User,
     Welcome to KrushiMitra - Smart AI Agriculture Platform.
     
-    Your farmer account has been created for {dist_text}.
-    Access your dashboard here: {APP_URL}
+    Your Farmer Account has been created successfully:
+    - Kisan ID: {kid_text}
+    - Farmer Name: {display_name}
+    - Registered Email: {to_email}
+    - District: {dist_text}
     
-    - Soil & Crop Advisory
+    Access your Farmer Dashboard here:
+    {login_url}
+    
+    Core Tools:
+    - Crop Recommendation & Soil Advisory
     - AI Harvest Yield Predictions
-    - Live Weather & Sowing Alerts
-    - Downloadable Farm Reports (PDF)
+    - Live Weather & Sowing Window Alerts
+    - Downloadable PDF Farm Reports
+    - Official Agronomist Support Desk
     
-    Kisan Helpline: 1800-180-1551
+    National Kisan Helpline: 1800-180-1551 (Toll-Free)
+    Official Email: krushimitra.project1@gmail.com
     """
 
-    _send_email_async(to_email, subject, html_content, text_content)
-    return True
+    return _send_email_async(to_email, subject, html_content, text_content)
 
 
 def send_password_reset_email(to_email, user_name=None, reset_token="", reset_url=None):

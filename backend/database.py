@@ -515,11 +515,15 @@ def create_user(name, email, password, role="Farmer", district="Pune", phone="",
     password_hash = generate_password_hash(password)
     member_since = datetime.now().strftime("%B %Y")
     
+    # Generate unique Kisan ID (e.g., MH-PUN-392817)
+    clean_dist = "".join([c for c in (district or "PUN")[:3].upper() if c.isalnum()]) or "MH"
+    kisan_id = f"MH-{clean_dist}-{int(datetime.now().timestamp() * 1000) % 1000000:06d}"
+    
     try:
         user_id = execute_insert("""
-        INSERT INTO users (name, email, password_hash, role, district, phone, farm_size, member_since)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, email.strip().lower(), password_hash, role, district, phone, farm_size, member_since))
+        INSERT INTO users (name, email, password_hash, role, district, phone, farm_size, kisan_id, member_since)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (name, email.strip().lower(), password_hash, role, district, phone, farm_size, kisan_id, member_since))
         
         return get_user_by_id(user_id)
     except Exception as e:

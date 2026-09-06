@@ -780,9 +780,16 @@ def register():
                 "message": "Failed to create user account"
             }), 500
 
-        # Trigger Welcome Email to new farmer
+        # Trigger Official Welcome Email to new farmer
         try:
-            email_service.send_welcome_email(email, name, district)
+            kisan_id = user.get("kisan_id") or f"MH-KISAN-{int(datetime.now().timestamp()) % 1000000:06d}"
+            email_service.send_welcome_email(
+                to_email=email,
+                user_name=name,
+                district=district,
+                kisan_id=kisan_id,
+                phone=phone
+            )
         except Exception as mail_err:
             print(f"[AUTH] Welcome email notification skipped: {mail_err}")
 
