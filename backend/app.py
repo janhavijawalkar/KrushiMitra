@@ -1,4 +1,6 @@
 import os
+import sys
+from datetime import datetime
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -936,6 +938,41 @@ def google_auth():
             "success": False,
             "message": "Server error during Google authentication",
             "error": str(e)
+        }), 500
+
+
+@app.route("/api/auth/resend-welcome-email", methods=["POST"])
+def resend_welcome_email():
+    """Resends the official KrushiMitra welcome and Kisan ID dossier email."""
+    try:
+        data = request.get_json() or {}
+        email = data.get("email", "").strip().lower()
+        if not email:
+            return jsonify({"success": False, "message": "Email is required"}), 400
+
+        user = database.get_user_by_email(email)
+        if not user:
+            return jsonify({"success": False, "message": f"No account found for {email}"}), 404
+
+        kisan_id = user.get("kisan_id") or f"MH-KISAN-{int(datetime.now().timestamp()) % 1000000:06d}"
+        email_service.send_welcome_email(
+            to_email=email,
+            user_name=user.get("name", "Farmer"),
+            district=user.get("district", "Maharashtra"),
+            kisan_id=kisan_id,
+            phone=user.get("phone", "")
+        )
+
+        return jsonify({
+            "success": True,
+            "message": f"Welcome email sent to {email}. Please check your Inbox and Spam folder.",
+            "kisan_id": kisan_id
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Failed to send email: {str(e)}"
         }), 500
 
 

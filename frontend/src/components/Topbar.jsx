@@ -399,9 +399,16 @@ export default function Topbar({ title, nav }) {
                 <p className="text-[11px] text-gray-400 truncate mt-0.5">
                   {userEmail}
                 </p>
-                <span className="mt-1.5 inline-block rounded-full bg-[#E5F7EA] px-2 py-0.5 text-[9px] font-bold text-[#2E7D32]">
-                  🌾 {userRole === "Admin" ? (t("superAdminBadge") || "Super-Admin") : (t("farmer") || "Farmer")}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span className="rounded-full bg-[#E5F7EA] px-2 py-0.5 text-[9px] font-bold text-[#2E7D32]">
+                    🌾 {userRole === "Admin" ? (t("superAdminBadge") || "Super-Admin") : (t("farmer") || "Farmer")}
+                  </span>
+                  {(user?.kisan_id || user?.kisanId) && (
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[9px] font-mono font-bold text-[#1B5E20]">
+                      {user.kisan_id || user.kisanId}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* MENU ACTIONS */}

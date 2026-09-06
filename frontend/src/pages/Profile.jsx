@@ -67,6 +67,31 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("personal");
   const [editing, setEditing] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailToast, setEmailToast] = useState("");
+
+  const handleResendWelcomeEmail = async () => {
+    if (!currentUser?.email) return;
+    setSendingEmail(true);
+    setEmailToast("");
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/auth/resend-welcome-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: currentUser.email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEmailToast("✅ Official Kisan ID email sent! Check Inbox & Spam.");
+      } else {
+        setEmailToast(`Failed: ${data.message || "Could not dispatch email."}`);
+      }
+    } catch (err) {
+      setEmailToast("Server error. Please verify backend is running.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   // Personal & Farm Details Form (No static dummy data)
   const [form, setForm] = useState(() => getInitialForm(currentUser));
@@ -439,6 +464,26 @@ export default function Profile() {
                 </>
               )}
             </div>
+
+            {/* WELCOME DOSSIER EMAIL ACTION */}
+            {!isAdmin && currentUser?.email && (
+              <div className="mt-4 pt-3 border-t border-[#EEF2EC]">
+                <button
+                  type="button"
+                  onClick={handleResendWelcomeEmail}
+                  disabled={sendingEmail}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#1B5E20] py-2 px-3 text-xs font-bold transition duration-200 cursor-pointer disabled:opacity-60"
+                >
+                  <Mail size={14} />
+                  <span>{sendingEmail ? "Sending Email via SMTP..." : (language === "mr" ? "किसान आयडी ईमेल पुन्हा पाठवा" : language === "hi" ? "किसान आईडी ईमेल दोबारा भेजें" : "Resend Kisan ID & Welcome Email")}</span>
+                </button>
+                {emailToast && (
+                  <p className={`mt-2 text-[11px] font-medium text-center ${emailToast.includes("Failed") ? "text-red-600" : "text-emerald-700 font-bold"}`}>
+                    {emailToast}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* DYNAMIC ACTIVITY STATS */}

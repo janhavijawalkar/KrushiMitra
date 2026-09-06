@@ -53,8 +53,8 @@ def _send_email_async(to_email, subject, html_content, text_content=None):
                 if len(RECENT_SENT_EMAILS) > 50:
                     RECENT_SENT_EMAILS.pop(0)
                 
-                print(f"[EMAIL SERVICE (SIMULATION)] Mail logged for: {to_email}")
-                print(f"[EMAIL SERVICE (SIMULATION)] Subject: {subject}")
+                print(f"[EMAIL SERVICE (SIMULATION)] Mail logged for: {to_email}", flush=True)
+                print(f"[EMAIL SERVICE (SIMULATION)] Subject: {subject}", flush=True)
                 return True
 
             msg = MIMEMultipart("alternative")
@@ -81,11 +81,11 @@ def _send_email_async(to_email, subject, html_content, text_content=None):
                 "simulated": False
             }
             RECENT_SENT_EMAILS.append(log_entry)
-            print(f"[EMAIL SERVICE] Real SMTP Email successfully sent to: {to_email}")
+            print(f"[EMAIL SERVICE] Real SMTP Email successfully sent to: {to_email}", flush=True)
             return True
 
         except Exception as e:
-            print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {e}")
+            print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {e}", flush=True)
             RECENT_SENT_EMAILS.append({
                 "to": to_email,
                 "subject": subject,
