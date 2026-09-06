@@ -273,6 +273,89 @@ export const getLocalizedSeasonName = (season, lang = "en") => {
   return season;
 };
 
+export const WEATHER_TRANSLATIONS = {
+  // Clear Sky
+  clearsky: { en: "Clear Sky", hi: "साफ आसमान", mr: "निरभ्र आकाश" },
+  clear: { en: "Clear Sky", hi: "साफ आसमान", mr: "निरभ्र आकाश" },
+  sunny: { en: "Sunny Skies", hi: "धूप खिली हुई", mr: "स्वच्छ सूर्यप्रकाश" },
+
+  // Clouds
+  fewclouds: { en: "Few Clouds", hi: "कम बादल", mr: "काही प्रमाणात ढगाळ" },
+  scatteredclouds: { en: "Scattered Clouds", hi: "बिखरे हुए बादल", mr: "विखुरलेले ढग" },
+  brokenclouds: { en: "Partly Cloudy", hi: "आंशिक रूप से बादल", mr: "अंशतः ढगाळ" },
+  overcastclouds: { en: "Overcast Clouds", hi: "घने बादल / घटाटोप", mr: "पूर्णपणे ढगाळ आकाश" },
+  overcast: { en: "Overcast Clouds", hi: "घने बादल / घटाटोप", mr: "पूर्णपणे ढगाळ आकाश" },
+  clouds: { en: "Cloudy", hi: "बादल छाए हुए", mr: "ढगाळ वातावरण" },
+  cloudy: { en: "Cloudy", hi: "बादल छाए हुए", mr: "ढगाळ वातावरण" },
+
+  // Rain
+  lightrain: { en: "Light Rain", hi: "हल्की बारिश", mr: "हलका पाऊस" },
+  moderaterain: { en: "Moderate Rain", hi: "मध्यम बारिश", mr: "मध्यम पाऊस" },
+  heavyintensityrain: { en: "Heavy Rain", hi: "भारी बारिश", mr: "मुसळधार पाऊस" },
+  heavyrain: { en: "Heavy Rain", hi: "भारी बारिश", mr: "मुसळधार पाऊस" },
+  veryheavyrain: { en: "Very Heavy Rain", hi: "अति भारी बारिश", mr: "अति मुसळधार पाऊस" },
+  extremerain: { en: "Extreme Rain", hi: "अत्यधिक बारिश", mr: "अतिवृष्टी" },
+  freezingrain: { en: "Freezing Rain", hi: "बर्फ़ीली बारिश", mr: "गारपीट / अतिथंड पाऊस" },
+  lightintensityshowerrain: { en: "Light Shower Rain", hi: "हल्की बौछारें", mr: "पावसाची हलकी सर" },
+  showerrain: { en: "Shower Rain", hi: "बारिश की बौछारें", mr: "पावसाच्या सरी" },
+  heavyintensityshowerrain: { en: "Heavy Showers", hi: "तेज बौछारें", mr: "मुसळधार पावसाच्या सरी" },
+  raggedshowerrain: { en: "Irregular Showers", hi: "अनियमित बौछारें", mr: "तुटक पावसाच्या सरी" },
+  rain: { en: "Rain", hi: "बारिश", mr: "पाऊस" },
+
+  // Drizzle
+  lightintensitydrizzle: { en: "Light Drizzle", hi: "हल्की बूंदाबांदी", mr: "हलकी रिमझिम" },
+  drizzle: { en: "Drizzle", hi: "बूंदाबांदी / फुहारें", mr: "रिमझिम पाऊस" },
+  heavyintensitydrizzle: { en: "Heavy Drizzle", hi: "तेज बूंदाबांदी", mr: "तीव्र रिमझिम पाऊस" },
+  drizzlerain: { en: "Drizzle Rain", hi: "रिमझिम बारिश", mr: "रिमझिम पाऊस" },
+  showerdrizzle: { en: "Shower Drizzle", hi: "फुहारों के साथ बारिश", mr: "रिमझिम पावसाच्या सरी" },
+
+  // Thunderstorm
+  thunderstorm: { en: "Thunderstorm", hi: "गरज के साथ तूफ़ान", mr: "विजांच्या कडकडाटासह वादळ" },
+  lightthunderstorm: { en: "Light Thunderstorm", hi: "हल्का तूफ़ान", mr: "हलके वादळ" },
+  heavythunderstorm: { en: "Heavy Thunderstorm", hi: "तीव्र तूफ़ान", mr: "तीव्र वादळी पाऊस" },
+  raggedthunderstorm: { en: "Ragged Thunderstorm", hi: "अनियमित तूफ़ान", mr: "वादळी वारे" },
+  thunderstormwithlightrain: { en: "Thunderstorm with Light Rain", hi: "गरज और हल्की बारिश", mr: "विजा आणि हलका पाऊस" },
+  thunderstormwithrain: { en: "Thunderstorm with Rain", hi: "गरज के साथ बारिश", mr: "विजांच्या कडकडाटासह पाऊस" },
+  thunderstormwithheavyrain: { en: "Thunderstorm with Heavy Rain", hi: "गरज और भारी बारिश", mr: "विजा आणि मुसळधार पाऊस" },
+  thunderstormwithdrizzle: { en: "Thunderstorm with Drizzle", hi: "गरज और बूंदाबांदी", mr: "विजा आणि रिमझिम पाऊस" },
+
+  // Atmospheric phenomena
+  mist: { en: "Mist", hi: "धुंध", mr: "धुके" },
+  smoke: { en: "Smoke", hi: "धुआं", mr: "धूर" },
+  haze: { en: "Haze", hi: "हल्की धुंध", mr: "धुरकट हवा" },
+  sanddustwhirls: { en: "Dust Whirls", hi: "धूल भरी आंधी", mr: "धुळीचे चक्रीवादळ" },
+  fog: { en: "Fog", hi: "घना कोहरा", mr: "दाट धुके" },
+  sand: { en: "Sand", hi: "रेतीली हवा", mr: "वाळूचे वादळ" },
+  dust: { en: "Dusty Air", hi: "धूल भरी हवा", mr: "धुळीचे वातावरण" },
+  volcanicash: { en: "Volcanic Ash", hi: "राख", mr: "ज्वालामुखीची राख" },
+  squalls: { en: "Squalls", hi: "तेज झोंकेदार हवा", mr: "सोसाट्याचा वारा" },
+  tornado: { en: "Tornado", hi: "बवंडर / चक्रवात", mr: "चक्रीवादळ" },
+
+  // Snow
+  lightsnow: { en: "Light Snow", hi: "हल्की बर्फबारी", mr: "हलका हिमवर्षाव" },
+  snow: { en: "Snow", hi: "बर्फबारी", mr: "हिमवर्षाव" },
+  heavysnow: { en: "Heavy Snow", hi: "भारी बर्फबारी", mr: "मुसळधार हिमवर्षाव" },
+  sleet: { en: "Sleet", hi: "ओलावृष्टि", mr: "गारपीट" },
+};
+
+export const getLocalizedWeatherCondition = (condition, lang = "en") => {
+  if (!condition) return "";
+  const raw = condition.toString().trim();
+  const key = raw.toLowerCase().replace(/[\s\-_(),/]/g, "");
+
+  if (WEATHER_TRANSLATIONS[key]) {
+    return WEATHER_TRANSLATIONS[key][lang] || WEATHER_TRANSLATIONS[key]["en"] || raw;
+  }
+
+  for (const [k, translations] of Object.entries(WEATHER_TRANSLATIONS)) {
+    if (key.includes(k) || k.includes(key)) {
+      return translations[lang] || translations["en"] || raw;
+    }
+  }
+
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+};
+
 const translations = {
   en: {
     dashboard: "Dashboard",
@@ -3435,6 +3518,9 @@ export function AppProvider({ children }) {
         MAHARASHTRA_DISTRICTS,
         tSeason: (seasonName) => getLocalizedSeasonName(seasonName, language),
         getLocalizedSeasonName,
+        tWeather: (condition) => getLocalizedWeatherCondition(condition, language),
+        getLocalizedWeatherCondition,
+        WEATHER_TRANSLATIONS,
       }}
     >
       {children}

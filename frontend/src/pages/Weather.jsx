@@ -24,7 +24,7 @@ import { parseSpokenDistrict } from "../utils/voiceParser";
 import { buildApiUrl } from "../utils/apiConfig";
 
 export default function Weather({ nav }) {
-  const { t, tDistrict, language } = useApp();
+  const { t, tDistrict, tWeather, language } = useApp();
 
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState(() => {
@@ -364,8 +364,8 @@ export default function Weather({ nav }) {
 
                   <div>
 
-                    <p className="text-lg font-bold capitalize">
-                      {weather.condition}
+                    <p className="text-lg font-bold">
+                      {tWeather ? tWeather(weather.condition) : weather.condition}
                     </p>
 
                     <p className="text-xs text-green-100">
@@ -450,7 +450,13 @@ export default function Weather({ nav }) {
                   icon={<CloudRain size={17} />}
                   label={t("cloudiness")}
                   value={`${weather.cloudiness}%`}
-                  subtext={weather.cloudiness > 70 ? "Overcast skies" : weather.cloudiness > 30 ? "Partly cloudy" : "Clear sunny skies"}
+                  subtext={
+                    weather.cloudiness > 70
+                      ? (language === "mr" ? "पूर्णपणे ढगाळ आकाश" : language === "hi" ? "घने घटाटोप बादल" : "Overcast skies")
+                      : weather.cloudiness > 30
+                      ? (language === "mr" ? "अंशतः ढगाळ हवामान" : language === "hi" ? "आंशिक रूप से बादल" : "Partly cloudy")
+                      : (language === "mr" ? "स्वच्छ निरभ्र आकाश" : language === "hi" ? "साफ धूप वाला आसमान" : "Clear sunny skies")
+                  }
                 />
 
                 <Detail
@@ -459,9 +465,15 @@ export default function Weather({ nav }) {
                   value={
                     weather.visibility
                       ? `${weather.visibility} km`
-                      : "10 km (Clear)"
+                      : (language === "mr" ? "१० किमी (स्पष्ट)" : language === "hi" ? "१० किमी (साफ)" : "10 km (Clear)")
                   }
-                  subtext="Field line-of-sight"
+                  subtext={
+                    language === "mr"
+                      ? "शेत दृष्टीक्षेपाची स्पष्टता"
+                      : language === "hi"
+                      ? "खेत में दृश्यता"
+                      : "Field line-of-sight"
+                  }
                 />
 
                 <Detail
@@ -471,7 +483,13 @@ export default function Weather({ nav }) {
                     (typeof weather.temperature === "number" ? weather.temperature : parseFloat(weather.temperature) || 25) -
                     ((100 - (typeof weather.humidity === "number" ? weather.humidity : parseFloat(weather.humidity) || 70)) / 5)
                   ).toFixed(1)}°C`}
-                  subtext="Moisture condensation"
+                  subtext={
+                    language === "mr"
+                      ? "दवबिंदू व ओलावा प्रमाण"
+                      : language === "hi"
+                      ? "ओस बिंदु व नमी संघनन"
+                      : "Moisture condensation"
+                  }
                 />
 
                 <Detail
@@ -479,12 +497,18 @@ export default function Weather({ nav }) {
                   label={t("solarExposure")}
                   value={
                     (typeof weather.cloudiness === "number" ? weather.cloudiness : parseFloat(weather.cloudiness) || 0) > 75
-                      ? "Low / Diffused"
+                      ? (language === "mr" ? "कमी / विसरित प्रकाश" : language === "hi" ? "कम / विसरित प्रकाश" : "Low / Diffused")
                       : (typeof weather.cloudiness === "number" ? weather.cloudiness : parseFloat(weather.cloudiness) || 0) > 35
-                      ? "Moderate Daylight"
-                      : "Direct Sunlight"
+                      ? (language === "mr" ? "मध्यम सूर्यप्रकाश" : language === "hi" ? "मध्यम धूप" : "Moderate Daylight")
+                      : (language === "mr" ? "थेट प्रखर सूर्यप्रकाश" : language === "hi" ? "सीधी तेज धूप" : "Direct Sunlight")
                   }
-                  subtext="Photosynthesis index"
+                  subtext={
+                    language === "mr"
+                      ? "प्रकाशसंश्लेषण निर्देशांक"
+                      : language === "hi"
+                      ? "प्रकाश संश्लेषण सूचकांक"
+                      : "Photosynthesis index"
+                  }
                 />
 
               </div>
@@ -518,10 +542,10 @@ export default function Weather({ nav }) {
                   title={t("sprayingCondition")}
                   status={
                     (parseFloat(weather.wind) || 0) > 7.5
-                      ? "Caution: High Wind"
+                      ? (language === "mr" ? "सावधान: वेगवान वारा" : language === "hi" ? "सावधान: तेज हवा" : "Caution: High Wind")
                       : (parseFloat(weather.rainfall) || 0) > 0
-                      ? "Hold: Rain Observed"
-                      : "Favorable (Low Drift)"
+                      ? (language === "mr" ? "थांबा: पाऊस सुरू आहे" : language === "hi" ? "रोकें: बारिश हो रही है" : "Hold: Rain Observed")
+                      : (language === "mr" ? "फवारणीस अनुकूल" : language === "hi" ? "छिड़काव के लिए अनुकूल" : "Favorable (Low Drift)")
                   }
                   statusType={
                     (parseFloat(weather.wind) || 0) > 7.5 || (parseFloat(weather.rainfall) || 0) > 0
@@ -530,8 +554,8 @@ export default function Weather({ nav }) {
                   }
                   description={
                     (parseFloat(weather.wind) || 0) > 7.5
-                      ? "Wind drift risk for foliar spray"
-                      : "Optimal for pesticide & fertilizer spray"
+                      ? (language === "mr" ? "वाऱ्यामुळे फवारणीचे औषध उडून जाण्याचा धोका" : language === "hi" ? "तेज हवा से छिड़काव उड़ने का जोखिम" : "Wind drift risk for foliar spray")
+                      : (language === "mr" ? "कीटकनाशक व विद्राव्य खत फवारणीसाठी योग्य वेळ" : language === "hi" ? "कीटनाशक व खाद छिड़काव हेतु उत्तम समय" : "Optimal for pesticide & fertilizer spray")
                   }
                 />
 
@@ -541,16 +565,16 @@ export default function Weather({ nav }) {
                   title={t("irrigationSchedule")}
                   status={
                     (parseFloat(weather.rainfall) || 0) > 1 || (parseFloat(weather.humidity) || 0) > 82
-                      ? "Hold Irrigation"
+                      ? (language === "mr" ? "पाणी देणे पुढे ढकला" : language === "hi" ? "सिंचाई रोकें" : "Hold Irrigation")
                       : (parseFloat(weather.humidity) || 0) < 45 && (parseFloat(weather.temperature) || 0) > 30
-                      ? "Plan Irrigation"
-                      : "Normal Schedule"
+                      ? (language === "mr" ? "पाणी देण्याचे नियोजन करा" : language === "hi" ? "सिंचाई की योजना बनाएं" : "Plan Irrigation")
+                      : (language === "mr" ? "नियमित पाणीपुरवठा" : language === "hi" ? "सामान्य सिंचाई सारणी" : "Normal Schedule")
                   }
                   statusType="info"
                   description={
                     (parseFloat(weather.rainfall) || 0) > 1 || (parseFloat(weather.humidity) || 0) > 82
-                      ? "Sufficient natural moisture in soil"
-                      : "Monitor topsoil moisture before pumping"
+                      ? (language === "mr" ? "मातीत पुरेसा नैसर्गिक ओलावा शिल्लक आहे" : language === "hi" ? "मिट्टी में पर्याप्त प्राकृतिक नमी मौजूद है" : "Sufficient natural moisture in soil")
+                      : (language === "mr" ? "पाणी देण्यापूर्वी शेतातील वाफसा तपासा" : language === "hi" ? "सिंचाई से पहले खेत की नमी की स्थिति जांचें" : "Monitor topsoil moisture before pumping")
                   }
                 />
 
@@ -560,16 +584,16 @@ export default function Weather({ nav }) {
                   title={t("diseaseRisk")}
                   status={
                     (parseFloat(weather.humidity) || 0) > 78
-                      ? "Elevated (High Humidity)"
-                      : "Low Risk Level"
+                      ? (language === "mr" ? "वाढलेला धोका (जास्त आर्द्रता)" : language === "hi" ? "बढ़ा हुआ जोखिम (उच्च आर्द्रता)" : "Elevated (High Humidity)")
+                      : (language === "mr" ? "कमी धोका" : language === "hi" ? "न्यूनतम जोखिम" : "Low Risk Level")
                   }
                   statusType={
                     (parseFloat(weather.humidity) || 0) > 78 ? "warning" : "success"
                   }
                   description={
                     (parseFloat(weather.humidity) || 0) > 78
-                      ? "Check pulses & vegetable foliage for spores"
-                      : "Atmospheric disease pressure is minimal"
+                      ? (language === "mr" ? "कडधान्ये व भाजीपाल्याच्या पानांवर बुरशीचे ठिपके तपासा" : language === "hi" ? "दालों और सब्जियों पर फफूंदीय संक्रमण की जांच करें" : "Check pulses & vegetable foliage for spores")
+                      : (language === "mr" ? "हवामानातील रोगांचा प्रादुर्भाव सध्या नगण्य आहे" : language === "hi" ? "वर्तमान में वातावरणीय रोग प्रकोप न्यूनतम है" : "Atmospheric disease pressure is minimal")
                   }
                 />
 
@@ -579,16 +603,16 @@ export default function Weather({ nav }) {
                   title={t("harvestSafety")}
                   status={
                     (parseFloat(weather.rainfall) || 0) > 0
-                      ? "Protect Produce"
-                      : "Field Work Favorable"
+                      ? (language === "mr" ? "काढणीचे पीक सुरक्षित ठेवा" : language === "hi" ? "कटी हुई फसल को सुरक्षित रखें" : "Protect Produce")
+                      : (language === "mr" ? "शेतीकामांसाठी उत्तम वेळ" : language === "hi" ? "कृषि कार्यों हेतु अनुकूल" : "Field Work Favorable")
                   }
                   statusType={
                     (parseFloat(weather.rainfall) || 0) > 0 ? "warning" : "success"
                   }
                   description={
                     (parseFloat(weather.rainfall) || 0) > 0
-                      ? "Keep harvested grains under tarpaulin"
-                      : "Clear weather for tractor & sowing operations"
+                      ? (language === "mr" ? "कापणी केलेले धान्य ताडपत्रीखाली सुरक्षित ठेवा" : language === "hi" ? "कटी फसल को तिरपाल से अच्छी तरह ढककर रखें" : "Keep harvested grains under tarpaulin")
+                      : (language === "mr" ? "ट्रॅक्टर, मशागत व पेरणीसाठी निरभ्र हवामान" : language === "hi" ? "ट्रैक्टर जुताई व बुआई कार्यों हेतु साफ मौसम" : "Clear weather for tractor & sowing operations")
                   }
                 />
 
