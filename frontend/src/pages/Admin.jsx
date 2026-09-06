@@ -70,6 +70,7 @@ export default function Admin({ nav }) {
   const [roleFilter, setRoleFilter] = useState("all");
   const [ticketStatusFilter, setTicketStatusFilter] = useState("all");
   const [ticketCategoryFilter, setTicketCategoryFilter] = useState("all");
+  const [ticketTypeTab, setTicketTypeTab] = useState("all"); // 'all', 'feedback', 'query'
   const [ticketSearch, setTicketSearch] = useState("");
   const [actionToast, setActionToast] = useState("");
   const [dbStats, setDbStats] = useState(null);
@@ -167,30 +168,40 @@ export default function Admin({ nav }) {
   const filteredTickets = (ticketsList || []).filter((t) => {
     const term = ticketSearch.toLowerCase();
     const matchesSearch =
-      t.subject?.toLowerCase().includes(term) ||
-      t.message?.toLowerCase().includes(term) ||
-      t.name?.toLowerCase().includes(term) ||
-      t.user_email?.toLowerCase().includes(term) ||
-      t.district?.toLowerCase().includes(term) ||
-      t.ticket_id?.toLowerCase().includes(term);
+      (t.subject || "").toLowerCase().includes(term) ||
+      (t.message || "").toLowerCase().includes(term) ||
+      (t.name || "").toLowerCase().includes(term) ||
+      (t.user_email || "").toLowerCase().includes(term) ||
+      (t.district || "").toLowerCase().includes(term) ||
+      (t.ticket_id || "").toLowerCase().includes(term);
 
     const matchesStatus =
       ticketStatusFilter === "all"
         ? true
         : (t.status || "Submitted").toLowerCase() === ticketStatusFilter.toLowerCase();
 
+    const isFeedback = (t.category || "").toLowerCase().includes("feedback") || Boolean(t.rating);
+    const matchesType =
+      ticketTypeTab === "all"
+        ? true
+        : ticketTypeTab === "feedback"
+        ? isFeedback
+        : !isFeedback;
+
     const matchesCategory =
       ticketCategoryFilter === "all"
         ? true
         : (t.category || "").toLowerCase().includes(ticketCategoryFilter.toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch && matchesStatus && matchesType && matchesCategory;
   });
 
   const totalFarmers = (usersList || []).filter((u) => u.role === "Farmer").length;
   const totalAdmins = (usersList || []).filter((u) => u.role === "Admin").length;
   const resolvedTickets = ticketsList.filter((t) => t.status === "Resolved").length;
   const pendingTickets = ticketsList.filter((t) => t.status !== "Resolved").length;
+  const feedbackTickets = ticketsList.filter((t) => (t.category || "").toLowerCase().includes("feedback") || Boolean(t.rating)).length;
+  const queryTickets = ticketsList.filter((t) => !((t.category || "").toLowerCase().includes("feedback") || Boolean(t.rating))).length;
 
   const handleRoleToggle = async (userId, currentRole) => {
     const newRole = currentRole === "Admin" ? "Farmer" : "Admin";
@@ -794,7 +805,7 @@ export default function Admin({ nav }) {
       {activeTab === "tickets" && (
         <div className="space-y-4 animate-zoom-fade">
           <div className="card overflow-hidden depth-1">
-            <div className="border-b border-[#E2EAE0] p-5">
+            <div className="border-b border-[#E2EAE0] p-5 space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -806,42 +817,123 @@ export default function Admin({ nav }) {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={ticketSearch}
-                      onChange={(e) => setTicketSearch(e.target.value)}
-                      placeholder="Search query, subject, farmer..."
-                      className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] pl-8 pr-3 py-1.5 text-xs outline-none focus:border-[#2E7D32] focus:bg-white"
-                    />
-                  </div>
-
-                  <select
-                    value={ticketStatusFilter}
-                    onChange={(e) => setTicketStatusFilter(e.target.value)}
-                    className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={loadData}
+                    disabled={isRefreshing}
+                    className="key-cap flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 hover:text-[#2E7D32] transition cursor-pointer"
+                    title="Refresh Data from Server"
                   >
-                    <option value="all">All Statuses</option>
-                    <option value="Submitted">Submitted / Open</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Resolved">Resolved</option>
-                  </select>
-
-                  <select
-                    value={ticketCategoryFilter}
-                    onChange={(e) => setTicketCategoryFilter(e.target.value)}
-                    className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
-                  >
-                    <option value="all">All Categories</option>
-                    <option value="Crop Advisory">Crop Advisory</option>
-                    <option value="Yield Prediction">Yield Prediction</option>
-                    <option value="Soil & Fertilizer">Soil & Fertilizer</option>
-                    <option value="AI Voice Assistant">AI Voice Assistant</option>
-                    <option value="General Inquiry">General Inquiry</option>
-                  </select>
+                    <RefreshCw size={13} className={isRefreshing ? "animate-spin text-[#2E7D32]" : ""} />
+                    <span>Refresh</span>
+                  </button>
                 </div>
+              </div>
+
+              {/* FILTER PILLS */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#EEF2EC]">
+                <button
+                  type="button"
+                  onClick={() => { setTicketTypeTab("all"); setTicketStatusFilter("all"); }}
+                  className={`rounded-xl px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    ticketTypeTab === "all" && ticketStatusFilter === "all"
+                      ? "bg-[#2E7D32] text-white shadow-xs"
+                      : "bg-[#F4F7F2] text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  All Inquiries ({ticketsList.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setTicketTypeTab("feedback"); setTicketStatusFilter("all"); }}
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    ticketTypeTab === "feedback"
+                      ? "bg-amber-500 text-white shadow-xs"
+                      : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60"
+                  }`}
+                >
+                  <Star size={12} className="fill-current" />
+                  <span>Feedback & Ratings ({feedbackTickets})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setTicketTypeTab("query"); setTicketStatusFilter("all"); }}
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    ticketTypeTab === "query"
+                      ? "bg-emerald-700 text-white shadow-xs"
+                      : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/60"
+                  }`}
+                >
+                  <span>🌾</span>
+                  <span>Agronomy Questions ({queryTickets})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setTicketStatusFilter("Submitted"); }}
+                  className={`rounded-xl px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    ticketStatusFilter === "Submitted"
+                      ? "bg-amber-600 text-white shadow-xs"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  ⏳ Pending ({pendingTickets})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setTicketStatusFilter("Resolved"); }}
+                  className={`rounded-xl px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    ticketStatusFilter === "Resolved"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  ✅ Resolved ({resolvedTickets})
+                </button>
+              </div>
+
+              {/* SEARCH & FILTERS BAR */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <div className="relative flex-1 min-w-[220px]">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={ticketSearch}
+                    onChange={(e) => setTicketSearch(e.target.value)}
+                    placeholder="Search query, subject, farmer name, district..."
+                    className="w-full rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] pl-8 pr-3 py-1.5 text-xs outline-none focus:border-[#2E7D32] focus:bg-white"
+                  />
+                </div>
+
+                <select
+                  value={ticketStatusFilter}
+                  onChange={(e) => setTicketStatusFilter(e.target.value)}
+                  className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="Submitted">Submitted / Open</option>
+                  <option value="Under Review">Under Review</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+
+                <select
+                  value={ticketCategoryFilter}
+                  onChange={(e) => setTicketCategoryFilter(e.target.value)}
+                  className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="Feedback">App Feedback & Rating</option>
+                  <option value="Prediction">Crop Yield Prediction</option>
+                  <option value="Recommendation">Crop Recommendation</option>
+                  <option value="Soil">Soil & Fertilizer</option>
+                  <option value="Weather">Weather & Climate Service</option>
+                  <option value="PDF">PDF Reports</option>
+                  <option value="General">General Inquiry</option>
+                </select>
               </div>
             </div>
 
@@ -849,10 +941,11 @@ export default function Admin({ nav }) {
             <div className="divide-y divide-[#EEF2EC]">
               {filteredTickets.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-xs">
-                  No farmer inquiries matching filter.
+                  No farmer inquiries or feedback matching current filter.
                 </div>
               ) : (
                 filteredTickets.map((ticket) => {
+                  const isFeedback = (ticket.category || "").toLowerCase().includes("feedback") || Boolean(ticket.rating);
                   const isResolved = ticket.status === "Resolved";
                   const isUnderReview = ticket.status === "Under Review";
 
@@ -863,9 +956,30 @@ export default function Admin({ nav }) {
                           <span className="key-cap text-[10px] px-2.5 py-0.5 font-extrabold text-[#2E7D32]">
                             {ticket.ticket_id || `TICK-#${ticket.id}`}
                           </span>
-                          <span className="rounded-full bg-[#E5F7EA] px-2.5 py-0.5 text-[10px] font-bold text-[#2E7D32] border border-[#CDE5D1]">
-                            {ticket.category || "General"}
+
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                              isFeedback
+                                ? "bg-amber-100 text-amber-800 border-amber-200"
+                                : "bg-[#E5F7EA] text-[#2E7D32] border-[#CDE5D1]"
+                            }`}
+                          >
+                            {isFeedback ? "⭐ " + (ticket.category || "App Feedback") : "🌾 " + (ticket.category || "General Query")}
                           </span>
+
+                          {ticket.rating && (
+                            <div className="flex items-center gap-1 text-amber-500 text-xs font-bold pl-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                              <div className="flex items-center">
+                                {[...Array(Number(ticket.rating) || 5)].map((_, i) => (
+                                  <Star key={i} size={11} fill="currentColor" />
+                                ))}
+                              </div>
+                              <span className="text-[10px] text-amber-800 font-extrabold">
+                                {ticket.rating}/5 Stars
+                              </span>
+                            </div>
+                          )}
+
                           <span
                             className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                               isResolved
@@ -875,15 +989,8 @@ export default function Admin({ nav }) {
                                 : "bg-amber-100 text-amber-800 border border-amber-200"
                             }`}
                           >
-                            {ticket.status || "Submitted"}
+                            {isResolved ? "✅ Resolved" : isUnderReview ? "🔍 Under Review" : "⏳ Submitted"}
                           </span>
-                          {ticket.rating && (
-                            <div className="flex items-center gap-0.5 text-amber-500 text-xs font-bold pl-1">
-                              {[...Array(Number(ticket.rating) || 5)].map((_, i) => (
-                                <Star key={i} size={12} fill="currentColor" />
-                              ))}
-                            </div>
-                          )}
                         </div>
 
                         <div className="text-[11px] text-gray-400 flex items-center gap-2">
@@ -912,7 +1019,7 @@ export default function Admin({ nav }) {
                           <span className="text-gray-500">{ticket.user_email}</span>
                           <span>•</span>
                           <span className="text-[#2E7D32] font-semibold flex items-center gap-1">
-                            <MapPin size={11} /> {ticket.district || "Maharashtra"}
+                            <MapPin size={11} /> {ticket.district && ticket.district.trim() ? (tDistrict ? tDistrict(ticket.district) : ticket.district) : "Maharashtra"}
                           </span>
                         </div>
 
@@ -1481,13 +1588,27 @@ export default function Admin({ nav }) {
               </button>
             </div>
 
-            <div className="mt-4 rounded-xl bg-[#F8FAF7] p-3 text-xs border border-[#E2EAE0] space-y-1">
-              <div className="flex justify-between font-bold text-gray-700">
-                <span>From: {replyTicketModal.name} ({replyTicketModal.district})</span>
-                <span className="text-[#2E7D32]">{replyTicketModal.category}</span>
+            <div className="mt-4 rounded-xl bg-[#F8FAF7] p-3.5 text-xs border border-[#E2EAE0] space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 font-bold text-gray-700">
+                <span>From: {replyTicketModal.name || "Farmer"} ({replyTicketModal.district && replyTicketModal.district.trim() ? (tDistrict ? tDistrict(replyTicketModal.district) : replyTicketModal.district) : "Maharashtra"})</span>
+                <div className="flex items-center gap-2">
+                  {replyTicketModal.rating && (
+                    <div className="flex items-center gap-0.5 text-amber-500 font-extrabold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      {[...Array(Number(replyTicketModal.rating) || 5)].map((_, i) => (
+                        <Star key={i} size={11} fill="currentColor" />
+                      ))}
+                      <span className="text-[10px] text-amber-800 ml-0.5">{replyTicketModal.rating}/5</span>
+                    </div>
+                  )}
+                  <span className="text-[#2E7D32] bg-[#E5F7EA] px-2 py-0.5 rounded-full border border-[#CDE5D1] text-[10px] font-bold">
+                    {replyTicketModal.category || "Inquiry"}
+                  </span>
+                </div>
               </div>
-              <p className="font-semibold text-gray-800">{replyTicketModal.subject}</p>
-              <p className="text-gray-500 italic">"{replyTicketModal.message}"</p>
+              <p className="font-extrabold text-gray-800 text-xs">{replyTicketModal.subject}</p>
+              <p className="text-gray-600 bg-white p-2.5 rounded-lg border border-[#E2EAE0] leading-relaxed">
+                "{replyTicketModal.message}"
+              </p>
             </div>
 
             <form onSubmit={handleSendReply} className="mt-4 space-y-3 text-xs">

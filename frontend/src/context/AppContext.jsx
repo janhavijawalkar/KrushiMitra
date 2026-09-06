@@ -2586,6 +2586,20 @@ export function AppProvider({ children }) {
           }
         })
         .catch(() => {});
+
+      // Sync User Queries & Feedback from DB
+      fetch(`${API_BASE}/support/my-tickets?email=${emailParam}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.tickets)) {
+            setSupportTickets(data.tickets);
+            localStorage.setItem(
+              "krushimitra_support_tickets",
+              JSON.stringify(data.tickets)
+            );
+          }
+        })
+        .catch(() => {});
     }
   }, [user?.email]);
 
@@ -2908,6 +2922,19 @@ export function AppProvider({ children }) {
     }
   };
 
+  // Admin: Purge Old Sample Tickets
+  const apiAdminPurgeSampleTickets = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/tickets/purge-sample`, {
+        method: "POST",
+      });
+      const data = await response.json();
+      return { success: response.ok && data.success, message: data.message };
+    } catch (err) {
+      return { success: false, message: "Backend offline" };
+    }
+  };
+
   // Admin: Export DB Data
   const apiExportDatabase = async () => {
     try {
@@ -3028,18 +3055,21 @@ export function AppProvider({ children }) {
   };
 
   const submitSupportTicket = async (ticket) => {
-    const newTicket = {
-      id: ticket.id || ("TICK-" + Date.now().toString().slice(-6)),
+    const genId = ticket.id || ticket.ticket_id || ("TICK-" + Date.now().toString().slice(-6));
+    const optimisticTicket = {
+      id: genId,
+      ticket_id: genId,
       ...ticket,
       user_email: ticket.user_email || user?.email || "farmer@krushimitra.in",
       name: ticket.name || user?.name || "Farmer",
       district: ticket.district || user?.district || "Maharashtra",
       status: "Submitted",
-      createdAt: new Date().toISOString(),
+      rating: Number(ticket.rating) || 5,
+      created_at: new Date().toLocaleString(),
     };
 
     setSupportTickets((prev) => {
-      const updated = [newTicket, ...prev.filter((t) => t.id !== newTicket.id)];
+      const updated = [optimisticTicket, ...prev.filter((t) => (t.ticket_id || t.id) !== genId)];
       localStorage.setItem(
         "krushimitra_support_tickets",
         JSON.stringify(updated)
@@ -3053,23 +3083,55 @@ export function AppProvider({ children }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ticket_id: newTicket.id,
-          user_email: newTicket.user_email,
-          name: newTicket.name,
-          district: newTicket.district,
-          category: newTicket.category || "General Inquiry",
-          subject: newTicket.subject || "Farmer Query",
-          message: newTicket.message || "",
-          rating: Number(newTicket.rating) || 5,
+          ticket_id: optimisticTicket.ticket_id,
+          user_email: optimisticTicket.user_email,
+          name: optimisticTicket.name,
+          district: optimisticTicket.district,
+          category: optimisticTicket.category || "General Inquiry",
+          subject: optimisticTicket.subject || "Farmer Query",
+          message: optimisticTicket.message || "",
+          rating: Number(optimisticTicket.rating) || 5,
           status: "Submitted",
         }),
       });
       const data = await response.json();
-      return data.ticket || newTicket;
+      if (data.ticket) {
+        setSupportTickets((prev) => {
+          const updated = [data.ticket, ...prev.filter((t) => (t.ticket_id || t.id) !== genId)];
+          localStorage.setItem(
+            "krushimitra_support_tickets",
+            JSON.stringify(updated)
+          );
+          return updated;
+        });
+        return data.ticket;
+      }
+      return optimisticTicket;
     } catch (err) {
       console.warn("Backend ticket sync fallback:", err);
-      return newTicket;
+      return optimisticTicket;
     }
+  };
+
+  const fetchMyTickets = async () => {
+    if (!user?.email) return [];
+    try {
+      const response = await fetch(
+        `${API_BASE}/support/my-tickets?email=${encodeURIComponent(user.email.toLowerCase().trim())}`
+      );
+      const data = await response.json();
+      if (response.ok && data.success && Array.isArray(data.tickets)) {
+        setSupportTickets(data.tickets);
+        localStorage.setItem(
+          "krushimitra_support_tickets",
+          JSON.stringify(data.tickets)
+        );
+        return data.tickets;
+      }
+    } catch (err) {
+      console.warn("Backend ticket sync fallback:", err);
+    }
+    return supportTickets;
   };
 
   const login = (userData) => {
@@ -3286,6 +3348,7 @@ export function AppProvider({ children }) {
         resetFarmData,
         supportTickets,
         submitSupportTicket,
+        fetchMyTickets,
 
         usersList,
         registerUser,
@@ -3314,6 +3377,7 @@ export function AppProvider({ children }) {
         apiUpdateTicketStatus,
         apiAdminReplyTicket,
         apiAdminDeleteTicket,
+        apiAdminPurgeSampleTickets,
         apiExportDatabase,
         apiOptimizeDatabase,
         t,

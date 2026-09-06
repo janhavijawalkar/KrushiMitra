@@ -440,91 +440,7 @@ def init_db():
             return list(row.values())[0] if row else 0
         return row[0]
 
-    # 2. Seed Initial Support Tickets if table is empty
-    cursor.execute("SELECT COUNT(*) FROM support_tickets")
-    ticket_row = cursor.fetchone()
-    ticket_count = _extract_count(ticket_row)
-    if ticket_count == 0:
-        sample_tickets = [
-            (
-                "TICK-102941",
-                "ramesh.patil@krushimitra.in",
-                "Ramesh Patil",
-                "Pune",
-                "Crop Advisory",
-                "Query regarding Drip Fertigation NPK ratio for Sugarcane",
-                "Sir, the crop recommendation suggested Sugarcane for my Medium Black Soil. What is the recommended split application of Urea and Potash through drip irrigation during early vegetative phase?",
-                "Resolved",
-                "Split 40% Nitrogen at planting, 30% at tillering, and balance during grand growth. Recommended NPK fertigation schedule sent to your registered email.",
-                5
-            ),
-            (
-                "TICK-203819",
-                "sunita.deshmukh@krushimitra.in",
-                "Sunita Deshmukh",
-                "Nashik",
-                "AI Voice Assistant",
-                "Feedback: Marathi voice assistant is very accurate!",
-                "नमस्कार, मी नाशिकमधील द्राक्ष उत्पादक शेतकरी आहे. मराठीमध्ये बोलून हवामान आणि पावसाचा अंदाज ऐकल्यामुळे औषध फवारणीचे योग्य नियोजन करता आले. धन्यवाद!",
-                "Resolved",
-                "धन्यवाद सुनिताजी! आम्ही नाशिक जिल्ह्यातील सर्व द्राक्ष बागायतदारांसाठी लवकरच विशेष रोग नियंत्रण अलर्ट आणत आहोत.",
-                5
-            ),
-            (
-                "TICK-309482",
-                "anil.jadhav@krushimitra.in",
-                "Anil Jadhav",
-                "Amravati",
-                "Yield Prediction",
-                "Soybean yield calculation query for Kharif season",
-                "I entered 3.5 Acres of Regur Black Soil for Soybean. The model predicted 28.4 Quintals. Does this consider moderate rainfall or deficit monsoon?",
-                "Under Review",
-                "",
-                4
-            ),
-            (
-                "TICK-408127",
-                "dnyaneshwar.patil@krushimitra.in",
-                "Dnyaneshwar Patil",
-                "Kolhapur",
-                "Soil & Fertilizer",
-                "Soil pH adjustment for alkaline black soil",
-                "My soil pH is 7.9 in Kolhapur district. Should I apply gypsum before sowing Kharif Cotton or Wheat?",
-                "Submitted",
-                "",
-                5
-            ),
-            (
-                "TICK-501934",
-                "priya.shinde@krushimitra.in",
-                "Priya Shinde",
-                "Nashik",
-                "General Inquiry",
-                "Official PDF Farm Record Download",
-                "Downloaded the KrushiMitra PDF report for submitting to bank for crop loan subsidy under KCC. The format is very clear and professional.",
-                "Resolved",
-                "Thank you Priya ji! The digital reports are accepted under PMFBY and Kisan Credit Scheme verification.",
-                5
-            )
-        ]
-
-        ticket_insert = """
-        INSERT INTO support_tickets (
-            ticket_id, user_email, name, district, category, subject, message, status, admin_reply, rating
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-        for t_tuple in sample_tickets:
-            try:
-                if engine == "mysql":
-                    cursor.execute(ticket_insert.replace("?", "%s"), t_tuple)
-                else:
-                    cursor.execute(ticket_insert, t_tuple)
-            except Exception as ex:
-                print(f"[DB WARN in ticket seed]: {ex}")
-
-        if engine == "sqlite":
-            conn.commit()
-        print("[DATABASE] Initial support tickets seeding complete.")
+    # 2. Support tickets are completely dynamic (submitted by real users)
 
     # 3. Seed Initial Predictions if table is empty
     cursor.execute("SELECT COUNT(*) FROM prediction_history")
@@ -804,13 +720,15 @@ def save_support_ticket(data):
     return {
         "id": record_id,
         "ticket_id": ticket_id,
-        "user_email": data.get("user_email"),
+        "user_email": data.get("user_email", "guest"),
         "name": data.get("name") or data.get("user_name", "Farmer"),
         "district": data.get("district", "Maharashtra"),
         "category": data.get("category", "General Inquiry"),
         "subject": data.get("subject"),
         "message": data.get("message"),
-        "status": "Submitted"
+        "status": "Submitted",
+        "rating": int(data.get("rating", 5)),
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
 def get_support_tickets(user_email=None):
@@ -846,6 +764,12 @@ def delete_support_ticket(ticket_id):
         (ticket_id,)
     )
     return True
+
+def purge_sample_tickets():
+    sample_ids = ('TICK-102941', 'TICK-203819', 'TICK-309482', 'TICK-408127', 'TICK-501934', 'TICK-TEST999', 'TICK-USERLIVE1')
+    placeholders = ','.join(['?'] * len(sample_ids))
+    execute_query(f"DELETE FROM support_tickets WHERE ticket_id IN ({placeholders})", sample_ids)
+    return len(sample_ids)
 
 def create_user_by_admin(data):
     name = data.get("name", "").strip()

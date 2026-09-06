@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Palette,
   Globe,
@@ -29,6 +29,11 @@ import {
   Lock,
   ExternalLink,
   LifeBuoy,
+  Star,
+  Clock,
+  Calendar,
+  MessageCircle,
+  RefreshCw,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -44,6 +49,8 @@ export default function Settings() {
     resetFarmData,
     supportTickets,
     submitSupportTicket,
+    fetchMyTickets,
+    user,
     t,
   } = useApp();
 
@@ -52,13 +59,23 @@ export default function Settings() {
   const [openFaq, setOpenFaq] = useState(null);
   const [showResetModal, setShowResetModal] = useState(false);
 
-  // Support Form State
+  // Support / Feedback Form State
   const [ticketForm, setTicketForm] = useState({
+    type: "query", // 'query' or 'feedback'
+    rating: 5,
     subject: "",
     category: "Crop Prediction",
     message: "",
   });
   const [ticketSuccess, setTicketSuccess] = useState("");
+  const [isRefreshingTickets, setIsRefreshingTickets] = useState(false);
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
+
+  useEffect(() => {
+    if (fetchMyTickets) {
+      fetchMyTickets();
+    }
+  }, [user]);
 
   const showFeedback = (msg) => {
     setSaveToast(msg);
@@ -94,19 +111,42 @@ export default function Settings() {
     }
 
     try {
-      const created = await submitSupportTicket(ticketForm);
+      setIsSubmittingTicket(true);
+      const created = await submitSupportTicket({
+        ...ticketForm,
+        user_email: user?.email || undefined,
+        name: user?.name || undefined,
+        district: user?.district || undefined,
+        rating: ticketForm.type === "feedback" ? ticketForm.rating : 5,
+        category: ticketForm.type === "feedback" ? "App Feedback & Rating" : ticketForm.category,
+      });
       const ticketId = created?.ticket_id || created?.id || "TICK-" + Date.now().toString().slice(-6);
       setTicketSuccess(
         language === "mr"
-          ? `आपली विनंती यशस्वीपणे पाठवली गेली! तिकीट आयडी: ${ticketId}`
+          ? `आपला संदेश यशस्वीपणे नोंदवला गेला! तिकीट आयडी: ${ticketId}`
           : language === "hi"
-          ? `आपका अनुरोध सफलतापूर्वक भेज दिया गया! टिकट आईडी: ${ticketId}`
-          : `Support request submitted! Ticket ID: ${ticketId}`
+          ? `आपका संदेश सफलतापूर्वक दर्ज किया गया! टिकट आईडी: ${ticketId}`
+          : `Inquiry / Feedback successfully submitted! Ticket ID: ${ticketId}`
       );
-      setTicketForm({ subject: "", category: "Crop Prediction", message: "" });
+      setTicketForm({
+        type: "query",
+        rating: 5,
+        subject: "",
+        category: "Crop Prediction",
+        message: "",
+      });
+      if (fetchMyTickets) await fetchMyTickets();
       setTimeout(() => setTicketSuccess(""), 6000);
     } catch (err) {
-      showFeedback(language === "mr" ? "मदत संदेश पाठवणे अयशस्वी झाले." : language === "hi" ? "सहायता अनुरोध भेजने में विफल।" : "Failed to submit support inquiry.");
+      showFeedback(
+        language === "mr"
+          ? "संदेश पाठवणे अयशस्वी झाले."
+          : language === "hi"
+          ? "संदेश भेजने में विफल।"
+          : "Failed to submit inquiry."
+      );
+    } finally {
+      setIsSubmittingTicket(false);
     }
   };
 
@@ -514,50 +554,145 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* CONTACT TICKET FORM */}
-              <div className="rounded-2xl border border-[#DCE8D9] bg-[#FAFDF9] p-5">
-                <h3 className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-1.5">
-                  <LifeBuoy size={16} className="text-[#2E7D32]" />
-                  <span>{language === "mr" ? "मदत किंवा शेती विषयक प्रश्न विचारा" : language === "hi" ? "सहायता या कृषि संबंधी प्रश्न पूछें" : "Submit Support or Agronomy Query"}</span>
-                </h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  {language === "mr"
-                    ? "आपल्या शेतीविषयक डेटा किंवा माती चाचणीबद्दल मदत हवी असल्यास आमच्या टीमला संदेश पाठवा."
-                    : language === "hi"
-                    ? "अपने कृषि डेटा या मृदा परीक्षण के संबंध में सहायता के लिए हमारी टीम को संदेश भेजें।"
-                    : "Need help with your farm data or soil advisories? Send a note to our support team."}
-                </p>
+              {/* CONTACT TICKET / FEEDBACK FORM */}
+              <div className="rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-[#FAFDF9] dark:bg-[#152319] p-5 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-1.5">
+                      <LifeBuoy size={16} className="text-[#2E7D32]" />
+                      <span>{language === "mr" ? "शेतकरी मदत व ॲप अभिप्राय केंद्र" : language === "hi" ? "किसान सहायता एवं ऐप फीडबैक केंद्र" : "Farmer Helpdesk & App Feedback Desk"}</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {language === "mr"
+                        ? "शेतीविषयक प्रश्न विचारा किंवा ॲप अनुभव शेअर करा. आमचे कृषी तज्ज्ञ व ॲडमिन थेट उत्तर देतील."
+                        : language === "hi"
+                        ? "कृषि संबंधी प्रश्न पूछें या ऐप अनुभव साझा करें। हमारे कृषि विशेषज्ञ व एडमिन सीधा उत्तर देंगे।"
+                        : "Ask agronomy questions or review your platform experience. Our agronomy team and admins reply directly."}
+                    </p>
+                  </div>
+
+                  {/* FORM TYPE TOGGLE */}
+                  <div className="inline-flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1 self-start sm:self-auto border border-[#E2EAE0] dark:border-gray-700">
+                    <button
+                      type="button"
+                      onClick={() => setTicketForm((prev) => ({ ...prev, type: "query" }))}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                        ticketForm.type === "query"
+                          ? "bg-[#2E7D32] text-white shadow-xs"
+                          : "text-gray-600 dark:text-gray-300 hover:text-gray-900"
+                      }`}
+                    >
+                      <span>🌾</span>
+                      <span>{language === "mr" ? "शेती प्रश्न" : language === "hi" ? "कृषि प्रश्न" : "Agronomy Query"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTicketForm((prev) => ({ ...prev, type: "feedback" }))}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                        ticketForm.type === "feedback"
+                          ? "bg-amber-500 text-white shadow-xs"
+                          : "text-gray-600 dark:text-gray-300 hover:text-gray-900"
+                      }`}
+                    >
+                      <Star size={13} className="fill-current" />
+                      <span>{language === "mr" ? "अभिप्राय व रेटिंग" : language === "hi" ? "फीडबैक व रेटिंग" : "Feedback & Rating"}</span>
+                    </button>
+                  </div>
+                </div>
 
                 {ticketSuccess && (
-                  <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-xs font-bold text-[#1B5E20]">
-                    {ticketSuccess}
+                  <div className="rounded-xl border border-green-200 bg-green-50 dark:bg-green-950/40 p-3 text-xs font-bold text-[#1B5E20] dark:text-green-300 flex items-center gap-2">
+                    <CheckCircle2 size={16} className="shrink-0 text-green-600" />
+                    <span>{ticketSuccess}</span>
                   </div>
                 )}
 
                 <form onSubmit={handleSupportSubmit} className="space-y-3.5">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                        {language === "mr" ? "विषय श्रेणी" : language === "hi" ? "श्रेणी" : "Category"}
+                  {ticketForm.type === "feedback" ? (
+                    /* FEEDBACK 5-STAR RATING SELECTOR */
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-4 space-y-2.5">
+                      <label className="block text-xs font-bold text-amber-900 dark:text-amber-200">
+                        {language === "mr" ? "ॲप अनुभव रेटिंग द्या (१ ते ५ स्टार):" : language === "hi" ? "ऐप अनुभव रेटिंग दें (1 से 5 स्टार):" : "Rate Your KrushiMitra Experience (1 to 5 Stars):"}
                       </label>
-                      <select
-                        value={ticketForm.category}
-                        onChange={(e) =>
-                          setTicketForm({ ...ticketForm, category: e.target.value })
-                        }
-                        className="w-full rounded-xl border border-[#DCE8D9] bg-white px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
-                      >
-                        <option value="Crop Prediction">{language === "mr" ? "पीक उत्पादन अंदाज" : language === "hi" ? "फसल उपज पूर्वानुमान" : "Crop Yield Prediction"}</option>
-                        <option value="Recommendation">{language === "mr" ? "पीक शिफारस व माती सल्ला" : language === "hi" ? "फसल सिफारिश एवं मृदा सलाह" : "Crop Recommendation"}</option>
-                        <option value="Weather Service">{language === "mr" ? "हवामान सेवा" : language === "hi" ? "मौसम सेवा" : "Weather & Climate Service"}</option>
-                        <option value="PDF Reports">{language === "mr" ? "PDF अहवाल डाउनलोड" : language === "hi" ? "पीडीएफ रिपोर्ट डाउनलोड" : "PDF Report Downloads"}</option>
-                        <option value="Other">{language === "mr" ? "इतर सामान्य शेती प्रश्न" : language === "hi" ? "अन्य सामान्य कृषि प्रश्न" : "General Agronomy Query"}</option>
-                      </select>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setTicketForm((prev) => ({ ...prev, rating: star }))}
+                              className="p-1 transition hover:scale-125 focus:outline-none cursor-pointer"
+                              title={`${star} Star`}
+                            >
+                              <Star
+                                size={26}
+                                className={`transition ${
+                                  star <= ticketForm.rating
+                                    ? "text-amber-500 fill-amber-400 drop-shadow-xs"
+                                    : "text-gray-300 dark:text-gray-600"
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                        <span className="rounded-full bg-white dark:bg-gray-800 px-3 py-1 text-xs font-extrabold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs">
+                          {ticketForm.rating === 5
+                            ? (language === "mr" ? "🌟 ५/५ - उत्कृष्ट अनुभव" : language === "hi" ? "🌟 5/5 - उत्कृष्ट अनुभव" : "🌟 5/5 - Outstanding")
+                            : ticketForm.rating === 4
+                            ? (language === "mr" ? "😊 ४/५ - खूप छान" : language === "hi" ? "😊 4/5 - बहुत अच्छा" : "😊 4/5 - Very Good")
+                            : ticketForm.rating === 3
+                            ? (language === "mr" ? "🙂 ३/५ - समाधानकारक" : language === "hi" ? "🙂 3/5 - संतोषजनक" : "🙂 3/5 - Satisfactory")
+                            : ticketForm.rating === 2
+                            ? (language === "mr" ? "😐 २/५ - सुधारणा हवी" : language === "hi" ? "😐 2/5 - सुधार आवश्यक" : "😐 2/5 - Needs Improvement")
+                            : (language === "mr" ? "😞 १/५ - असमाधानकारक" : language === "hi" ? "😞 1/5 - असंतोषजनक" : "😞 1/5 - Poor")}
+                        </span>
+                      </div>
                     </div>
+                  ) : (
+                    /* CATEGORY DROPDOWN FOR QUERY */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          {language === "mr" ? "विषय श्रेणी" : language === "hi" ? "श्रेणी" : "Category"}
+                        </label>
+                        <select
+                          value={ticketForm.category}
+                          onChange={(e) =>
+                            setTicketForm({ ...ticketForm, category: e.target.value })
+                          }
+                          className="w-full rounded-xl border border-[#DCE8D9] dark:border-gray-700 bg-white dark:bg-[#1B2F21] px-3 py-2 text-xs outline-none focus:border-[#2E7D32] dark:text-white"
+                        >
+                          <option value="Crop Prediction">{language === "mr" ? "पीक उत्पादन अंदाज" : language === "hi" ? "फसल उपज पूर्वानुमान" : "Crop Yield Prediction"}</option>
+                          <option value="Recommendation">{language === "mr" ? "पीक शिफारस व माती सल्ला" : language === "hi" ? "फसल सिफारिश एवं मृदा सलाह" : "Crop Recommendation"}</option>
+                          <option value="Soil & Fertilizer">{language === "mr" ? "खते व माती आरोग्य" : language === "hi" ? "उर्वरक एवं मृदा स्वास्थ्य" : "Soil & Fertilizer Advisory"}</option>
+                          <option value="Weather Service">{language === "mr" ? "हवामान सेवा व अंदाज" : language === "hi" ? "मौसम सेवा एवं पूर्वानुमान" : "Weather & Climate Service"}</option>
+                          <option value="PDF Reports">{language === "mr" ? "PDF अहवाल डाउनलोड" : language === "hi" ? "पीडीएफ रिपोर्ट डाउनलोड" : "PDF Report Downloads"}</option>
+                          <option value="Other">{language === "mr" ? "इतर सामान्य शेती प्रश्न" : language === "hi" ? "अन्य सामान्य कृषि प्रश्न" : "General Agronomy Query"}</option>
+                        </select>
+                      </div>
 
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          {language === "mr" ? "मुख्य विषय" : language === "hi" ? "विषय" : "Subject"}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={ticketForm.subject}
+                          onChange={(e) =>
+                            setTicketForm({ ...ticketForm, subject: e.target.value })
+                          }
+                          placeholder={language === "mr" ? "उदा. सोयाबीन उत्पादन अंदाज प्रश्न" : language === "hi" ? "उदा. सोयाबीन उपज संबंधी प्रश्न" : "e.g. Yield prediction question for Soybean"}
+                          className="w-full rounded-xl border border-[#DCE8D9] dark:border-gray-700 bg-white dark:bg-[#1B2F21] px-3 py-2 text-xs outline-none focus:border-[#2E7D32] dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {ticketForm.type === "feedback" && (
                     <div>
-                      <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                        {language === "mr" ? "मुख्य विषय" : language === "hi" ? "विषय" : "Subject"}
+                      <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        {language === "mr" ? "अभिप्राय शीर्षक" : language === "hi" ? "फीडबैक शीर्षक" : "Feedback Headline"}
                       </label>
                       <input
                         type="text"
@@ -566,15 +701,17 @@ export default function Settings() {
                         onChange={(e) =>
                           setTicketForm({ ...ticketForm, subject: e.target.value })
                         }
-                        placeholder={language === "mr" ? "उदा. सोयाबीन उत्पादन अंदाज प्रश्न" : language === "hi" ? "उदा. सोयाबीन उपज संबंधी प्रश्न" : "e.g. Yield prediction question for Soybean"}
-                        className="w-full rounded-xl border border-[#DCE8D9] bg-white px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
+                        placeholder={language === "mr" ? "उदा. उत्कृष्ट पीक अंदाज व वापरण्यास सोपे ॲप" : language === "hi" ? "उदा. बेहतरीन फसल उपज व उपयोग में आसान" : "e.g. Excellent yield predictions and easy to use"}
+                        className="w-full rounded-xl border border-[#DCE8D9] dark:border-gray-700 bg-white dark:bg-[#1B2F21] px-3 py-2 text-xs outline-none focus:border-[#2E7D32] dark:text-white"
                       />
                     </div>
-                  </div>
+                  )}
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                      {language === "mr" ? "तपशीलवार संदेश" : language === "hi" ? "विस्तृत संदेश" : "Message Details"}
+                    <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      {ticketForm.type === "feedback"
+                        ? (language === "mr" ? "आपला सविस्तर अभिप्राय" : language === "hi" ? "अपनी विस्तृत प्रतिक्रिया" : "Your Detailed Feedback")
+                        : (language === "mr" ? "तपशीलवार प्रश्न किंवा संदेश" : language === "hi" ? "विस्तृत प्रश्न या संदेश" : "Query Details & Field Observations")}
                     </label>
                     <textarea
                       rows={3}
@@ -583,19 +720,192 @@ export default function Settings() {
                       onChange={(e) =>
                         setTicketForm({ ...ticketForm, message: e.target.value })
                       }
-                      placeholder={language === "mr" ? "आपला प्रश्न किंवा अभिप्राय सविस्तरपणे लिहा..." : language === "hi" ? "अपना प्रश्न या प्रतिक्रिया विस्तार से लिखें..." : "Describe your query or feedback in detail..."}
-                      className="w-full rounded-xl border border-[#DCE8D9] bg-white p-3 text-xs outline-none focus:border-[#2E7D32]"
+                      placeholder={ticketForm.type === "feedback"
+                        ? (language === "mr" ? "कृषीमित्र ॲपबद्दल आपले अनुभव, सूचना किंवा काय आवडले ते लिहा..." : language === "hi" ? "कृषि-मित्र ऐप के बारे में अपना अनुभव, सुझाव या राय लिखें..." : "Share your experience, feature ideas, or compliments...")
+                        : (language === "mr" ? "आपल्या शेतीबद्दल, पिकाबद्दल किंवा समस्येबद्दल सविस्तरपणे लिहा..." : language === "hi" ? "अपनी कृषि, फसल या समस्या के बारे में विस्तार से लिखें..." : "Describe your crop, soil condition, or questions for our agronomists...")}
+                      className="w-full rounded-xl border border-[#DCE8D9] dark:border-gray-700 bg-white dark:bg-[#1B2F21] p-3 text-xs outline-none focus:border-[#2E7D32] dark:text-white"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="btn-shimmer flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-6 py-2.5 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
+                    disabled={isSubmittingTicket}
+                    className="btn-shimmer flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-6 py-2.5 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer disabled:opacity-50"
                   >
                     <Send size={14} />
-                    <span>{language === "mr" ? "संदेश पाठवा" : language === "hi" ? "संदेश भेजें" : "Send Message"}</span>
+                    <span>
+                      {isSubmittingTicket
+                        ? (language === "mr" ? "नोंदवत आहे..." : language === "hi" ? "भेज रहे हैं..." : "Submitting...")
+                        : ticketForm.type === "feedback"
+                        ? (language === "mr" ? "अभिप्राय व रेटिंग सबमिट करा" : language === "hi" ? "फीडबैक व रेटिंग सबमिट करें" : "Submit Feedback & Rating")
+                        : (language === "mr" ? "प्रश्न पाठवा" : language === "hi" ? "प्रश्न भेजें" : "Submit Agronomy Query")}
+                    </span>
                   </button>
                 </form>
+              </div>
+
+              {/* MY SUBMITTED INQUIRIES & OFFICIAL ADMIN RESPONSES */}
+              <div className="rounded-2xl border border-[#DCE8D9] dark:border-gray-800 bg-white dark:bg-[#152319] p-5 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#E2EAE0] dark:border-gray-800 pb-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                      <MessageCircle size={16} className="text-[#2E7D32]" />
+                      <span>{language === "mr" ? "माझे विचारलेले प्रश्न व कृषी तज्ज्ञ उत्तरे" : language === "hi" ? "मेरे पूछे गए प्रश्न एवं विशेषज्ञ उत्तर" : "My Inquiries, Feedback & Agronomist Responses"}</span>
+                      {supportTickets.length > 0 && (
+                        <span className="rounded-full bg-[#E5F7EA] dark:bg-green-950/50 px-2 py-0.5 text-[10px] font-extrabold text-[#2E7D32] border border-[#CDE5D1]">
+                          {supportTickets.length}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {language === "mr"
+                        ? "आपण पाठवलेले सर्व प्रश्न आणि ॲडमिन/कृषी तज्ज्ञांनी दिलेली अधिकृत उत्तरे येथे पहा."
+                        : language === "hi"
+                        ? "आपके द्वारा भेजे गए सभी प्रश्न और एडमिन/कृषि विशेषज्ञों के आधिकारिक उत्तर यहाँ देखें।"
+                        : "Track real-time status and official responses from our agronomists and administrators."}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsRefreshingTickets(true);
+                      if (fetchMyTickets) await fetchMyTickets();
+                      setTimeout(() => setIsRefreshingTickets(false), 600);
+                    }}
+                    className="key-cap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-[#2E7D32] transition cursor-pointer self-start sm:self-auto"
+                    title="Refresh Inquiries"
+                  >
+                    <RefreshCw size={12} className={isRefreshingTickets ? "animate-spin text-[#2E7D32]" : ""} />
+                    <span>{language === "mr" ? "रीफ्रेश" : language === "hi" ? "रिफ्रेश" : "Refresh"}</span>
+                  </button>
+                </div>
+
+                {supportTickets.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[#DCE8D9] dark:border-gray-800 p-8 text-center space-y-2">
+                    <p className="text-2xl">🌾</p>
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                      {language === "mr"
+                        ? "अद्याप कोणताही प्रश्न किंवा अभिप्राय विचारलेला नाही."
+                        : language === "hi"
+                        ? "अभी तक कोई प्रश्न या फीडबैक दर्ज नहीं किया गया है।"
+                        : "No inquiries or feedback submitted yet."}
+                    </p>
+                    <p className="text-[11px] text-gray-400 max-w-sm mx-auto">
+                      {language === "mr"
+                        ? "वरील फॉर्म वापरून शेतीविषयक प्रश्न विचारा किंवा ॲपला ५ स्टार रेटिंग द्या. येथे उत्तरे दिसतील."
+                        : language === "hi"
+                        ? "ऊपर दिए फॉर्म का उपयोग कर कृषि संबंधी प्रश्न पूछें या रेटिंग दें। उनके उत्तर यहाँ दिखाई देंगे।"
+                        : "Use the form above to submit an agronomy query or app review. Live responses will appear right here."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3.5">
+                    {supportTickets.map((tkt) => {
+                      const tktId = tkt.ticket_id || tkt.id || "TICK";
+                      const isFeedback = (tkt.category || "").toLowerCase().includes("feedback") || Boolean(tkt.rating);
+                      const isResolved = tkt.status === "Resolved";
+                      const isUnderReview = tkt.status === "Under Review";
+
+                      return (
+                        <div
+                          key={tktId}
+                          className="rounded-2xl border border-[#E2EAE0] dark:border-gray-800 bg-[#FAFDF9] dark:bg-[#122316] p-4.5 space-y-3 transition hover:shadow-sm"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="key-cap text-[10px] px-2.5 py-0.5 font-extrabold text-[#2E7D32]">
+                                {tktId}
+                              </span>
+
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                                  isFeedback
+                                    ? "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                                    : "bg-[#E5F7EA] text-[#2E7D32] border-[#CDE5D1] dark:bg-green-950/40 dark:text-green-300"
+                                }`}
+                              >
+                                {isFeedback ? "⭐ " + (tkt.category || "App Feedback") : "🌾 " + (tkt.category || "Query")}
+                              </span>
+
+                              {tkt.rating && (
+                                <div className="flex items-center gap-0.5 text-amber-500 text-xs font-bold pl-0.5">
+                                  {[...Array(Number(tkt.rating) || 5)].map((_, i) => (
+                                    <Star key={i} size={11} fill="currentColor" />
+                                  ))}
+                                  <span className="text-[10px] font-semibold text-gray-500 ml-1">
+                                    ({tkt.rating}/5)
+                                  </span>
+                                </div>
+                              )}
+
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                                  isResolved
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                    : isUnderReview
+                                    ? "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300"
+                                    : "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300"
+                                }`}
+                              >
+                                {isResolved
+                                  ? (language === "mr" ? "✅ सोडवले (Resolved)" : language === "hi" ? "✅ हल हुआ (Resolved)" : "✅ Resolved")
+                                  : isUnderReview
+                                  ? (language === "mr" ? "🔍 तपासणी सुरू" : language === "hi" ? "🔍 समीक्षा जारी" : "🔍 Under Review")
+                                  : (language === "mr" ? "⏳ नोंदवले (Submitted)" : language === "hi" ? "⏳ दर्ज हुआ (Submitted)" : "⏳ Submitted")}
+                              </span>
+                            </div>
+
+                            <div className="text-[11px] text-gray-400 flex items-center gap-1.5">
+                              <Calendar size={12} />
+                              <span>{tkt.created_at || tkt.createdAt || "Recent"}</span>
+                            </div>
+                          </div>
+
+                          {/* SUBJECT & QUESTION */}
+                          <div className="space-y-1">
+                            <h4 className="text-xs sm:text-sm font-extrabold text-gray-800 dark:text-white">
+                              {tkt.subject}
+                            </h4>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-[#1A2D1F] p-3 rounded-xl border border-[#E2EAE0] dark:border-gray-800 leading-relaxed">
+                              "{tkt.message}"
+                            </p>
+                          </div>
+
+                          {/* OFFICIAL ADMIN / AGRONOMIST RESPONSE */}
+                          {tkt.admin_reply ? (
+                            <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-[#EAF7EC] dark:bg-[#16331D] p-3.5 text-xs text-[#1B5E20] dark:text-emerald-200 space-y-1.5 shadow-2xs">
+                              <div className="flex items-center gap-1.5 font-extrabold">
+                                <ShieldCheck size={16} className="text-[#2E7D32] dark:text-emerald-400 shrink-0" />
+                                <span>
+                                  {language === "mr"
+                                    ? "👨‍🌾 अधिकृत कृषी तज्ज्ञ व ॲडमिन प्रतिसाद:"
+                                    : language === "hi"
+                                    ? "👨‍🌾 आधिकारिक कृषि विशेषज्ञ एवं एडमिन उत्तर:"
+                                    : "👨‍🌾 Official KrushiMitra Agronomist Response:"}
+                                </span>
+                              </div>
+                              <p className="pl-5.5 leading-relaxed font-medium">
+                                "{tkt.admin_reply}"
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 rounded-xl bg-gray-50 dark:bg-gray-800/40 px-3 py-2 text-[11px] text-gray-500 dark:text-gray-400 border border-dashed border-gray-200 dark:border-gray-700">
+                              <Clock size={13} className="text-amber-500 shrink-0" />
+                              <span>
+                                {language === "mr"
+                                  ? "कृषी तज्ज्ञांकडून तपासणी प्रलंबित आहे. लवकरच अधिकृत उत्तर येथे दिसेल."
+                                  : language === "hi"
+                                  ? "कृषि विशेषज्ञ द्वारा समीक्षा लंबित है। जल्द ही आधिकारिक उत्तर यहाँ दिखाई देगा।"
+                                  : "Awaiting agronomist review. Official reply will appear here once reviewed."}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1129,6 +1129,22 @@ def submit_support_ticket_api():
         return jsonify({"success": False, "message": "Error submitting inquiry", "error": str(e)}), 500
 
 
+@app.route("/api/support/my-tickets", methods=["GET"])
+def get_my_support_tickets_api():
+    try:
+        email = request.args.get("email", "").strip().lower()
+        if not email:
+            return jsonify({"success": False, "message": "Email is required"}), 400
+        tickets = database.get_support_tickets(email)
+        return jsonify({
+            "success": True,
+            "count": len(tickets),
+            "tickets": tickets
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error retrieving tickets", "error": str(e)}), 500
+
+
 @app.route("/api/admin/stats", methods=["GET"])
 def admin_stats():
     try:
@@ -1193,6 +1209,19 @@ def admin_delete_ticket(ticket_id):
         }), 200
     except Exception as e:
         return jsonify({"success": False, "message": "Error deleting ticket", "error": str(e)}), 500
+
+
+@app.route("/api/admin/tickets/purge-sample", methods=["POST"])
+def admin_purge_sample_tickets():
+    try:
+        count = database.purge_sample_tickets()
+        return jsonify({
+            "success": True,
+            "message": f"Successfully purged sample tickets ({count} removed).",
+            "purged": count
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error purging sample tickets", "error": str(e)}), 500
 
 
 @app.route("/api/admin/export", methods=["GET"])
