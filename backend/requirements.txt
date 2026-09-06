@@ -8,3 +8,5 @@ requests
 python-dotenv
 pymysql
 cryptography
+pyjwt
+flask-limiter

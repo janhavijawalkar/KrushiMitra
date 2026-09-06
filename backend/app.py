@@ -14,6 +14,7 @@ import requests
 import uuid
 import database
 import email_service
+import security
 
 # Initialize Database & Tables
 database.init_db()
@@ -27,8 +28,20 @@ OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 app = Flask(__name__)
 
-# Allow React frontend to access Flask APIs
-CORS(app)
+# Initialize Enterprise Rate Limiter
+security.limiter.init_app(app)
+
+# Allow React frontend to access Flask APIs securely with CORS protection
+CORS(
+    app,
+    resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"]}},
+    supports_credentials=True
+)
+
+# Apply OWASP security response headers to all responses
+@app.after_request
+def apply_owasp_security_headers(response):
+    return security.add_security_headers(response)
 
 
 # =========================================================
@@ -737,6 +750,7 @@ def get_weather():
 # =========================================================
 
 @app.route("/api/auth/register", methods=["POST"])
+@security.limiter.limit("20 per minute")
 def register():
     try:
         data = request.get_json() or {}
@@ -796,12 +810,17 @@ def register():
         except Exception as mail_err:
             print(f"[AUTH] Welcome email notification skipped: {mail_err}")
 
+        # Generate cryptographically signed JWT token
+        token = security.generate_token(user["id"], user["email"], user.get("role", "Farmer"), user.get("name"))
+
         # Don't return password_hash to frontend
         user_data = {k: v for k, v in user.items() if k != "password_hash"}
+        user_data["token"] = token
 
         return jsonify({
             "success": True,
             "message": "User registered successfully! Welcome email sent.",
+            "token": token,
             "user": user_data
         }), 201
 
@@ -814,6 +833,7 @@ def register():
 
 
 @app.route("/api/auth/login", methods=["POST"])
+@security.limiter.limit("25 per minute")
 def login():
     try:
         data = request.get_json() or {}
@@ -834,12 +854,17 @@ def login():
                 "message": "Invalid email or password"
             }), 401
 
+        # Generate cryptographically signed JWT token
+        token = security.generate_token(user["id"], user["email"], user.get("role", "Farmer"), user.get("name"))
+
         # Strip password hash before returning
         user_data = {k: v for k, v in user.items() if k != "password_hash"}
+        user_data["token"] = token
 
         return jsonify({
             "success": True,
             "message": "Login successful",
+            "token": token,
             "user": user_data
         }), 200
 
@@ -852,6 +877,7 @@ def login():
 
 
 @app.route("/api/auth/google", methods=["POST"])
+@security.limiter.limit("25 per minute")
 def google_auth():
     """Authenticates farmer using Google OAuth 2.0 Identity Services."""
     try:
@@ -920,16 +946,21 @@ def google_auth():
                     kisan_id=kid
                 )
             except Exception as mail_err:
-                print(f"[GOOGLE AUTH] Welcome email error: {mail_err}")
+                print(f"[GOOGLE AUTH] Welcome email error: {mail_err}", flush=True)
+
+        # Generate cryptographically signed JWT token
+        token = security.generate_token(user["id"], user["email"], user.get("role", "Farmer"), user.get("name"))
 
         user_data = {k: v for k, v in user.items() if k != "password_hash"}
         if picture and not user_data.get("avatar"):
             user_data["avatar"] = picture
+        user_data["token"] = token
 
         return jsonify({
             "success": True,
             "message": "Google authentication successful!",
             "isNewUser": is_new_farmer,
+            "token": token,
             "user": user_data
         }), 200
 
@@ -942,6 +973,7 @@ def google_auth():
 
 
 @app.route("/api/auth/resend-welcome-email", methods=["POST"])
+@security.limiter.limit("10 per minute")
 def resend_welcome_email():
     """Resends the official KrushiMitra welcome and Kisan ID dossier email."""
     try:
@@ -976,7 +1008,23 @@ def resend_welcome_email():
         }), 500
 
 
+@app.route("/api/auth/verify-token", methods=["GET", "POST"])
+@security.token_required
+def verify_token():
+    """Verifies that the client's JWT token is authentic, non-tampered, and unexpired."""
+    user = getattr(security.g, "current_user", None)
+    if not user:
+        return jsonify({"success": False, "message": "Invalid token"}), 401
+    user_data = {k: v for k, v in user.items() if k != "password_hash"}
+    return jsonify({
+        "success": True,
+        "message": "Cryptographic JWT token is valid",
+        "user": user_data
+    }), 200
+
+
 @app.route("/api/auth/forgot-password", methods=["POST"])
+@security.limiter.limit("10 per minute")
 def forgot_password():
     """Generates password reset token and sends an official reset email."""
     try:

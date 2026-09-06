@@ -2715,12 +2715,28 @@ export function AppProvider({ children }) {
     }
   };
 
+  // Secure Authorization Headers (JWT + RBAC Identity)
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("krushimitra_token");
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    if (user?.email) {
+      headers["X-User-Email"] = user.email;
+      if (user.role === "Admin") {
+        headers["X-Admin-Email"] = user.email;
+      }
+    }
+    return headers;
+  };
+
   // Real Database Profile Update
   const apiUpdateProfile = async (profileData) => {
     try {
       const response = await fetch(`${API_BASE}/user/profile`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(profileData),
       });
       const data = await response.json();
@@ -2795,7 +2811,9 @@ export function AppProvider({ children }) {
   // Real Database Admin Users Fetch
   const apiFetchAdminUsers = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/users`);
+      const response = await fetch(`${API_BASE}/admin/users`, {
+        headers: { ...getAuthHeaders() }
+      });
       const data = await response.json();
       if (response.ok && data.success && Array.isArray(data.users)) {
         setUsersList(data.users);
@@ -2813,7 +2831,7 @@ export function AppProvider({ children }) {
     try {
       await fetch(`${API_BASE}/admin/users/${userId}/role`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ role: newRole }),
       });
     } catch (err) {
@@ -2827,6 +2845,7 @@ export function AppProvider({ children }) {
     try {
       await fetch(`${API_BASE}/admin/users/${userId}`, {
         method: "DELETE",
+        headers: { ...getAuthHeaders() }
       });
     } catch (err) {
       console.warn("Backend API offline for user delete:", err);
@@ -2837,7 +2856,9 @@ export function AppProvider({ children }) {
   // Real Database Admin Stats Fetch
   const apiFetchAdminStats = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/stats`);
+      const response = await fetch(`${API_BASE}/admin/stats`, {
+        headers: { ...getAuthHeaders() }
+      });
       const data = await response.json();
       if (response.ok && data.success) {
         return data.stats;
@@ -2853,7 +2874,7 @@ export function AppProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/admin/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(userData),
       });
       const data = await response.json();
@@ -3163,14 +3184,16 @@ export function AppProvider({ children }) {
       "krushimitra_user",
       JSON.stringify(sanitized)
     );
+
+    if (userData?.token) {
+      localStorage.setItem("krushimitra_token", userData.token);
+    }
   };
 
   const logout = () => {
     setUser(null);
-
-    localStorage.removeItem(
-      "krushimitra_user"
-    );
+    localStorage.removeItem("krushimitra_user");
+    localStorage.removeItem("krushimitra_token");
   };
 
   const changeLanguage = (newLanguage) => {
