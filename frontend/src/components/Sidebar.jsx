@@ -12,6 +12,7 @@ import {
   Menu,
   LogOut,
   ChevronLeft,
+  BarChart3,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -51,6 +52,11 @@ export default function Sidebar({
       id: "reports",
       label: t("reports"),
       icon: FileText,
+    },
+    {
+      id: "analytics",
+      label: t("analytics") || "Agri Analytics",
+      icon: BarChart3,
     },
     {
       id: "history",

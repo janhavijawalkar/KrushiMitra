@@ -22,6 +22,7 @@ export default function Layout({
     recommendation: t("recommendation"),
     weather: t("weather"),
     reports: t("reports"),
+    analytics: t("analytics") || "Agri Analytics",
     history: t("history"),
 
     profile: t("profile"),

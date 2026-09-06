@@ -11,6 +11,7 @@ import Weather from "./pages/Weather";
 import Recommendation from "./pages/Recommendation";
 import Prediction from "./pages/Prediction";
 import Reports from "./pages/Reports";
+import Analytics from "./pages/Analytics";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -152,6 +153,7 @@ export default function App() {
         {page === "recommendation" && <Recommendation nav={navigate} />}
         {page === "prediction" && <Prediction nav={navigate} />}
         {page === "reports" && <Reports nav={navigate} />}
+        {page === "analytics" && <Analytics nav={navigate} />}
         {page === "history" && <History nav={navigate} />}
 
         {![
@@ -160,6 +162,7 @@ export default function App() {
           "recommendation",
           "prediction",
           "reports",
+          "analytics",
           "history",
           "profile",
           "settings",
