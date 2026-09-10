@@ -15,7 +15,15 @@ import {
 
 import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
 import VoiceMicButton from "../components/VoiceMicButton";
-import { parseSpokenYieldData, convertDevanagariDigits } from "../utils/voiceParser";
+import {
+  parseSpokenYieldData,
+  parseSpokenDistrict,
+  parseSpokenCrop,
+  parseSpokenSeason,
+  parseSpokenYear,
+  extractSpokenNumber,
+  convertDevanagariDigits,
+} from "../utils/voiceParser";
 import { buildApiUrl } from "../utils/apiConfig";
 
 export default function Prediction({ nav }) {
@@ -45,12 +53,13 @@ export default function Prediction({ nav }) {
 
   const handleVoiceYieldAutoFill = (transcript) => {
     const extracted = parseSpokenYieldData(transcript);
-    if (Object.keys(extracted).length > 0) {
+    const keysCount = Object.keys(extracted).length;
+
+    if (keysCount > 0) {
       setForm((prev) => ({
         ...prev,
         ...extracted,
       }));
-      const keysCount = Object.keys(extracted).length;
       setVoiceToast(
         language === "mr"
           ? `✅ व्हॉइस इनपुटवरून ${keysCount} माहिती भरली गेली!`
@@ -58,24 +67,65 @@ export default function Prediction({ nav }) {
           ? `✅ वॉइस इनपुट से ${keysCount} जानकारी भरी गई!`
           : `✅ Auto-filled ${keysCount} prediction parameters from voice!`
       );
-      setTimeout(() => setVoiceToast(""), 4500);
+      setTimeout(() => setVoiceToast(""), 5000);
     } else {
       setVoiceToast(
         language === "mr"
-          ? "माहिती ओळखता आली नाही. कृपया उदा. 'सोयाबीन, अमरावती, खरीप, ५ हेक्टर' असे बोला."
+          ? `माहिती ओळखता आली नाही: "${transcript}". उदा. 'सोयाबीन, अमरावती, खरीप, ५ हेक्टर, पाऊस ६५०' असे बोला.`
           : language === "hi"
-          ? "जानकारी नहीं पहचानी गई। कृपया उदा. 'सोयाबीन, अमरावती, खरीफ, 5 हेक्टेयर' बोलें।"
-          : "No fields detected. Try saying 'Soybean, Amravati, Kharif, 5 Hectares'."
+          ? `जानकारी नहीं पहचानी गई: "${transcript}"। उदा. 'सोयाबीन, अमरावती, खरीफ, 5 हेक्टेयर, वर्षा 650' बोलें।`
+          : `No fields detected: "${transcript}". Try saying 'Soybean, Amravati, Kharif, 5 Hectares, Rainfall 650'.`
       );
-      setTimeout(() => setVoiceToast(""), 4500);
+      setTimeout(() => setVoiceToast(""), 5000);
     }
   };
 
-  const handleSingleFieldVoice = (field, val) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: val,
-    }));
+  const handleSingleFieldVoice = (field, spokenText) => {
+    let extractedValue = null;
+    let fieldLabel = field;
+
+    if (field === "district") {
+      extractedValue = parseSpokenDistrict(spokenText);
+      fieldLabel = language === "mr" ? "जिल्हा" : language === "hi" ? "जिला" : "District";
+    } else if (field === "crop") {
+      extractedValue = parseSpokenCrop(spokenText);
+      fieldLabel = language === "mr" ? "पीक" : language === "hi" ? "फसल" : "Crop";
+    } else if (field === "season") {
+      extractedValue = parseSpokenSeason(spokenText);
+      fieldLabel = language === "mr" ? "हंगाम" : language === "hi" ? "मौसम" : "Season";
+    } else if (field === "year") {
+      extractedValue = parseSpokenYear(spokenText);
+      fieldLabel = language === "mr" ? "वर्ष" : language === "hi" ? "वर्ष" : "Year";
+    } else {
+      extractedValue = extractSpokenNumber(spokenText);
+      if (field === "area") fieldLabel = language === "mr" ? "क्षेत्रफळ" : language === "hi" ? "क्षेत्र" : "Area";
+      if (field === "rainfall") fieldLabel = language === "mr" ? "पाऊस" : language === "hi" ? "वर्षा" : "Rainfall";
+      if (field === "temperature") fieldLabel = language === "mr" ? "तापमान" : language === "hi" ? "तापमान" : "Temperature";
+    }
+
+    if (extractedValue) {
+      setForm((prev) => ({
+        ...prev,
+        [field]: extractedValue,
+      }));
+      setVoiceToast(
+        language === "mr"
+          ? `✅ ${fieldLabel}: "${extractedValue}" निवडले!`
+          : language === "hi"
+          ? `✅ ${fieldLabel}: "${extractedValue}" चुना गया!`
+          : `✅ Set ${fieldLabel}: "${extractedValue}"!`
+      );
+      setTimeout(() => setVoiceToast(""), 4000);
+    } else {
+      setVoiceToast(
+        language === "mr"
+          ? `माहिती ओळखता आली नाही: "${spokenText}"`
+          : language === "hi"
+          ? `जानकारी नहीं पहचानी गई: "${spokenText}"`
+          : `Could not recognize: "${spokenText}"`
+      );
+      setTimeout(() => setVoiceToast(""), 4000);
+    }
   };
 
   const handleChange = (e) => {
@@ -344,6 +394,7 @@ export default function Prediction({ nav }) {
               name="district"
               value={form.district}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("district", val)}
               icon={<MapPin size={15} />}
               options={MAHARASHTRA_DISTRICTS.map((d) => ({
                 value: d,
@@ -357,6 +408,7 @@ export default function Prediction({ nav }) {
               name="crop"
               value={form.crop}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("crop", val)}
               icon={<Sprout size={15} />}
               options={[
                 "Cotton",
@@ -378,6 +430,7 @@ export default function Prediction({ nav }) {
               name="year"
               value={form.year}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("year", val)}
               icon={<CalendarDays size={15} />}
               options={[
                 "2026",
@@ -394,6 +447,7 @@ export default function Prediction({ nav }) {
               name="season"
               value={form.season}
               onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("season", val)}
               options={[
                 { value: "Kharif", label: tSeason ? tSeason("Kharif") : "Kharif" },
                 { value: "Rabi", label: tSeason ? tSeason("Rabi") : "Rabi" },
@@ -632,22 +686,24 @@ function Input({
   icon,
 }) {
   const handleSingleVoice = (spokenText) => {
-    const clean = convertDevanagariDigits(spokenText);
-    const numMatch = clean.match(/(\d+(\.\d+)?)/);
-    if (numMatch && onVoiceInput) {
-      onVoiceInput(numMatch[1]);
+    if (onVoiceInput) {
+      onVoiceInput(spokenText);
     }
   };
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+        <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200">
           {icon}
           {label}
         </label>
         {onVoiceInput && (
-          <VoiceMicButton onTranscript={handleSingleVoice} size="sm" />
+          <VoiceMicButton
+            onTranscript={handleSingleVoice}
+            size="sm"
+            title={`बोलून ${label} भरा`}
+          />
         )}
       </div>
 
@@ -659,7 +715,7 @@ function Input({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[#DCE8D9] bg-white px-4 py-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100"
+        className="w-full rounded-xl border border-[#DCE8D9] bg-white dark:bg-[#132318] dark:border-gray-700 px-4 py-3 text-sm text-gray-800 dark:text-white outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100"
       />
     </div>
   );
@@ -678,23 +734,48 @@ function SelectInput({
   options,
   icon,
   selectText,
+  onVoiceInput,
 }) {
+  const handleSelectVoice = (spokenText) => {
+    if (onVoiceInput) {
+      onVoiceInput(spokenText);
+    }
+  };
+
+  // Match case-insensitively so "PUNE" matches "Pune" or "pune"
+  const matchedOpt = options.find((option) => {
+    const optValue = typeof option === "object" ? option.value : option;
+    return String(optValue).toLowerCase() === String(value || "").toLowerCase();
+  });
+  const selectedValue = matchedOpt
+    ? typeof matchedOpt === "object"
+      ? matchedOpt.value
+      : matchedOpt
+    : value;
+
   return (
     <div>
-
-      <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-        {icon}
-        {label}
-      </label>
+      <div className="mb-2 flex items-center justify-between">
+        <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200">
+          {icon}
+          {label}
+        </label>
+        {onVoiceInput && (
+          <VoiceMicButton
+            onTranscript={handleSelectVoice}
+            size="sm"
+            title={`बोलून ${label} निवडा`}
+          />
+        )}
+      </div>
 
       <select
         name={name}
-        value={value}
+        value={selectedValue}
         onChange={onChange}
-        className="w-full rounded-xl border border-[#DCE8D9] bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100 cursor-pointer"
+        className="w-full rounded-xl border border-[#DCE8D9] bg-white dark:bg-[#132318] dark:border-gray-700 px-4 py-3 text-sm text-gray-800 dark:text-white outline-none transition focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100 cursor-pointer"
       >
-
-        <option value="" className="text-gray-500 bg-white">
+        <option value="" className="text-gray-500 bg-white dark:bg-[#132318]">
           {selectText || label}
         </option>
 
@@ -705,15 +786,13 @@ function SelectInput({
             <option
               key={optValue}
               value={optValue}
-              className="text-gray-800 bg-white"
+              className="text-gray-800 dark:text-white bg-white dark:bg-[#132318]"
             >
               {optLabel}
             </option>
           );
         })}
-
       </select>
-
     </div>
   );
 }
