@@ -20,6 +20,7 @@ import Admin from "./pages/Admin";
 
 import Layout from "./components/Layout";
 import OfflineBanner from "./components/OfflineBanner";
+import UpdateNotification from "./components/UpdateNotification";
 
 import { useApp } from "./context/AppContext";
 
@@ -177,6 +178,7 @@ export default function App() {
     <>
       {(!user || page === "landing") && <OfflineBanner />}
       {renderContent()}
+      <UpdateNotification />
     </>
   );
 }

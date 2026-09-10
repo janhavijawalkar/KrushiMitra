@@ -24,13 +24,19 @@ import {
   Droplets,
   Wind,
   Gauge,
-  Compass,
   Mail,
+  Download,
+  Smartphone,
+  Apple,
+  Monitor,
+  WifiOff,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { buildApiUrl } from "../utils/apiConfig";
 import ImageSlider from "../components/ImageSlider";
 import VoiceChatbot from "../components/VoiceChatbot";
+import InstallModal from "../components/InstallModal";
 
 /* =========================================================
    ZOOM-FADE SCROLL REVEAL WRAPPER
@@ -88,6 +94,10 @@ export default function Landing({ nav }) {
     tDistrict,
   } = useApp();
 
+  const { isInstallable, promptInstall } = useOnlineStatus();
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [modalPlatform, setModalPlatform] = useState(null);
+  const [downloadPlatformTab, setDownloadPlatformTab] = useState("all");
   const [faqOpen, setFaqOpen] = useState(null);
   const [demoLoading, setDemoLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("yield");
@@ -647,6 +657,13 @@ export default function Landing({ nav }) {
               {t("landingFarmers") || (language === "mr" ? "शेतकरी अनुभव" : language === "hi" ? "किसान अनुभव" : "Farmers")}
             </a>
             <a
+              href="#download-app"
+              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5 flex items-center gap-1 font-extrabold text-[#2E7D32] dark:text-[#4ADE80]"
+            >
+              <Smartphone size={13} />
+              <span>{language === "mr" ? "अ‍ॅप डाऊनलोड" : language === "hi" ? "ऐप डाउनलोड" : "Download App"}</span>
+            </a>
+            <a
               href="#faq"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
@@ -656,6 +673,24 @@ export default function Landing({ nav }) {
 
           {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-2.5">
+            {/* DIRECT INSTALL APP BUTTON */}
+            <button
+              type="button"
+              onClick={async () => {
+                if (isInstallable && promptInstall) {
+                  const res = await promptInstall();
+                  if (!res) setShowInstallModal(true);
+                } else {
+                  setShowInstallModal(true);
+                }
+              }}
+              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-3 py-1.5 text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition hover:scale-102"
+              title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा" : language === "hi" ? "ऐप इंस्टॉल करें" : "Download & Install App"}
+            >
+              <Download size={13} />
+              <span>{language === "mr" ? "अ‍ॅप इन्स्टॉल" : language === "hi" ? "ऐप इंस्टॉल" : "Install App"}</span>
+            </button>
+
             {/* LANGUAGE SELECTOR */}
             <div className="relative">
               <select
@@ -1539,7 +1574,354 @@ export default function Landing({ nav }) {
       </section>
 
       {/* =========================================================
-          8. FAQ SECTION
+          8. DOWNLOAD & INSTALL PWA APP SECTION
+         ========================================================= */}
+      <section
+        id="download-app"
+        className="relative overflow-hidden py-16 sm:py-24 bg-gradient-to-b from-[#F3F8F1] via-white to-[#F3F8F1] dark:from-[#0D1710] dark:via-[#132318] dark:to-[#0D1710] border-y border-[#DCE8D9] dark:border-[#24402A]"
+      >
+        <div className="pointer-events-none absolute -left-20 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-emerald-400/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-green-400/15 blur-3xl" />
+
+        <ZoomFadeReveal delay={60} className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* HEADER */}
+          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+            <span className="key-cap text-xs py-1.5 px-4 bg-emerald-100 dark:bg-[#183321] text-[#1B5E20] dark:text-[#4ADE80] font-black border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
+              📲 {language === "mr" ? "मोबाईल अ‍ॅप डाऊनलोड" : language === "hi" ? "मोबाइल ऐप डाउनलोड" : "Download Mobile App"}
+            </span>
+
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+              {language === "mr"
+                ? "कृषीमित्र अ‍ॅप थेट मोबाईलवर इन्स्टॉल करा"
+                : language === "hi"
+                ? "कृषि-मित्र ऐप सीधे मोबाइल में इंस्टॉल करें"
+                : "Install KrushiMitra Directly on Your Device"}
+            </h2>
+
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              {language === "mr"
+                ? "प्ले स्टोअरच्या त्रासाशिवाय थेट १-क्लिक इन्स्टॉल. शेतात मोबाइल इंटरनेट नसतानाही १००% ऑफलाइन कार्य करते."
+                : language === "hi"
+                ? "बिना किसी झंझट के सीधा १-क्लिक इंस्टॉल। खेत में इंटरनेट न होने पर भी १००% ऑफलाइन काम करता है।"
+                : "Zero Play Store hassle. Instant 1-click install. Works 100% offline in fields with zero mobile data."}
+            </p>
+
+            {/* ACTION BUTTONS & PLATFORM SELECTOR (UPSIDE) */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (isInstallable && promptInstall) {
+                    const res = await promptInstall();
+                    if (!res) {
+                      setModalPlatform(null);
+                      setShowInstallModal(true);
+                    }
+                  } else {
+                    setModalPlatform(null);
+                    setShowInstallModal(true);
+                  }
+                }}
+                className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-7 py-3.5 text-xs sm:text-sm font-black !text-white shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+              >
+                <Download size={18} className="!text-white" />
+                <span className="!text-white">
+                  {language === "mr"
+                    ? "📲 थेट अ‍ॅप इन्स्टॉल करा (Install Now)"
+                    : language === "hi"
+                    ? "📲 तुरंत ऐप इंस्टॉल करें (Install Now)"
+                    : "📲 Install KrushiMitra App Now"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModalPlatform(null);
+                  setShowInstallModal(true);
+                }}
+                className="key-cap flex items-center gap-2 rounded-2xl px-6 py-3.5 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer"
+              >
+                <Smartphone size={17} />
+                <span>
+                  {language === "mr"
+                    ? "सर्व डिव्हाइस इन्स्टॉल गाईड"
+                    : language === "hi"
+                    ? "सभी डिवाइस इंस्टॉल गाइड"
+                    : "Universal Install Guide"}
+                </span>
+              </button>
+            </div>
+
+            {/* PLATFORM SELECTOR TABS (PERMANENTLY VISIBLE UPSIDE) */}
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-xs font-black text-gray-600 dark:text-gray-300 mr-1 flex items-center gap-1">
+                {language === "mr" ? "साधन निवडा:" : language === "hi" ? "डिवाइस चुनें:" : "Select Device:"}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setDownloadPlatformTab("all")}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  downloadPlatformTab === "all"
+                    ? "!bg-[#1B5E20] !text-white shadow-md ring-2 ring-[#2E7D32]/50 scale-[1.03]"
+                    : "bg-white dark:bg-[#132318] !text-gray-700 dark:!text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-[#2E7D32]"
+                }`}
+              >
+                <span>🌐 {language === "mr" ? "सर्व साधने (All Devices)" : language === "hi" ? "सभी उपकरण (All)" : "All Devices"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDownloadPlatformTab("android")}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  downloadPlatformTab === "android"
+                    ? "!bg-[#1B5E20] !text-white shadow-md ring-2 ring-[#2E7D32]/50 scale-[1.03]"
+                    : "bg-white dark:bg-[#132318] !text-gray-700 dark:!text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-[#2E7D32]"
+                }`}
+              >
+                <Smartphone size={16} className={downloadPlatformTab === "android" ? "!text-white" : "!text-emerald-700 dark:!text-emerald-400"} />
+                <span className={downloadPlatformTab === "android" ? "!text-white font-black" : ""}>Android</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDownloadPlatformTab("ios")}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  downloadPlatformTab === "ios"
+                    ? "!bg-[#1B5E20] !text-white shadow-md ring-2 ring-[#2E7D32]/50 scale-[1.03]"
+                    : "bg-white dark:bg-[#132318] !text-gray-700 dark:!text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-blue-500"
+                }`}
+              >
+                <Apple size={16} className={downloadPlatformTab === "ios" ? "!text-white" : "!text-blue-600 dark:!text-blue-400"} />
+                <span className={downloadPlatformTab === "ios" ? "!text-white font-black" : ""}>iPhone / iOS</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDownloadPlatformTab("desktop")}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  downloadPlatformTab === "desktop"
+                    ? "!bg-[#1B5E20] !text-white shadow-md ring-2 ring-[#2E7D32]/50 scale-[1.03]"
+                    : "bg-white dark:bg-[#132318] !text-gray-700 dark:!text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-purple-500"
+                }`}
+              >
+                <Monitor size={16} className={downloadPlatformTab === "desktop" ? "!text-white" : "!text-purple-600 dark:!text-purple-400"} />
+                <span className={downloadPlatformTab === "desktop" ? "!text-white font-black" : ""}>PC / Desktop</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3 PLATFORM CARDS */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {/* ANDROID CARD */}
+            {(downloadPlatformTab === "all" || downloadPlatformTab === "android") && (
+              <div
+                className={`card p-6 depth-1 border space-y-4 transition group rounded-3xl ${
+                  downloadPlatformTab === "android"
+                    ? "border-2 border-[#1B5E20] dark:border-[#4ADE80] ring-4 ring-emerald-500/15 shadow-xl sm:col-span-2 lg:col-span-3 max-w-2xl mx-auto"
+                    : "border-emerald-200 dark:border-emerald-800/80 hover:border-[#2E7D32]"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-[#183321] text-[#1B5E20] dark:text-[#4ADE80] shadow-sm group-hover:scale-110 transition">
+                    <Smartphone size={24} />
+                  </div>
+                  <span className="rounded-xl bg-emerald-100 dark:bg-emerald-950/90 px-3 py-1 text-xs font-black !text-emerald-900 dark:!text-[#4ADE80] border border-emerald-300 dark:border-emerald-700 shadow-xs">
+                    🤖 Android (Chrome / Samsung)
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+                    Android Phones & Tablets
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                    {language === "mr"
+                      ? "गुगल क्रोम किंवा सॅमसंग ब्राऊजरमध्ये १-क्लिक इन्स्टॉल करा. थेट मोबाईलच्या होम स्क्रीनवर जलद आयकॉन तयार होतो."
+                      : language === "hi"
+                      ? "गूगल क्रोम या सैमसंग ब्राउज़र में १-क्लिक इंस्टॉल करें। सीधे होम स्क्रीन पर तेज आइकन बन जाएगा।"
+                      : "Install directly from Chrome or Samsung Internet. Adds a clean native icon on your home screen."}
+                  </p>
+                </div>
+
+                {/* 3-STEP QUICK GUIDE */}
+                <div className="rounded-2xl bg-emerald-50/60 dark:bg-[#162A1D] p-3 text-xs space-y-1.5 border border-emerald-100 dark:border-emerald-900/50">
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] font-black text-[10px]">१</span>
+                    <span>{language === "mr" ? "ब्राऊझरमध्ये KrushiMitra उघडा" : language === "hi" ? "ब्राउज़र में KrushiMitra खोलें" : "Open KrushiMitra in Chrome"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] font-black text-[10px]">२</span>
+                    <span>{language === "mr" ? "मेनू (⋮) मधील 'Install app' दाबा" : language === "hi" ? "मेनू (⋮) में 'Install app' चुनें" : "Tap ⋮ Menu and 'Install app'"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] font-black text-[10px]">३</span>
+                    <span>{language === "mr" ? "होम स्क्रीनवरून कधीही ऑफलाइन वापरा" : language === "hi" ? "होम स्क्रीन से बिना इंटरनेट इस्तेमाल करें" : "Launch full-screen anytime offline"}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (isInstallable && promptInstall) {
+                        const res = await promptInstall();
+                        if (!res) {
+                          setModalPlatform("android");
+                          setShowInstallModal(true);
+                        }
+                      } else {
+                        setModalPlatform("android");
+                        setShowInstallModal(true);
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#1B5E20] hover:bg-[#2E7D32] py-2.5 px-3 text-xs font-black !text-white shadow-sm transition cursor-pointer"
+                  >
+                    <Download size={15} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr" ? "Android वर इन्स्टॉल करा" : language === "hi" ? "Android में इंस्टॉल करें" : "Install on Android"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* IPHONE / IOS CARD */}
+            {(downloadPlatformTab === "all" || downloadPlatformTab === "ios") && (
+              <div
+                className={`card p-6 depth-1 border space-y-4 transition group rounded-3xl ${
+                  downloadPlatformTab === "ios"
+                    ? "border-2 border-blue-600 dark:border-blue-400 ring-4 ring-blue-500/15 shadow-xl sm:col-span-2 lg:col-span-3 max-w-2xl mx-auto"
+                    : "border-blue-200 dark:border-blue-800/80 hover:border-blue-500"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 shadow-sm group-hover:scale-110 transition">
+                    <Apple size={24} />
+                  </div>
+                  <span className="rounded-xl bg-blue-100 dark:bg-blue-950/90 px-3 py-1 text-xs font-black !text-blue-900 dark:!text-blue-300 border border-blue-300 dark:border-blue-700 shadow-xs">
+                    🍎 Apple iPhone & iPad (Safari)
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+                    iPhone & iPad Devices
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                    {language === "mr"
+                      ? "सफारी ब्राऊजरच्या शेअर (Share) चिन्हावरून १ सेकंदात 'Add to Home Screen' करा. अ‍ॅप स्टोअरची गरज नाही."
+                      : language === "hi"
+                      ? "सफारी ब्राउज़र में शेयर (Share) आइकन से १ सेकंड में 'Add to Home Screen' करें। ऐप स्टोर की जरूरत नहीं।"
+                      : "Add to Home Screen in 1 second via Safari Share button. No Apple App Store download required."}
+                  </p>
+                </div>
+
+                {/* 3-STEP QUICK GUIDE */}
+                <div className="rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 p-3 text-xs space-y-1.5 border border-blue-100 dark:border-blue-900/50">
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 font-black text-[10px]">१</span>
+                    <span>{language === "mr" ? "Safari मध्ये KrushiMitra उघडा" : language === "hi" ? "Safari में KrushiMitra खोलें" : "Open KrushiMitra in Safari"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 font-black text-[10px]">२</span>
+                    <span>{language === "mr" ? "तळाशी शेअर (Share) निवडून 'Add to Home Screen' दाबा" : language === "hi" ? "शेयर (Share) चुनकर 'Add to Home Screen' दबाएं" : "Tap Share icon and 'Add to Home Screen'"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 font-black text-[10px]">३</span>
+                    <span>{language === "mr" ? "उजव्या बाजूला 'Add' करा, आयकॉन तयार होईल" : language === "hi" ? "ऊपर 'Add' करें, ऐप आइकन तैयार" : "Tap 'Add' to install on iPhone"}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPlatform("ios");
+                      setShowInstallModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 px-3 text-xs font-black !text-white shadow-sm transition cursor-pointer"
+                  >
+                    <Apple size={15} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr" ? "iPhone / iPad गाईड उघडा" : language === "hi" ? "iPhone / iPad गाइड खोलें" : "View iPhone / iPad Guide"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* PC / DESKTOP CARD */}
+            {(downloadPlatformTab === "all" || downloadPlatformTab === "desktop") && (
+              <div
+                className={`card p-6 depth-1 border space-y-4 transition group rounded-3xl ${
+                  downloadPlatformTab === "desktop"
+                    ? "border-2 border-purple-600 dark:border-purple-400 ring-4 ring-purple-500/15 shadow-xl sm:col-span-2 lg:col-span-3 max-w-2xl mx-auto"
+                    : "border-purple-200 dark:border-purple-800/80 hover:border-purple-500 sm:col-span-2 lg:col-span-1"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 shadow-sm group-hover:scale-110 transition">
+                    <Monitor size={24} />
+                  </div>
+                  <span className="rounded-xl bg-purple-100 dark:bg-purple-950/90 px-3 py-1 text-xs font-black !text-purple-900 dark:!text-purple-300 border border-purple-300 dark:border-purple-700 shadow-xs">
+                    💻 Windows PC & Mac (Chrome / Edge)
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+                    Desktop & Laptop App
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                    {language === "mr"
+                      ? "ब्राऊजरच्या अ‍ॅड्रेस बारमधील डाऊनलोड आयकॉनवर क्लिक करा. स्वतंत्र विंडोज अ‍ॅप प्रमाणे जलद कार्य करते."
+                      : language === "hi"
+                      ? "ब्राउज़र के एड्रेस बार में डाउनलोड आइकन पर क्लिक करें। स्वतंत्र डेस्कटॉप ऐप की तरह कार्य करता है।"
+                      : "Click the Install icon in Chrome/Edge address bar. Operates as a fast, standalone desktop app."}
+                  </p>
+                </div>
+
+                {/* 3-STEP QUICK GUIDE */}
+                <div className="rounded-2xl bg-purple-50/60 dark:bg-purple-950/40 p-3 text-xs space-y-1.5 border border-purple-100 dark:border-purple-900/50">
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 font-black text-[10px]">१</span>
+                    <span>{language === "mr" ? "Chrome किंवा Edge मध्ये KrushiMitra उघडा" : language === "hi" ? "Chrome या Edge में KrushiMitra खोलें" : "Open KrushiMitra in Chrome/Edge"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 font-black text-[10px]">२</span>
+                    <span>{language === "mr" ? "अ‍ॅड्रेस बारमधील कॉम्प्युटर/डाऊनलोड आयकॉन दाबा" : language === "hi" ? "एड्रेस बार में डाउनलोड आइकन पर क्लिक करें" : "Click Install icon in address bar"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 font-black text-[10px]">३</span>
+                    <span>{language === "mr" ? "'Install' वर क्लिक करून स्वतंत्र विंडोज अ‍ॅप वापरा" : language === "hi" ? "'Install' पर क्लिक करके स्वतंत्र डेस्कटॉप ऐप चलाएं" : "Launch as full-screen desktop window"}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPlatform("desktop");
+                      setShowInstallModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 py-2.5 px-3 text-xs font-black !text-white shadow-sm transition cursor-pointer"
+                  >
+                    <Monitor size={15} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr" ? "PC / Desktop वर इन्स्टॉल करा" : language === "hi" ? "PC / Desktop में इंस्टॉल करें" : "Install on PC / Desktop"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </ZoomFadeReveal>
+      </section>
+
+      {/* =========================================================
+          9. FAQ SECTION
          ========================================================= */}
       <section id="faq" className="py-16 sm:py-24">
         <ZoomFadeReveal delay={60} className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -1735,6 +2117,16 @@ export default function Landing({ nav }) {
 
       {/* KRUSHIMITRA MULTILINGUAL VOICE CHATBOT */}
       <VoiceChatbot />
+
+      {/* KRUSHIMITRA PWA INSTALL MODAL */}
+      <InstallModal
+        isOpen={showInstallModal}
+        onClose={() => {
+          setShowInstallModal(false);
+          setModalPlatform(null);
+        }}
+        initialPlatform={modalPlatform}
+      />
     </div>
   );
 }

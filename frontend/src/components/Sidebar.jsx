@@ -13,9 +13,13 @@ import {
   LogOut,
   ChevronLeft,
   BarChart3,
+  Smartphone,
+  Download,
 } from "lucide-react";
+import { useState } from "react";
 
 import { useApp } from "../context/AppContext";
+import InstallModal from "./InstallModal";
 
 export default function Sidebar({
   page,
@@ -23,7 +27,8 @@ export default function Sidebar({
   collapsed,
   setCollapsed,
 }) {
-  const { user, t, logout, notifications } = useApp();
+  const { user, t, logout, notifications, language } = useApp();
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const unreadCount = (notifications || []).filter((n) => n.unread).length;
 
@@ -353,10 +358,39 @@ export default function Sidebar({
       </div>
 
 
-      {/* LOGOUT */}
+      {/* INSTALL APP PROMPT BUTTON */}
+      <div className="shrink-0 border-t border-[#D7E4D3] p-3 space-y-2">
+        <button
+          onClick={() => setShowInstallModal(true)}
+          title={language === "mr" ? "मोबाईल अ‍ॅप डाऊनलोड व इन्स्टॉल करा" : language === "hi" ? "मोबाइल ऐप डाउनलोड एवं इंस्टॉल करें" : "Download & Install Mobile App"}
+          className={`
+            group flex w-full items-center rounded-xl
+            border border-emerald-300/80 bg-emerald-100/70 text-[#1B5E20] transition-all duration-200 cursor-pointer
+            hover:bg-emerald-200/80 hover:text-[#0F4716] active:scale-95 shadow-2xs
+            ${
+              collapsed
+                ? "justify-center px-3 py-3"
+                : "gap-2.5 px-3.5 py-2.5"
+            }
+          `}
+        >
+          <Smartphone
+            size={17}
+            className="shrink-0 text-[#2E7D32] transition-transform duration-200 group-hover:scale-110"
+          />
+          {!collapsed && (
+            <div className="text-left flex-1">
+              <p className="text-[12px] font-extrabold leading-tight">
+                {language === "mr" ? "मोबाईल अ‍ॅप" : language === "hi" ? "मोबाइल ऐप" : "Mobile App"}
+              </p>
+              <p className="text-[10px] text-emerald-800/80 font-medium">
+                {language === "mr" ? "इन्स्टॉल करा" : language === "hi" ? "इंस्टॉल करें" : "Install Now"}
+              </p>
+            </div>
+          )}
+        </button>
 
-      <div className="shrink-0 border-t border-[#D7E4D3] p-3">
-
+        {/* LOGOUT */}
         <button
           onClick={logout}
           title={
@@ -370,12 +404,11 @@ export default function Sidebar({
             hover:bg-amber-50 hover:text-[#92400E] active:scale-95
             ${
               collapsed
-                ? "justify-center px-3 py-3.5"
-                : "gap-3 px-3.5 py-3"
+                ? "justify-center px-3 py-3"
+                : "gap-3 px-3.5 py-2.5"
             }
           `}
         >
-
           <LogOut
             size={18}
             className="shrink-0 transition-transform duration-200 group-hover:-translate-x-1"
@@ -386,11 +419,11 @@ export default function Sidebar({
               {t("logout")}
             </span>
           )}
-
         </button>
-
       </div>
 
+      {/* INSTALL MODAL */}
+      <InstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
     </aside>
   );
 }

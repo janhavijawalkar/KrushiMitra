@@ -25,6 +25,7 @@ import {
 
 import { useApp } from "../context/AppContext";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import InstallModal from "./InstallModal";
 
 export default function Topbar({ title, nav }) {
   const { isOnline, isInstallable, promptInstall } = useOnlineStatus();
@@ -43,6 +44,7 @@ export default function Topbar({ title, nav }) {
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const notifRef = useRef(null);
@@ -181,18 +183,25 @@ export default function Topbar({ title, nav }) {
           </div>
         )}
 
-        {/* PWA INSTALL BUTTON */}
-        {isInstallable && (
-          <button
-            type="button"
-            onClick={promptInstall}
-            className="hidden sm:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 shadow-2xs transition hover:bg-emerald-100 hover:shadow-sm cursor-pointer"
-            title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा" : language === "hi" ? "ऐप इंस्टॉल करें" : "Install KrushiMitra App"}
-          >
-            <Download size={13} className="text-[#2E7D32]" />
-            <span>{language === "mr" ? "अ‍ॅप इन्स्टॉल" : language === "hi" ? "ऐप इंस्टॉल" : "Install App"}</span>
-          </button>
-        )}
+        {/* PWA INSTALL / DOWNLOAD APP BUTTON */}
+        <button
+          type="button"
+          onClick={async () => {
+            if (isInstallable && promptInstall) {
+              const res = await promptInstall();
+              if (!res) setShowInstallModal(true);
+            } else {
+              setShowInstallModal(true);
+            }
+          }}
+          className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 shadow-2xs transition hover:bg-emerald-100 hover:shadow-sm cursor-pointer"
+          title={language === "mr" ? "अ‍ॅप डाऊनलोड / इन्स्टॉल करा" : language === "hi" ? "ऐप डाउनलोड / इंस्टॉल करें" : "Download / Install App"}
+        >
+          <Download size={13} className="text-[#2E7D32]" />
+          <span className="hidden sm:inline">
+            {language === "mr" ? "अ‍ॅप डाऊनलोड" : language === "hi" ? "ऐप डाउनलोड" : "Download App"}
+          </span>
+        </button>
 
         {/* LANGUAGE SELECTOR */}
         <div className="relative">
@@ -470,6 +479,9 @@ export default function Topbar({ title, nav }) {
           )}
         </div>
       </div>
+
+      {/* INSTALL MODAL */}
+      <InstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
     </header>
   );
 }
