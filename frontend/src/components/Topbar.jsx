@@ -186,14 +186,7 @@ export default function Topbar({ title, nav }) {
         {/* PWA INSTALL / DOWNLOAD APP BUTTON */}
         <button
           type="button"
-          onClick={async () => {
-            if (isInstallable && promptInstall) {
-              const res = await promptInstall();
-              if (!res) setShowInstallModal(true);
-            } else {
-              setShowInstallModal(true);
-            }
-          }}
+          onClick={() => setShowInstallModal(true)}
           className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 shadow-2xs transition hover:bg-emerald-100 hover:shadow-sm cursor-pointer"
           title={language === "mr" ? "अ‍ॅप डाऊनलोड / इन्स्टॉल करा" : language === "hi" ? "ऐप डाउनलोड / इंस्टॉल करें" : "Download / Install App"}
         >

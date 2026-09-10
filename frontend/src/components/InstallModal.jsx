@@ -55,12 +55,10 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm p-4 flex min-h-full items-center justify-center animate-fade-in"
-      onClick={onClose}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-sm p-4 flex min-h-full items-center justify-center animate-fade-in"
     >
       <div
         className="relative w-full max-w-md my-auto rounded-3xl bg-white dark:bg-[#132318] p-5 sm:p-6 shadow-2xl border-2 border-emerald-300 dark:border-emerald-700/80 animate-zoom-fade depth-3 text-gray-900 dark:text-white"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* CLOSE BUTTON */}
         <button
@@ -80,10 +78,10 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           <div>
             <h2 className="text-base font-black !text-gray-900 dark:!text-white leading-tight">
               {language === "mr"
-                ? "कृषीमित्र अ‍ॅप इन्स्टॉल करा"
+                ? "कृषीमित्र अ‍ॅप डाऊनलोड व इन्स्टॉल"
                 : language === "hi"
-                ? "कृषि-मित्र ऐप इंस्टॉल करें"
-                : "Install KrushiMitra App"}
+                ? "कृषि-मित्र ऐप डाउनलोड एवं इंस्टॉल"
+                : "Download & Install KrushiMitra App"}
             </h2>
             <p className="text-[11px] !text-gray-500 dark:!text-emerald-300 font-medium">
               {language === "mr"
@@ -95,8 +93,25 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           </div>
         </div>
 
-        {/* 1-CLICK DIRECT INSTALL BUTTON */}
-        <div className="mt-4">
+        {/* DOWNLOAD / INSTALL ACTION BUTTONS */}
+        <div className="mt-4 space-y-2.5">
+          {/* OPTION 1: DIRECT APK DOWNLOAD */}
+          <a
+            href="/downloads/KrushiMitra.apk"
+            download="KrushiMitra.apk"
+            className="btn-shimmer w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] py-3 px-4 text-xs sm:text-sm font-black !text-white shadow-lg hover:-translate-y-0.5 active:scale-95 cursor-pointer text-center"
+          >
+            <Download size={18} className="!text-white shrink-0" />
+            <span className="!text-white">
+              {language === "mr"
+                ? "📥 KrushiMitra.apk डाऊनलोड करा (Android APK)"
+                : language === "hi"
+                ? "📥 KrushiMitra.apk डाउनलोड करें (Android APK)"
+                : "📥 Download KrushiMitra.apk (Android APK)"}
+            </span>
+          </a>
+
+          {/* OPTION 2: 1-CLICK PWA INSTALL */}
           <button
             type="button"
             onClick={async () => {
@@ -107,7 +122,7 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                   setTimeout(() => {
                     onClose();
                     setInstallSuccess(false);
-                  }, 2000);
+                  }, 2500);
                   return;
                 }
               }
@@ -120,15 +135,27 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                 setActiveTab("desktop");
               }
             }}
-            className="btn-shimmer w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] py-3.5 px-4 text-xs sm:text-sm font-black !text-white shadow-lg hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 dark:bg-[#183321] border-2 border-emerald-300 dark:border-emerald-700 py-2.5 px-4 text-xs sm:text-sm font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#1f3f2a] transition active:scale-95 cursor-pointer text-center"
           >
-            <Download size={18} className="!text-white" />
-            <span className="!text-white">
+            <Smartphone size={16} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0" />
+            <span>
               {installSuccess
                 ? (language === "mr" ? "✓ अ‍ॅप इन्स्टॉल झाले!" : language === "hi" ? "✓ ऐप इंस्टॉल हो गया!" : "✓ Installed Successfully!")
-                : (language === "mr" ? "📲 थेट अ‍ॅप इन्स्टॉल करा (Install Now)" : language === "hi" ? "📲 तुरंत ऐप इंस्टॉल करें (Install Now)" : "📲 Install KrushiMitra App Now")}
+                : (language === "mr" ? "📲 थेट १-क्लिक इन्स्टॉल (Add to Screen)" : language === "hi" ? "📲 १-क्लिक में स्क्रीन पर जोड़ें" : "📲 1-Click Add to Home Screen")}
             </span>
           </button>
+        </div>
+
+        {/* WHERE DOES IT SAVE EXPLANATION BOX */}
+        <div className="mt-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 p-3 border border-amber-200 dark:border-amber-800/60 text-xs">
+          <p className="font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 mb-1 text-xs">
+            <span>📁</span>
+            <span>{language === "mr" ? "अ‍ॅप कुठे सेव्ह होते? (Download Location)" : language === "hi" ? "ऐप कहां सेव होता है?" : "Where does it download?"}</span>
+          </p>
+          <div className="space-y-1 text-[11px] text-amber-950 dark:text-amber-200 font-medium">
+            <p>• <b>APK फाईल</b>: तुमच्या फोनच्या <b>"Downloads" (डाऊनलोड्स)</b> फोल्डरमध्ये सेव्ह होते.</p>
+            <p>• <b>१-क्लिक इन्स्टॉल</b>: थेट तुमच्या <b>होम स्क्रीनवर (Home Screen)</b> अ‍ॅप आयकॉन जोडला जातो.</p>
+          </div>
         </div>
 
         {/* PLATFORM PILL TABS */}

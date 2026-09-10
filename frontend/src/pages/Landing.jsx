@@ -676,14 +676,7 @@ export default function Landing({ nav }) {
             {/* DIRECT INSTALL APP BUTTON */}
             <button
               type="button"
-              onClick={async () => {
-                if (isInstallable && promptInstall) {
-                  const res = await promptInstall();
-                  if (!res) setShowInstallModal(true);
-                } else {
-                  setShowInstallModal(true);
-                }
-              }}
+              onClick={() => setShowInstallModal(true)}
               className="hidden lg:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-3 py-1.5 text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition hover:scale-102"
               title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा" : language === "hi" ? "ऐप इंस्टॉल करें" : "Download & Install App"}
             >
@@ -1608,31 +1601,20 @@ export default function Landing({ nav }) {
 
             {/* ACTION BUTTONS & PLATFORM SELECTOR (UPSIDE) */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-              <button
-                type="button"
-                onClick={async () => {
-                  if (isInstallable && promptInstall) {
-                    const res = await promptInstall();
-                    if (!res) {
-                      setModalPlatform(null);
-                      setShowInstallModal(true);
-                    }
-                  } else {
-                    setModalPlatform(null);
-                    setShowInstallModal(true);
-                  }
-                }}
-                className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-7 py-3.5 text-xs sm:text-sm font-black !text-white shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+              <a
+                href="/downloads/KrushiMitra.apk"
+                download="KrushiMitra.apk"
+                className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-7 py-3.5 text-xs sm:text-sm font-black !text-white shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline"
               >
                 <Download size={18} className="!text-white" />
                 <span className="!text-white">
                   {language === "mr"
-                    ? "📲 थेट अ‍ॅप इन्स्टॉल करा (Install Now)"
+                    ? "📥 थेट KrushiMitra.apk डाऊनलोड करा (Android APK)"
                     : language === "hi"
-                    ? "📲 तुरंत ऐप इंस्टॉल करें (Install Now)"
-                    : "📲 Install KrushiMitra App Now"}
+                    ? "📥 सीधे KrushiMitra.apk डाउनलोड करें (Android APK)"
+                    : "📥 Download KrushiMitra.apk directly (Android APK)"}
                 </span>
-              </button>
+              </a>
 
               <button
                 type="button"
@@ -1645,10 +1627,10 @@ export default function Landing({ nav }) {
                 <Smartphone size={17} />
                 <span>
                   {language === "mr"
-                    ? "सर्व डिव्हाइस इन्स्टॉल गाईड"
+                    ? "📲 १-क्लिक इन्स्टॉल व इतर साधने"
                     : language === "hi"
-                    ? "सभी डिवाइस इंस्टॉल गाइड"
-                    : "Universal Install Guide"}
+                    ? "📲 १-क्लिक इंस्टॉल व अन्य उपकरण"
+                    : "📲 1-Click Install & Guide"}
                 </span>
               </button>
             </div>
@@ -1761,26 +1743,28 @@ export default function Landing({ nav }) {
                   </div>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (isInstallable && promptInstall) {
-                        const res = await promptInstall();
-                        if (!res) {
-                          setModalPlatform("android");
-                          setShowInstallModal(true);
-                        }
-                      } else {
-                        setModalPlatform("android");
-                        setShowInstallModal(true);
-                      }
-                    }}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#1B5E20] hover:bg-[#2E7D32] py-2.5 px-3 text-xs font-black !text-white shadow-sm transition cursor-pointer"
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                  <a
+                    href="/downloads/KrushiMitra.apk"
+                    download="KrushiMitra.apk"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#1B5E20] hover:bg-[#2E7D32] py-2.5 px-3 text-xs font-black !text-white shadow-sm transition cursor-pointer no-underline text-center"
                   >
                     <Download size={15} className="!text-white" />
                     <span className="!text-white">
-                      {language === "mr" ? "Android वर इन्स्टॉल करा" : language === "hi" ? "Android में इंस्टॉल करें" : "Install on Android"}
+                      {language === "mr" ? "📥 KrushiMitra.apk (APK File)" : language === "hi" ? "📥 KrushiMitra.apk (APK File)" : "📥 KrushiMitra.apk (APK File)"}
+                    </span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPlatform("android");
+                      setShowInstallModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-emerald-600 dark:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 py-2.5 px-3 text-xs font-bold text-emerald-800 dark:text-emerald-300 transition cursor-pointer text-center"
+                  >
+                    <Smartphone size={15} />
+                    <span>
+                      {language === "mr" ? "📲 १-क्लिक इन्स्टॉल" : language === "hi" ? "📲 १-क्लिक इंस्टॉल" : "📲 1-Click Install"}
                     </span>
                   </button>
                 </div>
