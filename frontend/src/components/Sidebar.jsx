@@ -26,6 +26,8 @@ export default function Sidebar({
   setPage,
   collapsed,
   setCollapsed,
+  mobileOpen = false,
+  setMobileOpen,
 }) {
   const { user, t, logout, notifications, language } = useApp();
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -102,16 +104,20 @@ export default function Sidebar({
     if (setPage) {
       setPage(id);
     }
+    if (setMobileOpen) {
+      setMobileOpen(false);
+    }
   };
 
   return (
     <aside
       className={`
-        fixed left-0 top-0 z-50 flex h-screen flex-col
-        border-r border-[#DCE8D9]
-        bg-[#EAF3E6]/95 backdrop-blur-xl
+        fixed left-0 top-0 z-[60] flex h-screen flex-col
+        border-r border-[#DCE8D9] dark:border-[#24402A]
+        bg-[#EAF3E6]/95 dark:bg-[#132318]/95 backdrop-blur-xl
         transition-all duration-300 ease-out
-        ${collapsed ? "w-[78px]" : "w-[260px]"}
+        w-[270px] lg:${collapsed ? "w-[78px]" : "w-[260px]"}
+        ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
       `}
     >
 
@@ -119,8 +125,8 @@ export default function Sidebar({
 
       <div
         className={`
-          flex h-[82px] shrink-0 items-center
-          border-b border-[#DCE8D9]
+          flex h-[82px] shrink-0 items-center justify-between
+          border-b border-[#DCE8D9] dark:border-[#24402A]
           ${collapsed ? "justify-center px-3" : "px-5"}
         `}
       >
@@ -129,7 +135,7 @@ export default function Sidebar({
           onClick={() =>
             setCollapsed(!collapsed)
           }
-          className="group flex items-center gap-3"
+          className="group flex items-center gap-3 cursor-pointer"
           title={t("toggleSidebar")}
         >
 
@@ -156,11 +162,11 @@ export default function Sidebar({
           {!collapsed && (
             <div className="min-w-0 text-left">
 
-              <h1 className="text-[18px] font-extrabold tracking-tight text-[#1B5E20]">
+              <h1 className="text-[18px] font-extrabold tracking-tight text-[#1B5E20] dark:text-[#4ADE80]">
                 KrushiMitra
               </h1>
 
-              <p className="text-[9px] font-bold tracking-[0.18em] text-[#6B8A6B]">
+              <p className="text-[9px] font-bold tracking-[0.18em] text-[#6B8A6B] dark:text-[#8FA88E]">
                 {t("aiAgriculture")}
               </p>
 
@@ -169,10 +175,22 @@ export default function Sidebar({
 
         </button>
 
+        {/* MOBILE CLOSE DRAWER BUTTON */}
+        {setMobileOpen && (
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition active:scale-95 lg:hidden cursor-pointer"
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
+        )}
+
       </div>
 
 
-      {/* COLLAPSE BUTTON */}
+      {/* COLLAPSE BUTTON (Desktop only) */}
 
       <button
         onClick={() =>
@@ -180,15 +198,17 @@ export default function Sidebar({
         }
         className="
           absolute -right-3 top-[67px]
-          flex h-7 w-7 items-center justify-center
+          hidden lg:flex
+          h-7 w-7 items-center justify-center
           rounded-full
-          border border-[#D8E5D5]
-          bg-white
-          text-[#4B7A50]
+          border border-[#D8E5D5] dark:border-[#24402A]
+          bg-white dark:bg-[#1A3322]
+          text-[#4B7A50] dark:text-[#4ADE80]
           shadow-md
           transition-all duration-200
           hover:scale-110
           hover:bg-[#F3F8F1]
+          cursor-pointer
         "
         aria-label={t("toggleSidebar")}
       >
@@ -361,7 +381,10 @@ export default function Sidebar({
       {/* INSTALL APP PROMPT BUTTON */}
       <div className="shrink-0 border-t border-[#D7E4D3] p-3 space-y-2">
         <button
-          onClick={() => setShowInstallModal(true)}
+          onClick={() => {
+            if (setMobileOpen) setMobileOpen(false);
+            setShowInstallModal(true);
+          }}
           title={language === "mr" ? "मोबाईल अ‍ॅप डाऊनलोड व इन्स्टॉल करा" : language === "hi" ? "मोबाइल ऐप डाउनलोड एवं इंस्टॉल करें" : "Download & Install Mobile App"}
           className={`
             group flex w-full items-center rounded-xl
@@ -392,7 +415,10 @@ export default function Sidebar({
 
         {/* LOGOUT */}
         <button
-          onClick={logout}
+          onClick={() => {
+            if (setMobileOpen) setMobileOpen(false);
+            logout();
+          }}
           title={
             collapsed
               ? t("logout")

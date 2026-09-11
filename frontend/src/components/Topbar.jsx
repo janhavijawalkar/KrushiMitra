@@ -21,13 +21,14 @@ import {
   Lock,
   Download,
   WifiOff,
+  Menu,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import InstallModal from "./InstallModal";
 
-export default function Topbar({ title, nav }) {
+export default function Topbar({ title, nav, setMobileOpen }) {
   const { isOnline, isInstallable, promptInstall } = useOnlineStatus();
   const {
     user,
@@ -138,16 +139,29 @@ export default function Topbar({ title, nav }) {
   );
 
   return (
-    <header className="sticky top-0 z-40 flex h-[78px] shrink-0 items-center justify-between gap-4 border-b border-[#E1EAE0] bg-white/95 px-4 sm:px-7 shadow-[0_2px_15px_rgba(30,70,35,0.035)] backdrop-blur-xl transition-colors duration-200">
-      {/* PAGE TITLE & DATE */}
-      <div className="min-w-fit">
-        <h2 className="text-[17px] font-extrabold tracking-tight text-[#17291A]">
-          {title}
-        </h2>
-        <p className="text-[11px] font-medium text-gray-500 flex items-center gap-1">
-          <Clock size={11} className="text-gray-400" />
-          <span>{formattedDate}</span>
-        </p>
+    <header className="sticky top-0 z-40 flex h-[78px] shrink-0 items-center justify-between gap-3 sm:gap-4 border-b border-[#E1EAE0] dark:border-[#22402A] bg-white/95 dark:bg-[#132318]/95 px-3 sm:px-7 shadow-[0_2px_15px_rgba(30,70,35,0.035)] backdrop-blur-xl transition-colors duration-200">
+      {/* MOBILE HAMBURGER & PAGE TITLE */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-fit">
+        {setMobileOpen && (
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-[#183321] text-[#1B5E20] dark:text-[#4ADE80] border border-emerald-200 dark:border-emerald-800 shadow-2xs transition active:scale-95 cursor-pointer"
+            aria-label="Open Navigation Menu"
+            title="Open Menu"
+          >
+            <Menu size={20} />
+          </button>
+        )}
+        <div>
+          <h2 className="text-[15px] sm:text-[17px] font-extrabold tracking-tight text-[#17291A] dark:text-white line-clamp-1">
+            {title}
+          </h2>
+          <p className="text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <Clock size={11} className="text-gray-400" />
+            <span>{formattedDate}</span>
+          </p>
+        </div>
       </div>
 
       {/* SEARCH BAR (Visible in Light & Dark Mode) */}

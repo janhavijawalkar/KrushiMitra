@@ -30,6 +30,8 @@ import {
   Apple,
   Monitor,
   WifiOff,
+  Menu,
+  X,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
@@ -98,6 +100,7 @@ export default function Landing({ nav }) {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [modalPlatform, setModalPlatform] = useState(null);
   const [downloadPlatformTab, setDownloadPlatformTab] = useState("all");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(null);
   const [demoLoading, setDemoLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("yield");
@@ -672,16 +675,19 @@ export default function Landing({ nav }) {
           </nav>
 
           {/* RIGHT ACTIONS */}
-          <div className="flex items-center gap-2.5">
-            {/* DIRECT INSTALL APP BUTTON */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* DIRECT INSTALL APP BUTTON (VISIBLE ON MOBILE & DESKTOP) */}
             <button
               type="button"
-              onClick={() => setShowInstallModal(true)}
-              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-3 py-1.5 text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition hover:scale-102"
+              onClick={() => {
+                setModalPlatform(null);
+                setShowInstallModal(true);
+              }}
+              className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
               title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा" : language === "hi" ? "ऐप इंस्टॉल करें" : "Download & Install App"}
             >
-              <Download size={13} />
-              <span>{language === "mr" ? "अ‍ॅप इन्स्टॉल" : language === "hi" ? "ऐप इंस्टॉल" : "Install App"}</span>
+              <Download size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+              <span>{language === "mr" ? "अ‍ॅप" : language === "hi" ? "ऐप" : "App"}</span>
             </button>
 
             {/* LANGUAGE SELECTOR */}
@@ -689,12 +695,12 @@ export default function Landing({ nav }) {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="key-cap text-xs py-1.5 px-2.5 font-bold cursor-pointer bg-white dark:bg-[#183321] border-[#DCE8D9] dark:border-[#24402A] text-gray-700 dark:text-gray-200"
+                className="key-cap text-xs py-1.5 px-2 sm:px-2.5 font-bold cursor-pointer bg-white dark:bg-[#183321] border-[#DCE8D9] dark:border-[#24402A] text-gray-700 dark:text-gray-200"
                 title="Select Language"
               >
-                <option value="en">🌐 English</option>
-                <option value="hi">🇮🇳 हिन्दी</option>
-                <option value="mr">🌾 मराठी</option>
+                <option value="en">🌐 EN</option>
+                <option value="hi">🇮🇳 HI</option>
+                <option value="mr">🌾 MR</option>
               </select>
             </div>
 
@@ -702,14 +708,14 @@ export default function Landing({ nav }) {
             <button
               type="button"
               onClick={() => changeTheme(theme === "dark" ? "light" : "dark")}
-              className="key-cap p-2 text-gray-600 dark:text-gray-300 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer transition-transform hover:scale-105"
+              className="key-cap p-1.5 sm:p-2 text-gray-600 dark:text-gray-300 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer transition-transform hover:scale-105"
               title="Toggle Theme"
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? (
-                <Sun size={17} className="text-amber-400" />
+                <Sun size={16} className="text-amber-400" />
               ) : (
-                <Moon size={17} className="text-[#2E7D32]" />
+                <Moon size={16} className="text-[#2E7D32]" />
               )}
             </button>
 
@@ -717,7 +723,7 @@ export default function Landing({ nav }) {
               <button
                 type="button"
                 onClick={() => nav?.("dashboard")}
-                className="btn-shimmer flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                className="btn-shimmer hidden sm:flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 active:scale-95 cursor-pointer"
               >
                 <span>{t("dashboard") || "Dashboard"}</span>
                 <ArrowRight size={14} />
@@ -727,25 +733,140 @@ export default function Landing({ nav }) {
                 <button
                   type="button"
                   onClick={() => nav?.("login")}
-                  className="key-cap hidden sm:flex items-center gap-1 text-xs py-2 px-3.5 font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer"
+                  className="key-cap hidden md:flex items-center gap-1 text-xs py-1.5 sm:py-2 px-3 sm:px-3.5 font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer"
                 >
                   <span>{t("signIn") || "Sign In"}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => nav?.("register")}
-                  className="btn-shimmer btn-glow flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
+                  className="btn-shimmer btn-glow hidden sm:flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
                 >
                   <span>{t("getStarted") || "Get Started"}</span>
-                  <ArrowRight size={14} />
+                  <ArrowRight size={13} />
                 </button>
               </>
             )}
+
+            {/* MOBILE HAMBURGER MENU TOGGLE */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 dark:bg-[#183321] text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] border border-gray-200 dark:border-[#24402A] transition active:scale-95 cursor-pointer"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
         </div>
+
+        {/* MOBILE MENU DROPDOWN */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-[#DCE8D9] dark:border-[#24402A] bg-white/95 dark:bg-[#132218]/95 backdrop-blur-xl px-4 py-3 space-y-1.5 animate-fade-in shadow-xl">
+            <a
+              href="#features"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-[#183321]"
+            >
+              <span>{t("landingSolutions") || (language === "mr" ? "वैशिष्ट्ये" : language === "hi" ? "समाधान" : "Solutions")}</span>
+              <ChevronRight size={14} className="text-gray-400" />
+            </a>
+            <a
+              href="#simulator"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-[#183321]"
+            >
+              <span>{language === "mr" ? "थेट डेमो" : language === "hi" ? "लाइव डेमो" : "Live Demo"}</span>
+              <ChevronRight size={14} className="text-gray-400" />
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-[#183321]"
+            >
+              <span>{t("landingHowItWorks") || (language === "mr" ? "कसे कार्य करते" : language === "hi" ? "यह कैसे काम करता है" : "How It Works")}</span>
+              <ChevronRight size={14} className="text-gray-400" />
+            </a>
+            <a
+              href="#crops"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-[#183321]"
+            >
+              <span>{t("landingSupportedCrops") || (language === "mr" ? "समर्थित पिके" : language === "hi" ? "समर्थित फसलें" : "Supported Crops")}</span>
+              <ChevronRight size={14} className="text-gray-400" />
+            </a>
+            <a
+              href="#testimonials"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-[#183321]"
+            >
+              <span>{t("landingFarmers") || (language === "mr" ? "शेतकरी अनुभव" : language === "hi" ? "किसान अनुभव" : "Farmers")}</span>
+              <ChevronRight size={14} className="text-gray-400" />
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setModalPlatform(null);
+                setShowInstallModal(true);
+              }}
+              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] bg-emerald-50 dark:bg-[#183321]"
+            >
+              <span className="flex items-center gap-1.5">
+                <Smartphone size={14} />
+                <span>{language === "mr" ? "अ‍ॅप डाऊनलोड व इन्स्टॉल" : language === "hi" ? "ऐप डाउनलोड एवं इंस्टॉल" : "Download & Install App"}</span>
+              </span>
+              <ChevronRight size={14} className="text-emerald-600" />
+            </button>
+            <a
+              href="#faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-[#183321]"
+            >
+              <span>{t("landingFaq") || (language === "mr" ? "प्रश्नोत्तरे" : language === "hi" ? "अक्सर पूछे जाने वाले सवाल" : "FAQ")}</span>
+              <ChevronRight size={14} className="text-gray-400" />
+            </a>
+
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  nav?.("dashboard");
+                }}
+                className="w-full py-2.5 text-center text-xs font-bold rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] text-white shadow-md flex items-center justify-center gap-1.5"
+              >
+                <span>{t("dashboard") || "Dashboard"}</span>
+                <ArrowRight size={14} />
+              </button>
+            ) : (
+              <div className="pt-2 border-t border-gray-100 dark:border-[#24402A] flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    nav?.("login");
+                  }}
+                  className="flex-1 py-2 text-center text-xs font-bold rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#183321]"
+                >
+                  {t("signIn") || "Sign In"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    nav?.("register");
+                  }}
+                  className="flex-1 py-2 text-center text-xs font-bold rounded-xl bg-[#2E7D32] text-white shadow-sm hover:bg-[#1B5E20]"
+                >
+                  {t("getStarted") || "Register"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
-      {/* =========================================================
       {/* =========================================================
           2. HERO SECTION WITH VIBRANT ANIMATED BADGE & ZOOM HERO IMAGE
          ========================================================= */}
