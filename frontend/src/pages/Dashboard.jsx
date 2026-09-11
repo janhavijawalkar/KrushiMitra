@@ -130,128 +130,7 @@ export default function Dashboard({ nav }) {
     <div className="space-y-6">
 
       {/* =====================================================
-          DISTRICT-WISE ADVISORY & EMERGENCY BROADCAST ALERTS
-      ===================================================== */}
-      {visibleAlerts.length > 0 && (
-        <div className="space-y-3 animate-zoom-fade">
-          {visibleAlerts.map((alert) => {
-            const isCritical = alert.severity === "Critical";
-            const isWarning = alert.severity === "Warning";
-            const alertKey = alert.broadcast_id || alert.id;
-            const isExpanded = expandedAlertId === alertKey;
-
-            return (
-              <div
-                key={alertKey}
-                className={`relative overflow-hidden rounded-3xl border-2 p-4 sm:p-5 shadow-lg transition-all duration-300 ${
-                  isCritical
-                    ? "border-red-500/90 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white shadow-red-500/25 ring-2 ring-red-400/30"
-                    : isWarning
-                    ? "border-amber-400/90 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white shadow-amber-500/25 ring-2 ring-amber-400/30"
-                    : "border-emerald-500/90 bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#16A34A] text-white shadow-emerald-500/25 ring-2 ring-emerald-400/30"
-                }`}
-              >
-                {/* Background pulse glow */}
-                {isCritical && (
-                  <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/20 blur-xl animate-pulse" />
-                )}
-
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex items-start gap-3.5">
-                    {/* ICON */}
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-md ${
-                        isCritical
-                          ? "bg-white text-red-600 animate-bounce"
-                          : isWarning
-                          ? "bg-white text-amber-600"
-                          : "bg-white text-[#1B5E20]"
-                      }`}
-                    >
-                      {isCritical ? (
-                        <ShieldAlert size={22} className="stroke-[2.5]" />
-                      ) : isWarning ? (
-                        <AlertTriangle size={22} className="stroke-[2.5]" />
-                      ) : (
-                        <Megaphone size={22} className="stroke-[2.5]" />
-                      )}
-                    </div>
-
-                    {/* CONTENT */}
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full bg-black/25 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider backdrop-blur-xs">
-                          {isCritical
-                            ? "🚨 EMERGENCY ALERT"
-                            : isWarning
-                            ? "⚠️ HIGH CAUTION"
-                            : "📢 OFFICIAL ADVISORY"}
-                        </span>
-                        <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
-                          <MapPin size={10} />
-                          <span>{alert.district === "All" ? "All Maharashtra" : `${alert.district} District`}</span>
-                        </span>
-                        {alert.crop && alert.crop !== "All" && (
-                          <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-xs">
-                            🌾 {alert.crop}
-                          </span>
-                        )}
-                        <span className="text-[10px] opacity-80">
-                          {alert.category}
-                        </span>
-                      </div>
-
-                      <h3 className="text-sm sm:text-base font-black leading-snug">
-                        {alert.title}
-                      </h3>
-
-                      <p className={`text-xs leading-relaxed text-white/95 ${!isExpanded ? "line-clamp-2" : ""}`}>
-                        {alert.message}
-                      </p>
-
-                      {alert.action_recommendation && (
-                        <div className="mt-2 rounded-xl bg-black/20 backdrop-blur-md p-2.5 border border-white/25 text-xs font-semibold flex items-start gap-1.5">
-                          <CheckCircle2 size={15} className="shrink-0 text-white mt-0.5" />
-                          <span>
-                            <strong>Recommended Remedy / कृषी सल्ला:</strong> {alert.action_recommendation}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 pt-1 text-[10px] text-white/80">
-                        <span>Issued by: {alert.created_by}</span>
-                        {alert.message && alert.message.length > 100 && (
-                          <button
-                            type="button"
-                            onClick={() => setExpandedAlertId(isExpanded ? null : alertKey)}
-                            className="underline font-bold text-white ml-2 cursor-pointer"
-                          >
-                            {isExpanded ? "Show Less ▲" : "Read Full Bulletin ▼"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* DISMISS BUTTON */}
-                  <button
-                    type="button"
-                    onClick={() => setDismissedAlertIds([...dismissedAlertIds, alertKey])}
-                    className="self-end sm:self-start flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition active:scale-90 cursor-pointer"
-                    title="Dismiss alert banner"
-                    aria-label="Dismiss alert"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* =====================================================
-          HERO BANNER
+          HERO GREETING BANNER (TOP ELEMENT)
       ===================================================== */}
 
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-7 text-white shadow-[0_16px_40px_rgba(46,125,50,0.22)] animate-zoom-fade depth-3">
@@ -293,6 +172,149 @@ export default function Dashboard({ nav }) {
 
         </div>
       </section>
+
+
+      {/* =====================================================
+          DISTRICT-WISE ADVISORY & EMERGENCY ALERTS (SLEEK RIBBON)
+      ===================================================== */}
+      {visibleAlerts.length > 0 && (
+        <div className="space-y-2.5 animate-zoom-fade">
+          {visibleAlerts.map((alert) => {
+            const sev = (alert.severity || "advisory").toLowerCase();
+            const isCritical = sev === "critical";
+            const isWarning = sev === "warning";
+            const alertKey = alert.broadcast_id || alert.id;
+            const isExpanded = expandedAlertId === alertKey;
+
+            return (
+              <div
+                key={alertKey}
+                className={`rounded-2xl border transition-all duration-200 shadow-2xs ${
+                  isCritical
+                    ? "border-red-200 bg-red-50/90 text-red-950"
+                    : isWarning
+                    ? "border-amber-200 bg-amber-50/90 text-amber-950"
+                    : "border-emerald-200 bg-emerald-50/90 text-emerald-950"
+                }`}
+              >
+                {/* Sleek Alert Header Row */}
+                <div className="flex items-center justify-between gap-3 p-3 sm:px-4 sm:py-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-2xs ${
+                        isCritical
+                          ? "bg-red-600 text-white animate-pulse"
+                          : isWarning
+                          ? "bg-amber-500 text-white"
+                          : "bg-emerald-600 text-white"
+                      }`}
+                    >
+                      {isCritical ? (
+                        <ShieldAlert size={16} />
+                      ) : isWarning ? (
+                        <AlertTriangle size={16} />
+                      ) : (
+                        <Megaphone size={16} />
+                      )}
+                    </span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                            isCritical
+                              ? "bg-red-600 text-white"
+                              : isWarning
+                              ? "bg-amber-500 text-white"
+                              : "bg-emerald-600 text-white"
+                          }`}
+                        >
+                          {isCritical
+                            ? (language === "mr" ? "आपत्कालीन इशारा" : language === "hi" ? "आपातकालीन चेतावनी" : "Critical Alert")
+                            : isWarning
+                            ? (language === "mr" ? "सावधगिरी सूचना" : language === "hi" ? "सावधानी सूचना" : "Warning")
+                            : (language === "mr" ? "कृषी सल्ला" : language === "hi" ? "कृषि सलाह" : "Official Advisory")}
+                        </span>
+                        <span className="text-[10px] font-semibold text-gray-500">
+                          📍 {alert.district === "All" ? (language === "mr" ? "सर्व महाराष्ट्र" : language === "hi" ? "पूरा महाराष्ट्र" : "All Maharashtra") : `${alert.district}`}
+                        </span>
+                        {alert.crop && alert.crop !== "All" && (
+                          <span className="text-[10px] font-semibold text-gray-500">
+                            • 🌾 {alert.crop}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold truncate mt-0.5 text-gray-900">
+                        {alert.title}
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Actions (View Advice Toggle + Dismiss) */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedAlertId(isExpanded ? null : alertKey)}
+                      className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                        isCritical
+                          ? "text-red-700 bg-white/70 hover:bg-white"
+                          : isWarning
+                          ? "text-amber-800 bg-white/70 hover:bg-white"
+                          : "text-emerald-800 bg-white/70 hover:bg-white"
+                      }`}
+                    >
+                      {isExpanded
+                        ? (language === "mr" ? "कमी करा ▲" : language === "hi" ? "कम करें ▲" : "Hide ▲")
+                        : (language === "mr" ? "सल्ला पहा ▼" : language === "hi" ? "सलाह देखें ▼" : "View Advice ▼")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDismissedAlertIds((prev) => [...prev, alertKey])}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 transition cursor-pointer"
+                      title={language === "mr" ? "बंद करा" : language === "hi" ? "हटाएं" : "Dismiss"}
+                      aria-label="Dismiss"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expandable Advisory Body & Remedy */}
+                {isExpanded && (
+                  <div className="border-t border-inherit/40 px-4 pb-3 pt-2.5 text-xs text-gray-800 space-y-2 bg-white/70 rounded-b-2xl">
+                    <p className="leading-relaxed">
+                      {alert.message}
+                    </p>
+
+                    {alert.remedy && (
+                      <div className="rounded-xl bg-[#F0FDF4] border border-emerald-200 p-2.5 text-emerald-950 font-medium flex items-start gap-2">
+                        <span className="text-base shrink-0">🌱</span>
+                        <div className="flex-1 text-[11px] sm:text-xs">
+                          <strong className="text-emerald-800 font-bold block mb-0.5">
+                            {language === "mr" ? "कृषी उपाययोजना / शिफारस:" : language === "hi" ? "कृषि उपाय / सिफारिश:" : "Recommended Agricultural Remedy:"}
+                          </strong>
+                          {alert.remedy}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-gray-100">
+                      <span>
+                        {alert.author_name
+                          ? `✍️ ${alert.author_name}${alert.author_designation ? ` (${alert.author_designation})` : ""}`
+                          : "✍️ कृषी विभाग (Agriculture Department)"}
+                      </span>
+                      <span>
+                        {alert.created_at ? formatHistoryDate(alert.created_at) : ""}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
 
       {/* =====================================================
