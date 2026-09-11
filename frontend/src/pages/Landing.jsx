@@ -660,13 +660,6 @@ export default function Landing({ nav }) {
               {t("landingFarmers") || (language === "mr" ? "शेतकरी अनुभव" : language === "hi" ? "किसान अनुभव" : "Farmers")}
             </a>
             <a
-              href="#download-app"
-              className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5 flex items-center gap-1 font-extrabold text-[#2E7D32] dark:text-[#4ADE80]"
-            >
-              <Smartphone size={13} />
-              <span>{language === "mr" ? "अ‍ॅप डाऊनलोड" : language === "hi" ? "ऐप डाउनलोड" : "Download App"}</span>
-            </a>
-            <a
               href="#faq"
               className="transition hover:text-[#2E7D32] dark:hover:text-[#4ADE80] hover:-translate-y-0.5"
             >
@@ -676,7 +669,7 @@ export default function Landing({ nav }) {
 
           {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* DIRECT INSTALL APP BUTTON (VISIBLE ON MOBILE & DESKTOP) */}
+            {/* SINGLE UNIFIED DOWNLOAD / INSTALL APP BUTTON */}
             <button
               type="button"
               onClick={() => {
@@ -684,10 +677,15 @@ export default function Landing({ nav }) {
                 setShowInstallModal(true);
               }}
               className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
-              title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा" : language === "hi" ? "ऐप इंस्टॉल करें" : "Download & Install App"}
+              title={language === "mr" ? "अ‍ॅप डाऊनलोड व इन्स्टॉल करा" : language === "hi" ? "ऐप डाउनलोड व इंस्टॉल करें" : "Download & Install App"}
             >
               <Download size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
-              <span>{language === "mr" ? "अ‍ॅप" : language === "hi" ? "ऐप" : "App"}</span>
+              <span className="hidden sm:inline">
+                {language === "mr" ? "अ‍ॅप डाऊनलोड" : language === "hi" ? "ऐप डाउनलोड" : "Download App"}
+              </span>
+              <span className="sm:hidden">
+                {language === "mr" ? "अ‍ॅप" : language === "hi" ? "ऐप" : "App"}
+              </span>
             </button>
 
             {/* LANGUAGE SELECTOR */}
