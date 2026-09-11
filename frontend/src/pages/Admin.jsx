@@ -38,6 +38,11 @@ import {
   Calendar,
   Wheat,
   Droplets,
+  Megaphone,
+  Radio,
+  BellRing,
+  ShieldAlert,
+  AlertOctagon,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -58,6 +63,10 @@ export default function Admin({ nav }) {
     apiAdminDeleteTicket,
     apiExportDatabase,
     apiOptimizeDatabase,
+    adminBroadcastsList,
+    apiFetchAdminBroadcasts,
+    apiCreateBroadcast,
+    apiDeleteBroadcast,
     predictionHistory,
     recommendationHistory,
     t,
@@ -65,7 +74,7 @@ export default function Admin({ nav }) {
     tCrop,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'users', 'tickets', 'database'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'broadcasts', 'users', 'tickets', 'database'
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [ticketStatusFilter, setTicketStatusFilter] = useState("all");
@@ -75,6 +84,23 @@ export default function Admin({ nav }) {
   const [actionToast, setActionToast] = useState("");
   const [dbStats, setDbStats] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Broadcast Advisory State
+  const [broadcastsList, setBroadcastsList] = useState([]);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [broadcastSearch, setBroadcastSearch] = useState("");
+  const [broadcastSeverityFilter, setBroadcastSeverityFilter] = useState("all");
+  const [broadcastDistrictFilter, setBroadcastDistrictFilter] = useState("all");
+  const [broadcastForm, setBroadcastForm] = useState({
+    title: "",
+    message: "",
+    severity: "Critical",
+    category: "Weather Alert",
+    district: "All",
+    crop: "All",
+    action_recommendation: "",
+    created_by: "District Agriculture Emergency Cell",
+  });
 
   // Modals & State
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -115,6 +141,10 @@ export default function Admin({ nav }) {
         const tickets = await apiFetchAdminTickets();
         if (tickets && Array.isArray(tickets)) setTicketsList(tickets);
       }
+      if (apiFetchAdminBroadcasts) {
+        const b = await apiFetchAdminBroadcasts();
+        if (b && Array.isArray(b)) setBroadcastsList(b);
+      }
     } catch (e) {
       console.warn("Load data error:", e);
     }
@@ -124,12 +154,19 @@ export default function Admin({ nav }) {
   useEffect(() => {
     loadData();
 
-    // Auto-poll live database every 3 seconds for new farmer tickets and stats
+    // Auto-poll live database every 3 seconds for new farmer tickets, broadcasts, and stats
     const interval = setInterval(() => {
       if (apiFetchAdminTickets) {
         apiFetchAdminTickets().then((tickets) => {
           if (tickets && Array.isArray(tickets)) {
             setTicketsList(tickets);
+          }
+        }).catch(() => {});
+      }
+      if (apiFetchAdminBroadcasts) {
+        apiFetchAdminBroadcasts().then((b) => {
+          if (b && Array.isArray(b)) {
+            setBroadcastsList(b);
           }
         }).catch(() => {});
       }
@@ -146,6 +183,57 @@ export default function Admin({ nav }) {
   const showToast = (msg) => {
     setActionToast(msg);
     setTimeout(() => setActionToast(""), 3500);
+  };
+
+  const handleCreateBroadcast = async (e) => {
+    e.preventDefault();
+    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
+      showToast("Alert headline and advisory message are required!");
+      return;
+    }
+
+    setIsBroadcasting(true);
+    try {
+      const res = await apiCreateBroadcast(broadcastForm);
+      if (res.success) {
+        showToast(`📢 ${res.message || "Advisory broadcast successfully dispatched!"}`);
+        setBroadcastForm({
+          title: "",
+          message: "",
+          severity: "Critical",
+          category: "Weather Alert",
+          district: "All",
+          crop: "All",
+          action_recommendation: "",
+          created_by: "District Agriculture Emergency Cell",
+        });
+        if (apiFetchAdminBroadcasts) {
+          const b = await apiFetchAdminBroadcasts();
+          if (b) setBroadcastsList(b);
+        }
+      } else {
+        showToast(res.message || "Failed to dispatch broadcast.");
+      }
+    } catch (err) {
+      showToast("Broadcast submission error.");
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
+  const handleDeleteBroadcast = async (broadcastId, title) => {
+    if (confirm(`Are you sure you want to permanently delete broadcast "${title}"?`)) {
+      const res = await apiDeleteBroadcast(broadcastId);
+      if (res.success) {
+        showToast(`Broadcast "${title}" has been deleted.`);
+        if (apiFetchAdminBroadcasts) {
+          const b = await apiFetchAdminBroadcasts();
+          if (b) setBroadcastsList(b);
+        }
+      } else {
+        showToast(res.message || "Failed to delete broadcast.");
+      }
+    }
   };
 
   // User Filter Logic
@@ -438,6 +526,14 @@ export default function Admin({ nav }) {
       <div className="flex border-b border-[#DCE8D9] overflow-x-auto gap-2">
         {[
           { id: "overview", label: "Operations & Telemetry", icon: Activity },
+          {
+            id: "broadcasts",
+            label: `Advisory & Emergency Broadcast (${broadcastsList.length})`,
+            icon: Megaphone,
+            badge: broadcastsList.filter((b) => b.severity === "Critical").length > 0
+              ? `${broadcastsList.filter((b) => b.severity === "Critical").length} Critical`
+              : null,
+          },
           { id: "users", label: `Farmer & User Registry (${(usersList || []).length})`, icon: Users },
           { id: "tickets", label: `Farmer Queries & Feedback (${ticketsList.length})`, icon: MessageSquare, badge: pendingTickets > 0 ? `${pendingTickets} Open` : null },
           { id: "database", label: "Database & System Logs", icon: Database },
@@ -565,7 +661,520 @@ export default function Admin({ nav }) {
         </div>
       )}
 
-      {/* TAB 2: REGISTERED USERS & FARMER DIRECTORY */}
+      {/* TAB 2: ADVISORY & EMERGENCY BROADCAST COMMAND CENTER */}
+      {activeTab === "broadcasts" && (
+        <div className="space-y-6 animate-zoom-fade">
+          {/* BROADCAST TELEMETRY METRICS */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            <div className="card depth-1 p-4 flex items-center gap-3.5 bg-gradient-to-br from-emerald-50/60 to-white dark:from-[#183321]/60 dark:to-[#132318]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#1B5E20] text-white shadow-md">
+                <Megaphone size={20} />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Total Bulletins
+                </p>
+                <h3 className="text-xl font-extrabold text-[#172B18] dark:text-white">
+                  {broadcastsList.length}
+                </h3>
+              </div>
+            </div>
+
+            <div className="card depth-1 p-4 flex items-center gap-3.5 bg-gradient-to-br from-red-50/60 to-white dark:from-red-950/20 dark:to-[#132318]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white shadow-md">
+                <ShieldAlert size={20} />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">
+                  Critical Emergencies
+                </p>
+                <h3 className="text-xl font-extrabold text-red-700 dark:text-red-400">
+                  {broadcastsList.filter((b) => b.severity === "Critical").length}
+                </h3>
+              </div>
+            </div>
+
+            <div className="card depth-1 p-4 flex items-center gap-3.5 bg-gradient-to-br from-amber-50/60 to-white dark:from-amber-950/20 dark:to-[#132318]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md">
+                <AlertOctagon size={20} />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                  Caution Warnings
+                </p>
+                <h3 className="text-xl font-extrabold text-amber-700 dark:text-amber-400">
+                  {broadcastsList.filter((b) => b.severity === "Warning").length}
+                </h3>
+              </div>
+            </div>
+
+            <div className="card depth-1 p-4 flex items-center gap-3.5 bg-gradient-to-br from-blue-50/60 to-white dark:from-blue-950/20 dark:to-[#132318]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
+                <Radio size={20} />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                  Registered Audience
+                </p>
+                <h3 className="text-xl font-extrabold text-blue-700 dark:text-blue-400">
+                  {(usersList || []).filter((u) => u.role === "Farmer").length} Farmers
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN GRID: COMPOSER & LIVE BROADCAST LOG */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* LEFT COMPOSER (lg:col-span-5) */}
+            <div className="card depth-2 overflow-hidden border-2 border-emerald-300/80 dark:border-emerald-700/60 lg:col-span-5">
+              <div className="bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#16A34A] p-4 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
+                    <Radio size={18} className="animate-pulse" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black tracking-wide">
+                      Broadcast Advisory Console
+                    </h2>
+                    <p className="text-[10px] text-emerald-100 font-medium">
+                      Real-time alert dispatch to farmer dashboards & mobile apps
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-xs">
+                  MySQL Live
+                </span>
+              </div>
+
+              {/* QUICK TEMPLATES */}
+              <div className="p-4 bg-[#F7FAF6] dark:bg-[#183321]/40 border-b border-gray-100 dark:border-gray-800">
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
+                  <Sparkles size={12} className="text-[#2E7D32]" />
+                  <span>Quick Simulation Templates (SIH / Demos):</span>
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBroadcastForm({
+                        title: "Unseasonal Thunderstorm & Hailstorm Warning for Nashik & Ahmednagar",
+                        message: "Severe unseasonal thunderstorm with gusty winds (40-50 km/h) and scattered hailstorms expected over the next 48 hours across North Maharashtra. Farmers are strongly advised to secure harvested onion stocks, delay grape canopy spraying, and clear drainage lines in orchards.",
+                        severity: "Critical",
+                        category: "Weather Alert",
+                        district: "Nashik",
+                        crop: "Onion, Grapes",
+                        action_recommendation: "Shift harvested crops to covered godowns; inspect orchard drainage.",
+                        created_by: "District Agriculture Emergency Cell, Nashik",
+                      });
+                    }}
+                    className="rounded-lg bg-white dark:bg-[#1E3A28] border border-red-200 dark:border-red-900 px-2.5 py-1 text-[11px] font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 cursor-pointer transition shadow-2xs"
+                  >
+                    🌧️ Nashik Hailstorm (Critical)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBroadcastForm({
+                        title: "Fall Armyworm Vigilance Advisory for Kharif Maize & Sugarcane",
+                        message: "Incidence of early-stage Fall Armyworm (Spodoptera frugiperda) infestation observed in Western Maharashtra zones. Scouting should be undertaken every 4-5 days.",
+                        severity: "Warning",
+                        category: "Pest & Disease",
+                        district: "Pune",
+                        crop: "Sugarcane, Maize",
+                        action_recommendation: "Install pheromone traps @ 5 per acre & apply Azadirachtin 1500 ppm @ 5ml/L.",
+                        created_by: "Krushi Vigyan Kendra (KVK) Pune",
+                      });
+                    }}
+                    className="rounded-lg bg-white dark:bg-[#1E3A28] border border-amber-200 dark:border-amber-900 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-50 cursor-pointer transition shadow-2xs"
+                  >
+                    🐛 Pune Armyworm (Warning)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBroadcastForm({
+                        title: "Statewide Rabi Sowing & Micro-Irrigation 80% Subsidy Open",
+                        message: "Maharashtra Agriculture Department announces open portal registration for 80% Drip & Sprinkler Irrigation Subsidies under the PMKSY / MahaDBT framework for all registered farmers.",
+                        severity: "Advisory",
+                        category: "Government Scheme",
+                        district: "All",
+                        crop: "All",
+                        action_recommendation: "Apply online on MahaDBT portal with updated 7/12 land extract.",
+                        created_by: "Maharashtra State Agricultural Department",
+                      });
+                    }}
+                    className="rounded-lg bg-white dark:bg-[#1E3A28] border border-emerald-200 dark:border-emerald-900 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 cursor-pointer transition shadow-2xs"
+                  >
+                    🏛️ Statewide Subsidy (Advisory)
+                  </button>
+                </div>
+              </div>
+
+              {/* FORM */}
+              <form onSubmit={handleCreateBroadcast} className="p-5 space-y-4">
+                {/* SEVERITY SELECTOR */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Severity Level (Urgency):
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: "Critical", label: "🔴 Critical", desc: "Emergency Alert", color: "border-red-400 bg-red-50 text-red-800 dark:bg-red-950/50 dark:text-red-300" },
+                      { id: "Warning", label: "🟡 Warning", desc: "High Caution", color: "border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
+                      { id: "Advisory", label: "🟢 Advisory", desc: "General Notice", color: "border-emerald-400 bg-emerald-50 text-[#1B5E20] dark:bg-emerald-950/50 dark:text-emerald-300" },
+                    ].map((sev) => {
+                      const selected = broadcastForm.severity === sev.id;
+                      return (
+                        <button
+                          key={sev.id}
+                          type="button"
+                          onClick={() => setBroadcastForm({ ...broadcastForm, severity: sev.id })}
+                          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition cursor-pointer ${
+                            selected
+                              ? `${sev.color} ring-2 ring-offset-1 font-black shadow-xs`
+                              : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1B3523]"
+                          }`}
+                        >
+                          <span className="text-xs">{sev.label}</span>
+                          <span className="text-[9px] opacity-75">{sev.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* TITLE */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                    Alert Headline / Subject <span className="text-red-500">*</span>:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={broadcastForm.title}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+                    placeholder="e.g. Unseasonal Hailstorm Alert in Nashik & Ahmednagar"
+                    className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-emerald-400/20"
+                  />
+                </div>
+
+                {/* TARGET DISTRICT & CATEGORY */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                      Target District <span className="text-red-500">*</span>:
+                    </label>
+                    <select
+                      value={broadcastForm.district}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, district: e.target.value })}
+                      className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                    >
+                      <option value="All">🌐 All 36 Districts (Statewide)</option>
+                      {districts.map((d) => (
+                        <option key={d} value={d}>
+                          📍 {d} District
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                      Advisory Category:
+                    </label>
+                    <select
+                      value={broadcastForm.category}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, category: e.target.value })}
+                      className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                    >
+                      <option value="Weather Alert">🌧️ Weather Alert</option>
+                      <option value="Pest & Disease">🐛 Pest & Disease Outbreak</option>
+                      <option value="Government Scheme">🏛️ Government Scheme / Subsidy</option>
+                      <option value="Market & MSP">📈 Market Rate & MSP</option>
+                      <option value="Fertilizer & Sowing">🌱 Fertilizer & Sowing Advisory</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* TARGET CROP & AUTHOR */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                      Target Crop(s):
+                    </label>
+                    <input
+                      type="text"
+                      value={broadcastForm.crop}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, crop: e.target.value })}
+                      placeholder="e.g. All, Soybean, Grapes, Cotton"
+                      className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                      Issued By / Department:
+                    </label>
+                    <input
+                      type="text"
+                      value={broadcastForm.created_by}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, created_by: e.target.value })}
+                      placeholder="e.g. District Agriculture Emergency Cell"
+                      className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                    />
+                  </div>
+                </div>
+
+                {/* ADVISORY MESSAGE */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                    Detailed Advisory Instructions <span className="text-red-500">*</span>:
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={broadcastForm.message}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+                    placeholder="Describe the condition, risk factors, and precautions farmers must follow..."
+                    className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] p-3 text-xs text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                  />
+                </div>
+
+                {/* ACTIONABLE RECOMMENDATION */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                    Direct Action Step for Farmers (Actionable Remedy):
+                  </label>
+                  <input
+                    type="text"
+                    value={broadcastForm.action_recommendation}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, action_recommendation: e.target.value })}
+                    placeholder="e.g. Spray Neem oil (5ml/L) or transfer produce to covered godowns within 48 hours."
+                    className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                  />
+                </div>
+
+                {/* AUDIENCE REACH BANNER */}
+                <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-900/60 p-3 text-xs text-blue-800 dark:text-blue-200">
+                  <Radio size={16} className="shrink-0 text-blue-600 animate-pulse" />
+                  <span>
+                    🎯 Audience Target:{" "}
+                    <strong>
+                      {broadcastForm.district === "All"
+                        ? `All 36 Districts (~${(usersList || []).filter((u) => u.role === "Farmer").length} registered farmers)`
+                        : `${broadcastForm.district} District (~${(usersList || []).filter((u) => u.role === "Farmer" && (u.district || "").toLowerCase() === broadcastForm.district.toLowerCase()).length} registered farmers)`}
+                    </strong>
+                  </span>
+                </div>
+
+                {/* SUBMIT BUTTON */}
+                <button
+                  type="submit"
+                  disabled={isBroadcasting}
+                  className="btn-shimmer btn-glow flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] py-3 text-xs font-black text-white shadow-md transition hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  <Send size={15} />
+                  <span>{isBroadcasting ? "Transmitting Alert to MySQL..." : "Broadcast Alert to Farmers Now 🚀"}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* RIGHT: ACTIVE BROADCASTS & TRANSMISSION LOG TABLE (lg:col-span-7) */}
+            <div className="card depth-2 overflow-hidden lg:col-span-7 space-y-4">
+              <div className="border-b border-[#E2EAE0] dark:border-[#24402A] p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-sm font-black text-gray-800 dark:text-white flex items-center gap-2">
+                      <Megaphone size={17} className="text-[#2E7D32]" />
+                      <span>Active Broadcast Advisories & Alert Log ({broadcastsList.length})</span>
+                    </h2>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      Live transmission log stored in MySQL database. Alerts appear instantly on farmer dashboards.
+                    </p>
+                  </div>
+                </div>
+
+                {/* FILTERS & SEARCH */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={broadcastSearch}
+                      onChange={(e) => setBroadcastSearch(e.target.value)}
+                      placeholder="Search alerts or districts..."
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] pl-8 pr-3 py-1.5 text-xs text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
+                    />
+                  </div>
+
+                  <select
+                    value={broadcastSeverityFilter}
+                    onChange={(e) => setBroadcastSeverityFilter(e.target.value)}
+                    className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none"
+                  >
+                    <option value="all">All Severities</option>
+                    <option value="critical">🔴 Critical Only</option>
+                    <option value="warning">🟡 Warning Only</option>
+                    <option value="advisory">🟢 Advisory Only</option>
+                  </select>
+
+                  <select
+                    value={broadcastDistrictFilter}
+                    onChange={(e) => setBroadcastDistrictFilter(e.target.value)}
+                    className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none"
+                  >
+                    <option value="all">All Target Districts</option>
+                    <option value="all">🌐 All (Statewide)</option>
+                    {districts.map((d) => (
+                      <option key={d} value={d}>
+                        📍 {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* LIST / TABLE */}
+              <div className="p-4 space-y-3 max-h-[700px] overflow-y-auto">
+                {broadcastsList.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <Megaphone size={36} className="mx-auto text-gray-300 mb-2" />
+                    <p className="text-xs font-bold">No broadcast advisories found.</p>
+                    <p className="text-[11px]">Compose an advisory using the form on the left.</p>
+                  </div>
+                ) : (
+                  broadcastsList
+                    .filter((b) => {
+                      const term = broadcastSearch.toLowerCase();
+                      const matchesSearch =
+                        (b.title || "").toLowerCase().includes(term) ||
+                        (b.message || "").toLowerCase().includes(term) ||
+                        (b.district || "").toLowerCase().includes(term) ||
+                        (b.crop || "").toLowerCase().includes(term) ||
+                        (b.broadcast_id || "").toLowerCase().includes(term);
+
+                      const matchesSeverity =
+                        broadcastSeverityFilter === "all"
+                          ? true
+                          : (b.severity || "").toLowerCase() === broadcastSeverityFilter.toLowerCase();
+
+                      const matchesDistrict =
+                        broadcastDistrictFilter === "all"
+                          ? true
+                          : (b.district || "").toLowerCase() === broadcastDistrictFilter.toLowerCase();
+
+                      return matchesSearch && matchesSeverity && matchesDistrict;
+                    })
+                    .map((item) => {
+                      const isCritical = item.severity === "Critical";
+                      const isWarning = item.severity === "Warning";
+                      return (
+                        <div
+                          key={item.broadcast_id || item.id}
+                          className={`rounded-2xl p-4 border transition-all hover:shadow-md ${
+                            isCritical
+                              ? "border-red-200 bg-red-50/40 dark:bg-red-950/20 dark:border-red-900/40"
+                              : isWarning
+                              ? "border-amber-200 bg-amber-50/40 dark:bg-amber-950/20 dark:border-amber-900/40"
+                              : "border-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/20 dark:border-emerald-900/40"
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                            <div className="space-y-1.5 flex-1">
+                              {/* BADGES ROW */}
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span
+                                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                                    isCritical
+                                      ? "bg-red-600 text-white"
+                                      : isWarning
+                                      ? "bg-amber-500 text-white"
+                                      : "bg-[#1B5E20] text-white"
+                                  }`}
+                                >
+                                  {item.severity}
+                                </span>
+
+                                <span className="rounded-full bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-[10px] font-bold text-gray-700 dark:text-gray-300">
+                                  {item.category || "Weather"}
+                                </span>
+
+                                <span className="rounded-full bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 text-[10px] font-bold text-blue-800 dark:text-blue-200 flex items-center gap-1">
+                                  <MapPin size={10} />
+                                  <span>{item.district === "All" ? "All Maharashtra" : `${item.district} District`}</span>
+                                </span>
+
+                                {item.crop && item.crop !== "All" && (
+                                  <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200 flex items-center gap-1">
+                                    <Wheat size={10} />
+                                    <span>{item.crop}</span>
+                                  </span>
+                                )}
+
+                                <span className="text-[10px] text-gray-400 font-mono ml-auto">
+                                  {item.broadcast_id}
+                                </span>
+                              </div>
+
+                              {/* HEADLINE */}
+                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white">
+                                {item.title}
+                              </h3>
+
+                              {/* MESSAGE */}
+                              <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                                {item.message}
+                              </p>
+
+                              {/* ACTION REMEDY BOX */}
+                              {item.action_recommendation && (
+                                <div className="rounded-xl bg-white dark:bg-[#132318] p-2.5 border border-gray-100 dark:border-gray-800 text-[11px] font-semibold text-gray-700 dark:text-emerald-200 flex items-start gap-1.5 shadow-2xs">
+                                  <CheckCircle2 size={13} className="shrink-0 text-[#2E7D32] mt-0.5" />
+                                  <span>
+                                    <strong>Actionable Advice:</strong> {item.action_recommendation}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* METADATA */}
+                              <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-400 pt-1">
+                                <span className="flex items-center gap-1">
+                                  <Clock size={11} />
+                                  <span>{item.created_at || "Recent"}</span>
+                                </span>
+                                <span>•</span>
+                                <span>Issued by: {item.created_by}</span>
+                                <span>•</span>
+                                <span className="text-[#2E7D32] font-bold flex items-center gap-1">
+                                  <Radio size={10} />
+                                  <span>Reaches ~{item.estimated_reach || 13} farmers</span>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* ACTIONS */}
+                            <div className="flex sm:flex-col items-center gap-1.5 shrink-0 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteBroadcast(item.broadcast_id || item.id, item.title)}
+                                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white dark:bg-[#1E3A28] border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition shadow-2xs cursor-pointer"
+                                title="Delete / Archive Alert"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: REGISTERED USERS & FARMER DIRECTORY */}
       {activeTab === "users" && (
         <div className="space-y-4 animate-zoom-fade">
           <div className="card overflow-hidden depth-1">

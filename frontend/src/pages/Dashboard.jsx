@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -7,6 +8,10 @@ import {
   TrendingUp,
   Target,
   CloudSun,
+  AlertTriangle,
+  ShieldAlert,
+  Megaphone,
+  X,
 } from "lucide-react";
 
 import StatCard from "../components/StatCard";
@@ -42,7 +47,11 @@ export default function Dashboard({ nav }) {
     tDistrict,
     predictionHistory,
     recommendationHistory,
+    farmerBroadcastAlerts,
   } = useApp();
+
+  const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
+  const [expandedAlertId, setExpandedAlertId] = useState(null);
 
   const name = user?.name || (user?.role === "Admin" ? "Admin" : "Farmer");
   const userRole = user?.role || "Farmer";
@@ -113,8 +122,133 @@ export default function Dashboard({ nav }) {
         "Administrator Overview: Monitor ML inference throughput, registered farmers directory, and system health."
       : (t("dashboardFarmerBannerSub") || "Smart AI Agronomy Dashboard for your farm in {district}. Get instant crop predictions, nutrient advisories, and weather forecasts.").replace("{district}", userDistrict);
 
+  const visibleAlerts = (farmerBroadcastAlerts || []).filter(
+    (a) => !dismissedAlertIds.includes(a.broadcast_id || a.id)
+  );
+
   return (
     <div className="space-y-6">
+
+      {/* =====================================================
+          DISTRICT-WISE ADVISORY & EMERGENCY BROADCAST ALERTS
+      ===================================================== */}
+      {visibleAlerts.length > 0 && (
+        <div className="space-y-3 animate-zoom-fade">
+          {visibleAlerts.map((alert) => {
+            const isCritical = alert.severity === "Critical";
+            const isWarning = alert.severity === "Warning";
+            const alertKey = alert.broadcast_id || alert.id;
+            const isExpanded = expandedAlertId === alertKey;
+
+            return (
+              <div
+                key={alertKey}
+                className={`relative overflow-hidden rounded-3xl border-2 p-4 sm:p-5 shadow-lg transition-all duration-300 ${
+                  isCritical
+                    ? "border-red-500/90 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white shadow-red-500/25 ring-2 ring-red-400/30"
+                    : isWarning
+                    ? "border-amber-400/90 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white shadow-amber-500/25 ring-2 ring-amber-400/30"
+                    : "border-emerald-500/90 bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#16A34A] text-white shadow-emerald-500/25 ring-2 ring-emerald-400/30"
+                }`}
+              >
+                {/* Background pulse glow */}
+                {isCritical && (
+                  <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/20 blur-xl animate-pulse" />
+                )}
+
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex items-start gap-3.5">
+                    {/* ICON */}
+                    <div
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-md ${
+                        isCritical
+                          ? "bg-white text-red-600 animate-bounce"
+                          : isWarning
+                          ? "bg-white text-amber-600"
+                          : "bg-white text-[#1B5E20]"
+                      }`}
+                    >
+                      {isCritical ? (
+                        <ShieldAlert size={22} className="stroke-[2.5]" />
+                      ) : isWarning ? (
+                        <AlertTriangle size={22} className="stroke-[2.5]" />
+                      ) : (
+                        <Megaphone size={22} className="stroke-[2.5]" />
+                      )}
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full bg-black/25 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider backdrop-blur-xs">
+                          {isCritical
+                            ? "🚨 EMERGENCY ALERT"
+                            : isWarning
+                            ? "⚠️ HIGH CAUTION"
+                            : "📢 OFFICIAL ADVISORY"}
+                        </span>
+                        <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
+                          <MapPin size={10} />
+                          <span>{alert.district === "All" ? "All Maharashtra" : `${alert.district} District`}</span>
+                        </span>
+                        {alert.crop && alert.crop !== "All" && (
+                          <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-xs">
+                            🌾 {alert.crop}
+                          </span>
+                        )}
+                        <span className="text-[10px] opacity-80">
+                          {alert.category}
+                        </span>
+                      </div>
+
+                      <h3 className="text-sm sm:text-base font-black leading-snug">
+                        {alert.title}
+                      </h3>
+
+                      <p className={`text-xs leading-relaxed text-white/95 ${!isExpanded ? "line-clamp-2" : ""}`}>
+                        {alert.message}
+                      </p>
+
+                      {alert.action_recommendation && (
+                        <div className="mt-2 rounded-xl bg-black/20 backdrop-blur-md p-2.5 border border-white/25 text-xs font-semibold flex items-start gap-1.5">
+                          <CheckCircle2 size={15} className="shrink-0 text-white mt-0.5" />
+                          <span>
+                            <strong>Recommended Remedy / कृषी सल्ला:</strong> {alert.action_recommendation}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 pt-1 text-[10px] text-white/80">
+                        <span>Issued by: {alert.created_by}</span>
+                        {alert.message && alert.message.length > 100 && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedAlertId(isExpanded ? null : alertKey)}
+                            className="underline font-bold text-white ml-2 cursor-pointer"
+                          >
+                            {isExpanded ? "Show Less ▲" : "Read Full Bulletin ▼"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* DISMISS BUTTON */}
+                  <button
+                    type="button"
+                    onClick={() => setDismissedAlertIds([...dismissedAlertIds, alertKey])}
+                    className="self-end sm:self-start flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition active:scale-90 cursor-pointer"
+                    title="Dismiss alert banner"
+                    aria-label="Dismiss alert"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* =====================================================
           HERO BANNER

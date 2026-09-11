@@ -231,6 +231,26 @@ def init_db():
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
 
+        # 6. Broadcast Advisories Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS broadcast_advisories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            broadcast_id VARCHAR(50) UNIQUE,
+            title VARCHAR(200) NOT NULL,
+            message TEXT NOT NULL,
+            severity VARCHAR(30) NOT NULL DEFAULT 'Warning',
+            category VARCHAR(50) NOT NULL DEFAULT 'Weather',
+            district VARCHAR(100) NOT NULL DEFAULT 'All',
+            crop VARCHAR(100) NOT NULL DEFAULT 'All',
+            action_recommendation VARCHAR(255) DEFAULT '',
+            created_by VARCHAR(150) NOT NULL DEFAULT 'KrushiMitra State Agriculture Authority',
+            is_active TINYINT DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_broadcast_district (district),
+            INDEX idx_broadcast_active (is_active)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """)
+
     else:
         print(f"[DATABASE] Connected to SQLite Database ({SQLITE_PATH})")
         
@@ -311,6 +331,23 @@ def init_db():
             token TEXT UNIQUE NOT NULL,
             expires_at TEXT NOT NULL,
             used INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS broadcast_advisories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            broadcast_id TEXT UNIQUE,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            severity TEXT NOT NULL DEFAULT 'Warning',
+            category TEXT NOT NULL DEFAULT 'Weather',
+            district TEXT NOT NULL DEFAULT 'All',
+            crop TEXT NOT NULL DEFAULT 'All',
+            action_recommendation TEXT DEFAULT '',
+            created_by TEXT NOT NULL DEFAULT 'KrushiMitra State Agriculture Authority',
+            is_active INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
@@ -503,6 +540,68 @@ def init_db():
         if engine == "sqlite":
             conn.commit()
         print("[DATABASE] Initial recommendations seeding complete.")
+
+    # 4. Seed Initial Broadcast Advisories if table is empty
+    cursor.execute("SELECT COUNT(*) FROM broadcast_advisories")
+    b_res = cursor.fetchone()
+    b_count = _extract_count(b_res)
+    if b_count == 0:
+        sample_broadcasts = [
+            (
+                "ADV-2026-001",
+                "Unseasonal Thunderstorm & Hailstorm Warning for Nashik & Ahmednagar",
+                "Severe unseasonal thunderstorm with gusty winds (40-50 km/h) and scattered hailstorms expected over the next 48 hours across North Maharashtra. Farmers are strongly advised to secure harvested onion stocks, delay grape canopy spraying, and clear drainage lines in low-lying orchards.",
+                "Critical",
+                "Weather Alert",
+                "Nashik",
+                "Onion, Grapes",
+                "Shift harvested crops to covered godowns; inspect field drainage.",
+                "District Agriculture Emergency Cell, Nashik",
+                1
+            ),
+            (
+                "ADV-2026-002",
+                "Fall Armyworm Vigilance Advisory for Kharif Maize & Sugarcane",
+                "Incidence of early-stage Fall Armyworm (Spodoptera frugiperda) infestation observed in Western Maharashtra and Marathwada zones. Scouting should be undertaken every 4-5 days.",
+                "Warning",
+                "Pest & Disease",
+                "Pune",
+                "Sugarcane, Maize",
+                "Install pheromone traps @ 5 per acre & apply Azadirachtin 1500 ppm @ 5ml/L.",
+                "Krushi Vigyan Kendra (KVK) Pune",
+                1
+            ),
+            (
+                "ADV-2026-003",
+                "Statewide Rabi Sowing & Micro-Irrigation 80% Subsidy Open",
+                "Maharashtra Agriculture Department announces open portal registration for 80% Drip & Sprinkler Irrigation Subsidies under the PMKSY / MahaDBT framework for all registered farmers.",
+                "Advisory",
+                "Government Scheme",
+                "All",
+                "All",
+                "Apply online on MahaDBT portal with updated 7/12 land extract and bank passbook.",
+                "Maharashtra State Agricultural Department",
+                1
+            )
+        ]
+        b_insert = """
+        INSERT INTO broadcast_advisories (
+            broadcast_id, title, message, severity, category, district, crop,
+            action_recommendation, created_by, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        for b_tuple in sample_broadcasts:
+            try:
+                if engine == "mysql":
+                    cursor.execute(b_insert.replace("?", "%s"), b_tuple)
+                else:
+                    cursor.execute(b_insert, b_tuple)
+            except Exception as ex:
+                print(f"[DB WARN in broadcast seed]: {ex}")
+
+        if engine == "sqlite":
+            conn.commit()
+        print("[DATABASE] Initial broadcast advisories seeding complete.")
 
     cursor.close()
     conn.close()
@@ -846,13 +945,15 @@ def get_database_export_data():
     preds = execute_query("SELECT id, user_email, crop, district, season, area, rainfall, temperature, productivity, production, created_at FROM prediction_history", fetch_mode="all")
     recs = execute_query("SELECT id, user_email, crop, confidence, n_val, p_val, k_val, temperature, humidity, ph, rainfall, created_at FROM recommendation_history", fetch_mode="all")
     tickets = execute_query("SELECT id, ticket_id, user_email, name, category, subject, message, status, created_at FROM support_tickets", fetch_mode="all")
+    broadcasts = execute_query("SELECT id, broadcast_id, title, message, severity, category, district, crop, action_recommendation, created_by, is_active, created_at FROM broadcast_advisories", fetch_mode="all")
     return {
         "timestamp": datetime.now().isoformat(),
         "engine": _active_engine,
         "users": users,
         "predictions": preds,
         "recommendations": recs,
-        "tickets": tickets
+        "tickets": tickets,
+        "broadcasts": broadcasts
     }
 
 def get_system_stats():
@@ -862,6 +963,7 @@ def get_system_stats():
     total_pred_res = execute_query("SELECT COUNT(*) AS count FROM prediction_history", fetch_mode="one")
     total_rec_res = execute_query("SELECT COUNT(*) AS count FROM recommendation_history", fetch_mode="one")
     total_tickets_res = execute_query("SELECT COUNT(*) AS count FROM support_tickets", fetch_mode="one")
+    total_broadcasts_res = execute_query("SELECT COUNT(*) AS count FROM broadcast_advisories WHERE is_active = 1", fetch_mode="one")
     
     engine_name = "MySQL (Active)" if _active_engine == "mysql" else "SQLite 3 (Active)"
     
@@ -872,6 +974,7 @@ def get_system_stats():
         "total_predictions": total_pred_res["count"] if total_pred_res else 0,
         "total_recommendations": total_rec_res["count"] if total_rec_res else 0,
         "total_support_tickets": total_tickets_res["count"] if total_tickets_res else 0,
+        "total_broadcasts": total_broadcasts_res["count"] if total_broadcasts_res else 0,
         "db_status": f"{engine_name} Connected",
         "db_engine": _active_engine or "auto",
         "db_file": MYSQL_DB if _active_engine == "mysql" else "krushimitra.db"
@@ -943,4 +1046,76 @@ def reset_password_with_token(token, new_password):
         (token.strip(),)
     )
     return True
+
+# =========================================================
+# BROADCAST ADVISORY & EMERGENCY ALERT MANAGEMENT
+# =========================================================
+
+def create_broadcast_advisory(data):
+    """
+    Creates a new broadcast advisory in MySQL/SQLite.
+    """
+    broadcast_id = data.get("broadcast_id") or f"ADV-{datetime.now().strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
+    title = data.get("title", "").strip()
+    message = data.get("message", "").strip()
+    severity = data.get("severity", "Warning").strip()
+    category = data.get("category", "Weather Alert").strip()
+    district = data.get("district", "All").strip()
+    crop = data.get("crop", "All").strip()
+    action_rec = data.get("action_recommendation", "").strip()
+    created_by = data.get("created_by", "KrushiMitra Agriculture Authority").strip()
+    
+    execute_insert("""
+    INSERT INTO broadcast_advisories (
+        broadcast_id, title, message, severity, category, district, crop,
+        action_recommendation, created_by, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+    """, (broadcast_id, title, message, severity, category, district, crop, action_rec, created_by))
+    
+    return get_broadcast_by_id(broadcast_id)
+
+def get_broadcast_by_id(broadcast_id):
+    return execute_query(
+        "SELECT * FROM broadcast_advisories WHERE broadcast_id = ? LIMIT 1",
+        (broadcast_id,),
+        fetch_mode="one"
+    )
+
+def get_all_broadcast_advisories():
+    return execute_query(
+        "SELECT * FROM broadcast_advisories ORDER BY created_at DESC",
+        fetch_mode="all"
+    )
+
+def get_farmer_broadcast_advisories(district=None, crop=None):
+    """
+    Retrieves active alerts matching the farmer's district (or 'All').
+    """
+    if not district or district.strip().lower() in ["all", "maharashtra", ""]:
+        return execute_query("""
+        SELECT * FROM broadcast_advisories 
+        WHERE is_active = 1 
+        ORDER BY CASE severity WHEN 'Critical' THEN 1 WHEN 'Warning' THEN 2 ELSE 3 END, created_at DESC
+        """, fetch_mode="all")
+    
+    # Match specific district or All
+    return execute_query("""
+    SELECT * FROM broadcast_advisories 
+    WHERE is_active = 1 AND (LOWER(district) = 'all' OR LOWER(district) = LOWER(?))
+    ORDER BY CASE severity WHEN 'Critical' THEN 1 WHEN 'Warning' THEN 2 ELSE 3 END, created_at DESC
+    """, (district.strip(),), fetch_mode="all")
+
+def delete_broadcast_advisory(broadcast_id):
+    return execute_query(
+        "DELETE FROM broadcast_advisories WHERE broadcast_id = ?",
+        (broadcast_id,)
+    )
+
+def toggle_broadcast_advisory_status(broadcast_id, is_active):
+    val = 1 if is_active else 0
+    return execute_query(
+        "UPDATE broadcast_advisories SET is_active = ? WHERE broadcast_id = ?",
+        (val, broadcast_id)
+    )
+
 

@@ -1434,6 +1434,93 @@ def admin_optimize_db():
 
 
 # =========================================================
+# BROADCAST ADVISORY & EMERGENCY ALERTS APIs
+# =========================================================
+
+@app.route("/api/admin/broadcasts", methods=["GET", "POST"])
+def admin_broadcasts():
+    try:
+        if request.method == "POST":
+            data = request.get_json() or {}
+            title = data.get("title", "").strip()
+            message = data.get("message", "").strip()
+            if not title or not message:
+                return jsonify({"success": False, "message": "Alert title and message are required."}), 400
+            
+            created = database.create_broadcast_advisory(data)
+            return jsonify({
+                "success": True,
+                "message": "Advisory broadcast successfully dispatched to farmers!",
+                "broadcast": created
+            }), 201
+        
+        # GET: List all broadcasts with target audience estimation
+        broadcasts = database.get_all_broadcast_advisories()
+        users = database.get_all_users()
+        
+        for b in broadcasts:
+            target_dist = (b.get("district") or "All").lower()
+            if target_dist in ["all", "maharashtra"]:
+                b["estimated_reach"] = len([u for u in users if u.get("role") == "Farmer"])
+            else:
+                b["estimated_reach"] = len([
+                    u for u in users 
+                    if u.get("role") == "Farmer" and (u.get("district") or "").lower() == target_dist
+                ])
+
+        return jsonify({
+            "success": True,
+            "broadcasts": broadcasts
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error managing broadcasts", "error": str(e)}), 500
+
+
+@app.route("/api/admin/broadcasts/<string:broadcast_id>", methods=["DELETE"])
+def admin_delete_broadcast(broadcast_id):
+    try:
+        database.delete_broadcast_advisory(broadcast_id)
+        return jsonify({
+            "success": True,
+            "message": f"Broadcast advisory '{broadcast_id}' deleted successfully."
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error deleting broadcast", "error": str(e)}), 500
+
+
+@app.route("/api/admin/broadcasts/<string:broadcast_id>/status", methods=["PUT"])
+def admin_toggle_broadcast_status(broadcast_id):
+    try:
+        data = request.get_json() or {}
+        is_active = data.get("is_active", True)
+        database.toggle_broadcast_advisory_status(broadcast_id, is_active)
+        return jsonify({
+            "success": True,
+            "message": f"Broadcast '{broadcast_id}' status updated to {'Active' if is_active else 'Archived'}."
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error updating broadcast status", "error": str(e)}), 500
+
+
+@app.route("/api/farmer/broadcasts", methods=["GET"])
+def farmer_broadcasts():
+    try:
+        district = request.args.get("district", "All")
+        crop = request.args.get("crop", None)
+        active_alerts = database.get_farmer_broadcast_advisories(district=district, crop=crop)
+        return jsonify({
+            "success": True,
+            "district": district,
+            "alerts": active_alerts,
+            "count": len(active_alerts)
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Error fetching farmer alerts", "error": str(e)}), 500
+
+
+
+# =========================================================
 # HISTORY PERSISTENCE APIs
 # =========================================================
 

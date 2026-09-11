@@ -22,6 +22,7 @@ import {
   Download,
   WifiOff,
   Menu,
+  AlertTriangle,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -38,6 +39,7 @@ export default function Topbar({ title, nav, setMobileOpen }) {
     theme,
     changeTheme,
     notifications,
+    farmerBroadcastAlerts,
     markAllNotificationsAsRead,
     clearAllNotifications,
     t,
@@ -52,7 +54,8 @@ export default function Topbar({ title, nav, setMobileOpen }) {
   const profileRef = useRef(null);
 
   const notifsList = notifications || [];
-  const unreadCount = notifsList.filter((n) => n.unread).length;
+  const broadcastList = farmerBroadcastAlerts || [];
+  const unreadCount = notifsList.filter((n) => n.unread).length + broadcastList.length;
 
   const getNotifIcon = (type) => {
     switch (type) {
@@ -90,14 +93,6 @@ export default function Topbar({ title, nav, setMobileOpen }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-  };
-
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -300,8 +295,63 @@ export default function Topbar({ title, nav, setMobileOpen }) {
               </div>
 
               {/* NOTIFICATION ITEMS */}
-              <div className="divide-y divide-[#EEF2EC] max-h-72 overflow-y-auto my-2">
-                {notifsList.length === 0 ? (
+              <div className="divide-y divide-[#EEF2EC] max-h-80 overflow-y-auto my-2 pr-1">
+                {/* Real-time Emergency / District Broadcasts */}
+                {broadcastList.length > 0 && (
+                  <div className="pb-2 mb-2 border-b border-gray-200 space-y-2">
+                    <div className="flex items-center gap-1 px-1 text-[11px] font-bold text-red-600 uppercase tracking-wider">
+                      <AlertTriangle size={13} className="animate-pulse" />
+                      <span>
+                        {language === "mr"
+                          ? "आपत्कालीन कृषी सल्ले / इशारे"
+                          : language === "hi"
+                          ? "आपातकालीन कृषि सलाह / चेतावनी"
+                          : "Official Broadcast Advisories"}
+                      </span>
+                    </div>
+                    {broadcastList.map((alert) => (
+                      <div
+                        key={alert.broadcast_id || alert.id}
+                        className={`p-2.5 rounded-xl border text-left transition ${
+                          alert.severity === "critical"
+                            ? "bg-red-50/90 border-red-200 text-red-950 shadow-2xs"
+                            : alert.severity === "warning"
+                            ? "bg-amber-50/90 border-amber-200 text-amber-950"
+                            : "bg-emerald-50/90 border-emerald-200 text-emerald-950"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold truncate">{alert.title}</span>
+                          <span
+                            className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md ${
+                              alert.severity === "critical"
+                                ? "bg-red-600 text-white animate-pulse"
+                                : alert.severity === "warning"
+                                ? "bg-amber-500 text-white"
+                                : "bg-emerald-600 text-white"
+                            }`}
+                          >
+                            {alert.severity}
+                          </span>
+                        </div>
+                        <p className="text-[11px] mt-1 text-gray-700 leading-snug line-clamp-2">
+                          {alert.message}
+                        </p>
+                        {alert.remedy && (
+                          <p className="text-[10px] font-semibold mt-1 text-[#2E7D32] bg-white/70 p-1 rounded-md border border-emerald-100 line-clamp-1">
+                            🌱 {alert.remedy}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between mt-1 text-[9px] text-gray-500 font-medium">
+                          <span>📍 {alert.district || "Statewide"}</span>
+                          <span>{alert.crop ? `🌾 ${alert.crop}` : ""}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {notifsList.length === 0 && broadcastList.length === 0 ? (
                   <div className="py-8 text-center text-xs text-gray-400">
                     {language === "mr" ? "आपल्या खात्यासाठी नवीन सूचना नाहीत." : language === "hi" ? "आपके खाते के लिए कोई नई सूचना नहीं है।" : "No new notifications for your account."}
                   </div>

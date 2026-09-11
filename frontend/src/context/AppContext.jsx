@@ -2588,6 +2588,21 @@ export function AppProvider({ children }) {
   };
 
   const [notifications, setNotifications] = useState(() => getInitialNotifications(user));
+  const [farmerBroadcastAlerts, setFarmerBroadcastAlerts] = useState([]);
+  const [adminBroadcastsList, setAdminBroadcastsList] = useState([]);
+
+  // Sync active district broadcast advisories whenever user or their district changes
+  useEffect(() => {
+    const dist = user?.district || "Pune";
+    fetch(buildApiUrl(`/farmer/broadcasts?district=${encodeURIComponent(dist)}`))
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.alerts)) {
+          setFarmerBroadcastAlerts(data.alerts);
+        }
+      })
+      .catch(() => {});
+  }, [user?.district]);
 
   // Sync user notifications when logged in user changes
   useEffect(() => {
@@ -3088,6 +3103,82 @@ export function AppProvider({ children }) {
     }
   };
 
+  // =========================================================
+  // BROADCAST ADVISORY & EMERGENCY ALERTS APIs
+  // =========================================================
+
+  // Farmer: Fetch Broadcast Alerts for a District
+  const apiFetchFarmerBroadcasts = async (targetDistrict) => {
+    try {
+      const dist = targetDistrict || user?.district || "Pune";
+      const response = await fetch(buildApiUrl(`/farmer/broadcasts?district=${encodeURIComponent(dist)}`));
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setFarmerBroadcastAlerts(data.alerts || []);
+        return data.alerts || [];
+      }
+    } catch (err) {
+      console.warn("Farmer alerts fetch error:", err);
+    }
+    return [];
+  };
+
+  // Admin: Fetch All Broadcasts
+  const apiFetchAdminBroadcasts = async () => {
+    try {
+      const response = await fetch(buildApiUrl("/admin/broadcasts"));
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setAdminBroadcastsList(data.broadcasts || []);
+        return data.broadcasts || [];
+      }
+    } catch (err) {
+      console.warn("Admin broadcasts fetch error:", err);
+    }
+    return [];
+  };
+
+  // Admin: Create & Dispatch New Broadcast
+  const apiCreateBroadcast = async (broadcastData) => {
+    try {
+      const response = await fetch(buildApiUrl("/admin/broadcasts"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(broadcastData),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        await apiFetchAdminBroadcasts();
+        // Also refresh farmer alerts if applicable
+        const curDist = user?.district || "Pune";
+        apiFetchFarmerBroadcasts(curDist);
+        return { success: true, message: data.message, broadcast: data.broadcast };
+      }
+      return { success: false, message: data.message || "Failed to dispatch broadcast" };
+    } catch (err) {
+      return { success: false, message: "Broadcast server connection failed" };
+    }
+  };
+
+  // Admin: Delete Broadcast
+  const apiDeleteBroadcast = async (broadcastId) => {
+    try {
+      const response = await fetch(buildApiUrl(`/admin/broadcasts/${encodeURIComponent(broadcastId)}`), {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        await apiFetchAdminBroadcasts();
+        const curDist = user?.district || "Pune";
+        apiFetchFarmerBroadcasts(curDist);
+        return { success: true, message: data.message };
+      }
+      return { success: false, message: data.message || "Failed to delete broadcast" };
+    } catch (err) {
+      return { success: false, message: "Broadcast server connection failed" };
+    }
+  };
+
   const registerUser = (newUser) => {
     const userObj = {
       id: "usr-" + Date.now().toString().slice(-6),
@@ -3511,6 +3602,15 @@ export function AppProvider({ children }) {
         apiAdminPurgeSampleTickets,
         apiExportDatabase,
         apiOptimizeDatabase,
+
+        // Broadcast Advisory & Emergency Alerts
+        farmerBroadcastAlerts,
+        adminBroadcastsList,
+        apiFetchFarmerBroadcasts,
+        apiFetchAdminBroadcasts,
+        apiCreateBroadcast,
+        apiDeleteBroadcast,
+
         t,
         tCrop: (cropName) => getLocalizedCropName(cropName, language),
         getLocalizedCropName,
