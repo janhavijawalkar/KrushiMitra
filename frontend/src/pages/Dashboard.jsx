@@ -195,10 +195,10 @@ export default function Dashboard({ nav }) {
                 key={alertKey}
                 className={`rounded-2xl border transition-all duration-200 shadow-2xs ${
                   isCritical
-                    ? "border-red-200 bg-red-50/90 text-red-950"
+                    ? "border-red-200 bg-red-50/90 text-red-950 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-100"
                     : isWarning
-                    ? "border-amber-200 bg-amber-50/90 text-amber-950"
-                    : "border-emerald-200 bg-emerald-50/90 text-emerald-950"
+                    ? "border-amber-200 bg-amber-50/90 text-amber-950 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-100"
+                    : "border-emerald-200 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100"
                 }`}
               >
                 {/* Sleek Alert Header Row */}
@@ -235,16 +235,16 @@ export default function Dashboard({ nav }) {
                         >
                           {alert.severityLabel}
                         </span>
-                        <span className="text-[10px] font-semibold text-gray-500">
+                        <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300">
                           📍 {alert.districtLabel}
                         </span>
                         {alert.cropLabel && (
-                          <span className="text-[10px] font-semibold text-gray-500">
+                          <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300">
                             • 🌾 {alert.cropLabel}
                           </span>
                         )}
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold truncate mt-0.5 text-gray-900">
+                      <h4 className="text-xs sm:text-sm font-bold truncate mt-0.5 text-gray-900 dark:text-white">
                         {alert.title}
                       </h4>
                     </div>
@@ -257,10 +257,10 @@ export default function Dashboard({ nav }) {
                       onClick={() => setExpandedAlertId(isExpanded ? null : alertKey)}
                       className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition cursor-pointer ${
                         isCritical
-                          ? "text-red-700 bg-white/70 hover:bg-white"
+                          ? "text-red-700 bg-white/80 hover:bg-white dark:bg-red-900/50 dark:text-red-200 dark:hover:bg-red-900/70"
                           : isWarning
-                          ? "text-amber-800 bg-white/70 hover:bg-white"
-                          : "text-emerald-800 bg-white/70 hover:bg-white"
+                          ? "text-amber-800 bg-white/80 hover:bg-white dark:bg-amber-900/50 dark:text-amber-200 dark:hover:bg-amber-900/70"
+                          : "text-emerald-800 bg-white/80 hover:bg-white dark:bg-emerald-900/50 dark:text-emerald-200 dark:hover:bg-emerald-900/70"
                       }`}
                     >
                       {isExpanded
@@ -273,7 +273,7 @@ export default function Dashboard({ nav }) {
                         setDismissedAlertIds((prev) => [...prev, alertKey]);
                         markBroadcastAsRead(alertKey);
                       }}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 transition cursor-pointer"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-gray-200 transition cursor-pointer"
                       title={language === "mr" ? "बंद करा" : language === "hi" ? "हटाएं" : "Dismiss"}
                       aria-label="Dismiss"
                     >
@@ -284,16 +284,16 @@ export default function Dashboard({ nav }) {
 
                 {/* Expandable Advisory Body & Remedy */}
                 {isExpanded && (
-                  <div className="border-t border-inherit/40 px-4 pb-3 pt-2.5 text-xs text-gray-800 space-y-2 bg-white/70 rounded-b-2xl">
+                  <div className="border-t border-inherit/40 px-4 pb-3 pt-2.5 text-xs text-gray-800 dark:text-gray-200 space-y-2 bg-white/80 dark:bg-[#0D1E13]/90 rounded-b-2xl">
                     <p className="leading-relaxed">
                       {alert.message}
                     </p>
 
                     {alert.remedy && (
-                      <div className="rounded-xl bg-[#F0FDF4] border border-emerald-200 p-2.5 text-emerald-950 font-medium flex items-start gap-2">
+                      <div className="rounded-xl bg-[#F0FDF4] dark:bg-[#07190D] border border-emerald-200 dark:border-emerald-800/80 p-2.5 text-emerald-950 dark:text-emerald-100 font-medium flex items-start gap-2">
                         <span className="text-base shrink-0">🌱</span>
                         <div className="flex-1 text-[11px] sm:text-xs">
-                          <strong className="text-emerald-800 font-bold block mb-0.5">
+                          <strong className="text-emerald-800 dark:text-emerald-300 font-bold block mb-0.5">
                             {language === "mr" ? "कृषी उपाययोजना / शिफारस:" : language === "hi" ? "कृषि उपाय / सिफारिश:" : "Recommended Agricultural Remedy:"}
                           </strong>
                           {alert.remedy}
@@ -301,7 +301,7 @@ export default function Dashboard({ nav }) {
                       </div>
                     )}
 
-                    <div className="flex flex-wrap items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-gray-100">
+                    <div className="flex flex-wrap items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-white/10">
                       <span>
                         {alert.author_name
                           ? `✍️ ${alert.author_name}${alert.author_designation ? ` (${alert.author_designation})` : ""}`

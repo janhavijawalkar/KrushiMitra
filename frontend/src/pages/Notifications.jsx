@@ -334,14 +334,14 @@ export default function Notifications({ nav }) {
               className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer ${
                 active
                   ? "bg-[#2E7D32] text-white shadow-sm"
-                  : "bg-white text-gray-600 border border-[#DCE8D9] hover:bg-[#F3F8F0] hover:text-[#2E7D32]"
+                  : "bg-white text-gray-600 border border-[#DCE8D9] hover:bg-[#F3F8F0] hover:text-[#2E7D32] dark:bg-[#132218] dark:text-gray-300 dark:border-[#24402A] dark:hover:bg-[#1A3322]"
               }`}
             >
               <span>{tab.label}</span>
               {typeof tab.count === "number" && tab.count > 0 && (
                 <span
                   className={`rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${
-                    active ? "bg-white text-[#2E7D32]" : "bg-[#EAF3E6] text-[#2E7D32]"
+                    active ? "bg-white text-[#2E7D32]" : "bg-[#EAF3E6] text-[#2E7D32] dark:bg-[#1A3322] dark:text-emerald-300"
                   }`}
                 >
                   {tab.count}
@@ -379,10 +379,10 @@ export default function Notifications({ nav }) {
                     key={alertKey}
                     className={`card rounded-2xl border p-4 sm:p-5 transition-all shadow-xs ${
                       (locAlert.severity || "").toLowerCase() === "critical"
-                        ? "bg-red-50/90 border-red-300 text-red-950"
+                        ? "bg-red-50/90 border-red-300 text-red-950 dark:bg-red-950/40 dark:border-red-900/60 dark:text-red-100"
                         : (locAlert.severity || "").toLowerCase() === "warning"
-                        ? "bg-amber-50/90 border-amber-300 text-amber-950"
-                        : "bg-emerald-50/90 border-emerald-300 text-emerald-950"
+                        ? "bg-amber-50/90 border-amber-300 text-amber-950 dark:bg-amber-950/40 dark:border-amber-900/60 dark:text-amber-100"
+                        : "bg-emerald-50/90 border-emerald-300 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-100"
                     }`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -399,11 +399,11 @@ export default function Notifications({ nav }) {
                           >
                             {locAlert.severityLabel}
                           </span>
-                          <span className="text-[11px] font-semibold opacity-75">
+                          <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
                             📍 {locAlert.districtLabel}
                           </span>
                           {locAlert.cropLabel && (
-                            <span className="text-[11px] font-semibold opacity-75">
+                            <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
                               • 🌾 {locAlert.cropLabel}
                             </span>
                           )}
@@ -414,19 +414,19 @@ export default function Notifications({ nav }) {
                           )}
                         </div>
 
-                        <h4 className="text-sm sm:text-base font-bold text-gray-900">
+                        <h4 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
                           {locAlert.title}
                         </h4>
 
-                        <p className="text-xs text-gray-700 leading-relaxed max-w-3xl">
+                        <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed max-w-3xl">
                           {locAlert.message}
                         </p>
 
                         {locAlert.remedy && (
-                          <div className="mt-2 rounded-xl bg-white/80 border border-emerald-200 p-2.5 text-emerald-950 font-medium text-xs flex items-start gap-2">
+                          <div className="mt-2 rounded-xl bg-white/80 dark:bg-[#07190D] border border-emerald-200 dark:border-emerald-800/60 p-2.5 text-emerald-950 dark:text-emerald-100 font-medium text-xs flex items-start gap-2">
                             <span>🌱</span>
                             <div className="flex-1">
-                              <strong className="block text-emerald-900 font-bold mb-0.5">
+                              <strong className="block text-emerald-900 dark:text-emerald-300 font-bold mb-0.5">
                                 {language === "mr" ? "कृषी उपाययोजना / शिफारस:" : language === "hi" ? "अनुशंसित उपाय:" : "Recommended Action:"}
                               </strong>
                               {locAlert.remedy}
@@ -440,14 +440,14 @@ export default function Notifications({ nav }) {
                           <button
                             type="button"
                             onClick={() => markBroadcastAsRead(alertKey)}
-                            className="btn-shimmer inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-[#2E7D32] border border-emerald-300 shadow-xs hover:bg-emerald-50 cursor-pointer transition"
+                            className="btn-shimmer inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-white/10 px-3.5 py-2 text-xs font-bold text-[#2E7D32] dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 shadow-xs hover:bg-emerald-50 dark:hover:bg-white/20 cursor-pointer transition"
                           >
                             <CheckCheck size={14} />
                             <span>{language === "mr" ? "वाचले" : language === "hi" ? "पढ़ा" : "Mark Read"}</span>
                           </button>
                         ) : (
-                          <span className="text-[11px] font-semibold text-gray-400 flex items-center gap-1">
-                            <CheckCircle2 size={13} className="text-emerald-600" />
+                          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 flex items-center gap-1">
+                            <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
                             <span>{language === "mr" ? "वाचले आहे" : language === "hi" ? "पढ़ा हुआ" : "Read"}</span>
                           </span>
                         )}

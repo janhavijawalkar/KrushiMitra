@@ -326,10 +326,10 @@ export default function Topbar({ title, nav, setMobileOpen }) {
                           onClick={() => markBroadcastAsRead(alertKey)}
                           className={`p-2.5 rounded-xl border text-left transition cursor-pointer relative ${
                             (locAlert.severity || "").toLowerCase() === "critical"
-                              ? "bg-red-50/90 border-red-200 text-red-950 shadow-2xs hover:bg-red-100/80"
+                              ? "bg-red-50/90 border-red-200 text-red-950 shadow-2xs hover:bg-red-100/80 dark:bg-red-950/40 dark:border-red-900/60 dark:text-red-100 dark:hover:bg-red-950/60"
                               : (locAlert.severity || "").toLowerCase() === "warning"
-                              ? "bg-amber-50/90 border-amber-200 text-amber-950 hover:bg-amber-100/80"
-                              : "bg-emerald-50/90 border-emerald-200 text-emerald-950 hover:bg-emerald-100/80"
+                              ? "bg-amber-50/90 border-amber-200 text-amber-950 hover:bg-amber-100/80 dark:bg-amber-950/40 dark:border-amber-900/60 dark:text-amber-100 dark:hover:bg-amber-950/60"
+                              : "bg-emerald-50/90 border-emerald-200 text-emerald-950 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-100 dark:hover:bg-emerald-950/60"
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
@@ -337,7 +337,7 @@ export default function Topbar({ title, nav, setMobileOpen }) {
                               {isUnread && (
                                 <span className="h-2 w-2 rounded-full bg-red-600 shrink-0 animate-pulse" title="Unread" />
                               )}
-                              <span className="text-xs font-bold truncate">{locAlert.title}</span>
+                              <span className="text-xs font-bold truncate text-gray-900 dark:text-white">{locAlert.title}</span>
                             </div>
                             <span
                               className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md shrink-0 ${
@@ -351,15 +351,15 @@ export default function Topbar({ title, nav, setMobileOpen }) {
                               {locAlert.severityLabel}
                             </span>
                           </div>
-                          <p className="text-[11px] mt-1 text-gray-700 leading-snug line-clamp-2">
+                          <p className="text-[11px] mt-1 text-gray-700 dark:text-gray-300 leading-snug line-clamp-2">
                             {locAlert.message}
                           </p>
                           {locAlert.remedy && (
-                            <p className="text-[10px] font-semibold mt-1 text-[#2E7D32] bg-white/70 p-1 rounded-md border border-emerald-100 line-clamp-1">
+                            <p className="text-[10px] font-semibold mt-1 text-[#2E7D32] dark:text-emerald-300 bg-white/80 dark:bg-[#07190D] p-1.5 rounded-md border border-emerald-100 dark:border-emerald-800/60 line-clamp-1">
                               🌱 {locAlert.remedy}
                             </p>
                           )}
-                          <div className="flex items-center justify-between mt-1 text-[9px] text-gray-500 font-medium">
+                          <div className="flex items-center justify-between mt-1 text-[9px] text-gray-500 dark:text-gray-400 font-medium">
                             <span>📍 {locAlert.districtLabel}</span>
                             <span>{locAlert.cropLabel ? `🌾 ${locAlert.cropLabel}` : ""}</span>
                           </div>
