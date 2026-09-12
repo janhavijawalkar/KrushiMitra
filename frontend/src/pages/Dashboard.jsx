@@ -48,6 +48,9 @@ export default function Dashboard({ nav }) {
     predictionHistory,
     recommendationHistory,
     farmerBroadcastAlerts,
+    readBroadcastIds,
+    markBroadcastAsRead,
+    getLocalizedBroadcast,
   } = useApp();
 
   const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
@@ -179,11 +182,12 @@ export default function Dashboard({ nav }) {
       ===================================================== */}
       {visibleAlerts.length > 0 && (
         <div className="space-y-2.5 animate-zoom-fade">
-          {visibleAlerts.map((alert) => {
+          {visibleAlerts.map((rawAlert) => {
+            const alertKey = String(rawAlert.broadcast_id || rawAlert.id);
+            const alert = getLocalizedBroadcast(rawAlert, language);
             const sev = (alert.severity || "advisory").toLowerCase();
             const isCritical = sev === "critical";
             const isWarning = sev === "warning";
-            const alertKey = alert.broadcast_id || alert.id;
             const isExpanded = expandedAlertId === alertKey;
 
             return (
@@ -229,18 +233,14 @@ export default function Dashboard({ nav }) {
                               : "bg-emerald-600 text-white"
                           }`}
                         >
-                          {isCritical
-                            ? (language === "mr" ? "आपत्कालीन इशारा" : language === "hi" ? "आपातकालीन चेतावनी" : "Critical Alert")
-                            : isWarning
-                            ? (language === "mr" ? "सावधगिरी सूचना" : language === "hi" ? "सावधानी सूचना" : "Warning")
-                            : (language === "mr" ? "कृषी सल्ला" : language === "hi" ? "कृषि सलाह" : "Official Advisory")}
+                          {alert.severityLabel}
                         </span>
                         <span className="text-[10px] font-semibold text-gray-500">
-                          📍 {alert.district === "All" ? (language === "mr" ? "सर्व महाराष्ट्र" : language === "hi" ? "पूरा महाराष्ट्र" : "All Maharashtra") : `${alert.district}`}
+                          📍 {alert.districtLabel}
                         </span>
-                        {alert.crop && alert.crop !== "All" && (
+                        {alert.cropLabel && (
                           <span className="text-[10px] font-semibold text-gray-500">
-                            • 🌾 {alert.crop}
+                            • 🌾 {alert.cropLabel}
                           </span>
                         )}
                       </div>
@@ -269,7 +269,10 @@ export default function Dashboard({ nav }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDismissedAlertIds((prev) => [...prev, alertKey])}
+                      onClick={() => {
+                        setDismissedAlertIds((prev) => [...prev, alertKey]);
+                        markBroadcastAsRead(alertKey);
+                      }}
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 transition cursor-pointer"
                       title={language === "mr" ? "बंद करा" : language === "hi" ? "हटाएं" : "Dismiss"}
                       aria-label="Dismiss"

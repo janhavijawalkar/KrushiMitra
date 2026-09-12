@@ -356,6 +356,281 @@ export const getLocalizedWeatherCondition = (condition, lang = "en") => {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 };
 
+export const BROADCAST_TRANSLATIONS = {
+  "ADV-2026-001": {
+    mr: {
+      title: "नाशिक व अहमदनगर जिल्ह्यांसाठी अवकाळी वादळ व गारपिटीचा इशारा",
+      message: "उत्तर महाराष्ट्रात पुढील ४८ तासांत वादळी वारे (४०-५० किमी/तास) आणि विखुरलेल्या गारपिटीसह अवकाळी पावसाची शक्यता आहे. काढलेला कांदा झाकून ठेवावा आणि द्राक्ष बागांची निचरा व्यवस्था तपासावी.",
+      remedy: "काढणी केलेला शेतमाल सुरक्षित गोदामात हलवा; बागेतील अतिरिक्त पाण्याचा निचरा करा.",
+      created_by: "जिल्हा कृषी आपत्कालीन कक्ष, नाशिक",
+      category: "हवामान इशारा",
+    },
+    hi: {
+      title: "नाशिक व अहमदनगर जिलों के लिए बेमौसम आंधी व ओलावृष्टि चेतावनी",
+      message: "उत्तर महाराष्ट्र में आगामी ४८ घंटों में तेज हवाओं (४०-५० किमी/घंटा) और ओलावृष्टि के साथ बेमौसम बारिश की आशंका है। कटे हुए प्याज को सुरक्षित करें और अंगूर के बागों में जल निकासी सुनिश्चित करें।",
+      remedy: "कटी हुई फसलों को सुरक्षित गोदामों में रखें; खेतों में जल निकासी की व्यवस्था करें।",
+      created_by: "जिला कृषि आपातकालीन प्रकोष्ठ, नाशिक",
+      category: "मौसम चेतावनी",
+    },
+  },
+  "ADV-2026-002": {
+    mr: {
+      title: "खरीप मका आणि ऊस पिकावरील लष्करी अळी (Fall Armyworm) सतर्कता सल्ला",
+      message: "पश्चिम महाराष्ट्र व मराठवाडा विभागातील मका व ऊस पिकावर लष्करी अळीचा (Spodoptera frugiperda) प्रादुर्भाव दिसून आला आहे. शेतकऱ्यांनी दर ४-५ दिवसांनी शेताची पाहणी करावी.",
+      remedy: "एकर ५ कामगंध सापळे (फेरोमोन ट्रॅप) लावा आणि निंबोळी अर्क (Azadirachtin १५०० ppm) ५ मिली प्रति लिटर पाण्यात मिसळून फवारा.",
+      created_by: "कृषी विज्ञान केंद्र (KVK), पुणे",
+      category: "कीड व रोग नियंत्रण",
+    },
+    hi: {
+      title: "खरीफ मक्का और गन्ना फसल पर फॉल आर्मीवर्म सतर्कता सलाह",
+      message: "पश्चिम महाराष्ट्र और मराठवाड़ा में मक्का व गन्ना फसल पर फॉल आर्मीवर्म (Spodoptera frugiperda) कीट का प्रकोप देखा गया है। किसान प्रत्येक ४-५ दिनों में खेतों का निरीक्षण करें।",
+      remedy: "प्रति एकड़ ५ फेरोमोन ट्रैप लगाएं और अज़ाडिराक्टिन १५०० ppm ५ मिली प्रति लीटर पानी में मिलाकर छिड़काव करें।",
+      created_by: "कृषि विज्ञान केंद्र (KVK), पुणे",
+      category: "कीट व रोग नियंत्रण",
+    },
+  },
+  "ADV-2026-003": {
+    mr: {
+      title: "राज्यव्यापी रब्बी पेरणी व सूक्ष्म सिंचन (ठिबक/तुषार) ८०% अनुदान नोंदणी सुरू",
+      message: "महाराष्ट्र कृषी विभागाने सर्व नोंदणीकृत शेतकऱ्यांसाठी महाडीबीटी / पीएमकेएसवाय (PMKSY) अंतर्गत ८०% ठिबक व तुषार सिंचन अनुदानाची नोंदणी सुरू केली आहे.",
+      remedy: "अद्ययावत ७/१२ उतारा आणि बँक पासबुकसह महाडीबीटी (MahaDBT) शेतकरी पोर्टलवर ऑनलाइन अर्ज करा.",
+      created_by: "महाराष्ट्र राज्य कृषी विभाग",
+      category: "शासकीय योजना",
+    },
+    hi: {
+      title: "राज्यव्यापी रबी बुवाई और सूक्ष्म सिंचाई (ड्रिप/स्प्रिंकलर) ८०% सब्सिडी पोर्टल खुला",
+      message: "महाराष्ट्र कृषि विभाग ने सभी पंजीकृत किसानों के लिए महाडीबीटी / PMKSY के तहत ८०% ड्रिप और स्प्रिंकलर सिंचाई सब्सिडी हेतु पंजीकरण शुरू किया है।",
+      remedy: "नवीनतम ७/१२ खतौनी और बैंक पासबुक के साथ महाडीबीटी किसान पोर्टल पर ऑनलाइन आवेदन करें।",
+      created_by: "महाराष्ट्र राज्य कृषि विभाग",
+      category: "सरकारी योजना",
+    },
+  },
+};
+
+const BROADCAST_KEYWORD_RULES = [
+  {
+    test: (t, m) =>
+      (t + " " + m).toLowerCase().includes("armyworm") ||
+      (t + " " + m).toLowerCase().includes("लष्करी") ||
+      (t + " " + m).toLowerCase().includes("फॉल आर्मी"),
+    mr: {
+      title: "खरीप मका आणि ऊस पिकावरील लष्करी अळी (Fall Armyworm) सतर्कता सल्ला",
+      message: "पश्चिम महाराष्ट्र व मराठवाडा विभागातील मका व ऊस पिकावर लष्करी अळीचा (Spodoptera frugiperda) प्रादुर्भाव दिसून आला आहे. शेतकऱ्यांनी दर ४-५ दिवसांनी शेताची पाहणी करावी.",
+      remedy: "एकर ५ कामगंध सापळे (फेरोमोन ट्रॅप) लावा आणि निंबोळी अर्क (Azadirachtin १५०० ppm) ५ मिली प्रति लिटर पाण्यात मिसळून फवारा.",
+      created_by: "कृषी विज्ञान केंद्र (KVK), पुणे",
+      category: "कीड व रोग नियंत्रण",
+    },
+    hi: {
+      title: "खरीफ मक्का और गन्ना फसल पर फॉल आर्मीवर्म सतर्कता सलाह",
+      message: "पश्चिम महाराष्ट्र और मराठवाड़ा में मक्का व गन्ना फसल पर फॉल आर्मीवर्म (Spodoptera frugiperda) कीट का प्रकोप देखा गया है। किसान प्रत्येक ४-५ दिनों में खेतों का निरीक्षण करें।",
+      remedy: "प्रति एकड़ ५ फेरोमोन ट्रैप लगाएं और अज़ाडिराक्टिन १५०० ppm ५ मिली प्रति लीटर पानी में मिलाकर छिड़काव करें।",
+      created_by: "कृषि विज्ञान केंद्र (KVK), पुणे",
+      category: "कीट व रोग नियंत्रण",
+    },
+  },
+  {
+    test: (t, m) =>
+      (t + " " + m).toLowerCase().includes("subsidy") ||
+      (t + " " + m).toLowerCase().includes("micro-irrigation") ||
+      (t + " " + m).toLowerCase().includes("ठिबक") ||
+      (t + " " + m).toLowerCase().includes("सिंचाई") ||
+      (t + " " + m).toLowerCase().includes("अनुदान"),
+    mr: {
+      title: "राज्यव्यापी रब्बी पेरणी व सूक्ष्म सिंचन (ठिबक/तुषार) ८०% अनुदान नोंदणी सुरू",
+      message: "महाराष्ट्र कृषी विभागाने सर्व नोंदणीकृत शेतकऱ्यांसाठी महाडीबीटी / पीएमकेएसवाय (PMKSY) अंतर्गत ८०% ठिबक व तुषार सिंचन अनुदानाची नोंदणी सुरू केली आहे.",
+      remedy: "अद्ययावत ७/१२ उतारा आणि बँक पासबुकसह महाडीबीटी (MahaDBT) शेतकरी पोर्टलवर ऑनलाइन अर्ज करा.",
+      created_by: "महाराष्ट्र राज्य कृषी विभाग",
+      category: "शासकीय योजना",
+    },
+    hi: {
+      title: "राज्यव्यापी रबी बुवाई और सूक्ष्म सिंचाई (ड्रिप/स्प्रिंकलर) ८०% सब्सिडी पोर्टल खुला",
+      message: "महाराष्ट्र कृषि विभाग ने सभी पंजीकृत किसानों के लिए महाडीबीटी / PMKSY के तहत ८०% ड्रिप और स्प्रिंकलर सिंचाई सब्सिडी हेतु पंजीकरण शुरू किया है।",
+      remedy: "नवीनतम ७/१२ खतौनी और बैंक पासबुक के साथ महाडीबीटी किसान पोर्टल पर ऑनलाइन आवेदन करें।",
+      created_by: "महाराष्ट्र राज्य कृषि विभाग",
+      category: "सरकारी योजना",
+    },
+  },
+  {
+    test: (t, m) =>
+      (t + " " + m).toLowerCase().includes("hailstorm") ||
+      (t + " " + m).toLowerCase().includes("thunderstorm") ||
+      (t + " " + m).toLowerCase().includes("गारपीट") ||
+      (t + " " + m).toLowerCase().includes("ओलावृष्टि") ||
+      (t + " " + m).toLowerCase().includes("अवकाळी"),
+    mr: {
+      title: "नाशिक व अहमदनगर जिल्ह्यांसाठी अवकाळी वादळ व गारपिटीचा इशारा",
+      message: "उत्तर महाराष्ट्रात पुढील ४८ तासांत वादळी वारे (४०-५० किमी/तास) आणि विखुरलेल्या गारपिटीसह अवकाळी पावसाची शक्यता आहे. काढलेला कांदा झाकून ठेवावा आणि द्राक्ष बागांची निचरा व्यवस्था तपासावी.",
+      remedy: "काढणी केलेला शेतमाल सुरक्षित गोदामात हलवा; बागेतील अतिरिक्त पाण्याचा निचरा करा.",
+      created_by: "जिल्हा कृषी आपत्कालीन कक्ष, नाशिक",
+      category: "हवामान इशारा",
+    },
+    hi: {
+      title: "नाशिक व अहमदनगर जिलों के लिए बेमौसम आंधी व ओलावृष्टि चेतावनी",
+      message: "उत्तर महाराष्ट्र में आगामी ४८ घंटों में तेज हवाओं (४०-५० किमी/घंटा) और ओलावृष्टि के साथ बेमौसम बारिश की आशंका है। कटे हुए प्याज को सुरक्षित करें और अंगूर के बागों में जल निकासी सुनिश्चित करें।",
+      remedy: "कटी हुई फसलों को सुरक्षित गोदामों में रखें; खेतों में जल निकासी की व्यवस्था करें।",
+      created_by: "जिला कृषि आपातकालीन प्रकोष्ठ, नाशिक",
+      category: "मौसम चेतावनी",
+    },
+  },
+  {
+    test: (t, m) =>
+      (t + " " + m).toLowerCase().includes("pink bollworm") ||
+      (t + " " + m).toLowerCase().includes("बोंड अळी") ||
+      (t + " " + m).toLowerCase().includes("गुलाबी सुंडी"),
+    mr: {
+      title: "कापूस पिकावरील गुलाबी बोंड अळी नियंत्रण सतर्कता सल्ला",
+      message: "विदर्भ आणि खान्देश पट्ट्यात कापूस पिकावर बोंड अळीचा प्रादुर्भाव वाढण्याची शक्यता आहे. नियमित कामगंध सापळे तपासावेत.",
+      remedy: "५% निंबोळी अर्क किंवा प्रोफेनोफॉस ५०% ईसी ३० मिली प्रति पंप फवारा.",
+      created_by: "कापूस संशोधन केंद्र",
+      category: "कीड व रोग नियंत्रण",
+    },
+    hi: {
+      title: "कपास फसल में गुलाबी सुंडी रोकथाम सतर्कता सलाह",
+      message: "विदर्भ और खानदेश क्षेत्र में कपास पर गुलाबी सुंडी का प्रकोप बढ़ने की आशंका है। नियमित रूप से फेरोमोन ट्रैप की निगरानी करें।",
+      remedy: "५% नीम का काढ़ा या प्रोफेनोफॉस ५०% ईसी ३० मिली प्रति पंप छिड़कें।",
+      created_by: "कपास अनुसंधान केंद्र",
+      category: "कीट व रोग नियंत्रण",
+    },
+  },
+  {
+    test: (t, m) =>
+      (t + " " + m).toLowerCase().includes("yellow mosaic") ||
+      (t + " " + m).toLowerCase().includes("मोझॅक") ||
+      (t + " " + m).toLowerCase().includes("मोज़ेक"),
+    mr: {
+      title: "सोयाबीन पिवळा मोझॅक आणि खोडमाशी नियंत्रण सल्ला",
+      message: "सोयाबीन पिकावर पांढरी माशी आणि खोडमाशीचा प्रादुर्भाव झाल्यास पिवळा मोझॅक रोग पसरतो. वेळेवर कीटकनाशक फवारणी आवश्यक आहे.",
+      remedy: "थायमेथोक्सम २५% डब्ल्यूजी ४ ग्रॅम किंवा एसीफेट ७५% एसपी १५ ग्रॅम प्रति १० लिटर पाण्यात मिसळून फवारा.",
+      created_by: "सोयाबीन संशोधन केंद्र",
+      category: "कीड व रोग नियंत्रण",
+    },
+    hi: {
+      title: "सोयाबीन पीला मोज़ेक और तना मक्खी नियंत्रण सलाह",
+      message: "सफेद मक्खी द्वारा फैलने वाले पीले मोज़ेक वायरस से बचाव हेतु तुरंत अनुशंसित कीटनाशक का छिड़काव करें।",
+      remedy: "थायमेथोक्सम २५% डब्ल्यूजी ४ ग्राम या एसीफेट १५ ग्राम प्रति १० लीटर पानी में छिड़कें।",
+      created_by: "सोयाबीन अनुसंधान केंद्र",
+      category: "कीट व रोग नियंत्रण",
+    },
+  },
+];
+
+export const getLocalizedBroadcast = (alert, lang = "en") => {
+  if (!alert) return {};
+
+  const bId = alert.broadcast_id || alert.id || "";
+  const origTitle = alert.title || "";
+  const origMessage = alert.message || "";
+  const origRemedy = alert.remedy || alert.action_recommendation || "";
+  const origAuthor = alert.author_name || alert.created_by || "";
+  const origCategory = alert.category || "General";
+  const origSeverity = alert.severity || "Advisory";
+
+  // Severity Label translation
+  const sevLower = origSeverity.toLowerCase();
+  let severityLabel = origSeverity;
+  if (sevLower === "critical") {
+    severityLabel = lang === "mr" ? "आपत्कालीन इशारा" : lang === "hi" ? "आपातकालीन चेतावनी" : "Critical Alert";
+  } else if (sevLower === "warning") {
+    severityLabel = lang === "mr" ? "सावधगिरी सूचना" : lang === "hi" ? "सावधानी सूचना" : "Warning";
+  } else {
+    severityLabel = lang === "mr" ? "कृषी सल्ला" : lang === "hi" ? "कृषि सलाह" : "Official Advisory";
+  }
+
+  // District Label translation
+  const origDistrict = alert.district || "All";
+  let districtLabel = origDistrict;
+  if (origDistrict.toLowerCase() === "all" || origDistrict.toLowerCase() === "statewide") {
+    districtLabel = lang === "mr" ? "सर्व महाराष्ट्र" : lang === "hi" ? "पूरा महाराष्ट्र" : "All Maharashtra";
+  } else {
+    districtLabel = getLocalizedDistrictName(origDistrict, lang);
+  }
+
+  // Crop Label translation
+  const origCrop = alert.crop || "All";
+  let cropLabel = origCrop;
+  if (origCrop.toLowerCase() === "all") {
+    cropLabel = lang === "mr" ? "सर्व पिके" : lang === "hi" ? "सभी फसलें" : "All Crops";
+  } else if (origCrop.includes(",")) {
+    cropLabel = origCrop
+      .split(",")
+      .map((c) => getLocalizedCropName(c.trim(), lang))
+      .join(", ");
+  } else {
+    cropLabel = getLocalizedCropName(origCrop, lang);
+  }
+
+  // Category translation
+  const catLower = origCategory.toLowerCase();
+  let categoryLabel = origCategory;
+  if (catLower.includes("weather")) {
+    categoryLabel = lang === "mr" ? "हवामान अलर्ट" : lang === "hi" ? "मौसम अलर्ट" : "Weather Alert";
+  } else if (catLower.includes("pest") || catLower.includes("disease")) {
+    categoryLabel = lang === "mr" ? "कीड व रोग नियंत्रण" : lang === "hi" ? "कीट व रोग नियंत्रण" : "Pest & Disease";
+  } else if (catLower.includes("scheme") || catLower.includes("gov")) {
+    categoryLabel = lang === "mr" ? "शासकीय योजना" : lang === "hi" ? "सरकारी योजना" : "Government Scheme";
+  }
+
+  if (lang === "en") {
+    return {
+      ...alert,
+      title: origTitle,
+      message: origMessage,
+      remedy: origRemedy,
+      author_name: origAuthor || "Maharashtra Agriculture Department",
+      severityLabel,
+      districtLabel,
+      cropLabel,
+      categoryLabel,
+    };
+  }
+
+  // 1. Direct ID match
+  if (bId && BROADCAST_TRANSLATIONS[bId] && BROADCAST_TRANSLATIONS[bId][lang]) {
+    const tData = BROADCAST_TRANSLATIONS[bId][lang];
+    return {
+      ...alert,
+      title: tData.title || origTitle,
+      message: tData.message || origMessage,
+      remedy: tData.remedy || origRemedy,
+      author_name: tData.created_by || origAuthor,
+      severityLabel,
+      districtLabel,
+      cropLabel,
+      categoryLabel: tData.category || categoryLabel,
+    };
+  }
+
+  // 2. Keyword Rule match
+  for (const rule of BROADCAST_KEYWORD_RULES) {
+    if (rule.test(origTitle, origMessage) && rule[lang]) {
+      const tData = rule[lang];
+      return {
+        ...alert,
+        title: tData.title || origTitle,
+        message: tData.message || origMessage,
+        remedy: tData.remedy || origRemedy,
+        author_name: tData.created_by || origAuthor,
+        severityLabel,
+        districtLabel,
+        cropLabel,
+        categoryLabel: tData.category || categoryLabel,
+      };
+    }
+  }
+
+  return {
+    ...alert,
+    title: origTitle,
+    message: origMessage,
+    remedy: origRemedy,
+    author_name: origAuthor,
+    severityLabel,
+    districtLabel,
+    cropLabel,
+    categoryLabel,
+  };
+};
+
 const translations = {
   en: {
     dashboard: "Dashboard",
@@ -2590,6 +2865,31 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState(() => getInitialNotifications(user));
   const [farmerBroadcastAlerts, setFarmerBroadcastAlerts] = useState([]);
   const [adminBroadcastsList, setAdminBroadcastsList] = useState([]);
+  const [readBroadcastIds, setReadBroadcastIds] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const key = user?.email
+        ? `krushimitra_read_broadcasts_${user.email.toLowerCase()}`
+        : "krushimitra_read_broadcasts_guest";
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Sync read broadcasts when user changes
+  useEffect(() => {
+    const key = user?.email
+      ? `krushimitra_read_broadcasts_${user.email.toLowerCase()}`
+      : "krushimitra_read_broadcasts_guest";
+    try {
+      const saved = localStorage.getItem(key);
+      setReadBroadcastIds(saved ? JSON.parse(saved) : []);
+    } catch {
+      setReadBroadcastIds([]);
+    }
+  }, [user?.email]);
 
   // Sync active district broadcast advisories whenever user or their district changes
   useEffect(() => {
@@ -2723,6 +3023,32 @@ export function AppProvider({ children }) {
     });
   };
 
+  const markBroadcastAsRead = (broadcastId) => {
+    if (!broadcastId) return;
+    const bIdStr = String(broadcastId);
+    setReadBroadcastIds((prev) => {
+      if (prev.includes(bIdStr)) return prev;
+      const updated = [...prev, bIdStr];
+      const key = user?.email
+        ? `krushimitra_read_broadcasts_${user.email.toLowerCase()}`
+        : "krushimitra_read_broadcasts_guest";
+      localStorage.setItem(key, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const markAllBroadcastsAsRead = () => {
+    const allIds = (farmerBroadcastAlerts || []).map((b) => String(b.broadcast_id || b.id)).filter(Boolean);
+    setReadBroadcastIds((prev) => {
+      const combined = Array.from(new Set([...prev, ...allIds]));
+      const key = user?.email
+        ? `krushimitra_read_broadcasts_${user.email.toLowerCase()}`
+        : "krushimitra_read_broadcasts_guest";
+      localStorage.setItem(key, JSON.stringify(combined));
+      return combined;
+    });
+  };
+
   const markAllNotificationsAsRead = () => {
     const userKey = user?.email
       ? `krushimitra_notifications_${user.email.toLowerCase()}`
@@ -2733,6 +3059,9 @@ export function AppProvider({ children }) {
       localStorage.setItem(userKey, JSON.stringify(updated));
       return updated;
     });
+
+    // Also mark all broadcast alerts as read so badge clears
+    markAllBroadcastsAsRead();
   };
 
   const clearAllNotifications = () => {
@@ -3606,10 +3935,16 @@ export function AppProvider({ children }) {
         // Broadcast Advisory & Emergency Alerts
         farmerBroadcastAlerts,
         adminBroadcastsList,
+        readBroadcastIds,
+        markBroadcastAsRead,
+        markAllBroadcastsAsRead,
         apiFetchFarmerBroadcasts,
         apiFetchAdminBroadcasts,
         apiCreateBroadcast,
         apiDeleteBroadcast,
+        getLocalizedBroadcast: (alert) => getLocalizedBroadcast(alert, language),
+        tBroadcast: (alert) => getLocalizedBroadcast(alert, language),
+        BROADCAST_TRANSLATIONS,
 
         t,
         tCrop: (cropName) => getLocalizedCropName(cropName, language),

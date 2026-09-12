@@ -24,9 +24,12 @@ export default function Notifications({ nav }) {
   const {
     user,
     notifications,
-    addNotification,
+    farmerBroadcastAlerts,
+    readBroadcastIds,
+    markBroadcastAsRead,
     markAllNotificationsAsRead,
     clearAllNotifications,
+    getLocalizedBroadcast,
     language,
     t,
     tCrop,
@@ -38,7 +41,11 @@ export default function Notifications({ nav }) {
   const [toastMsg, setToastMsg] = useState("");
 
   const notifsList = notifications || [];
-  const unreadCount = notifsList.filter((n) => n.unread).length;
+  const broadcastList = farmerBroadcastAlerts || [];
+  const unreadBroadcasts = broadcastList.filter(
+    (b) => !(readBroadcastIds || []).includes(String(b.broadcast_id || b.id))
+  );
+  const unreadCount = notifsList.filter((n) => n.unread).length + unreadBroadcasts.length;
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -311,7 +318,7 @@ export default function Notifications({ nav }) {
       {/* FILTER TABS */}
       <div className="flex flex-wrap items-center gap-2 border-b border-[#DCE8D9] pb-3">
         {[
-          { id: "all", label: language === "mr" ? "सर्व सूचना" : language === "hi" ? "सभी अलर्ट" : "All Alerts", count: notifsList.length },
+          { id: "all", label: language === "mr" ? "सर्व सूचना" : language === "hi" ? "सभी अलर्ट" : "All Alerts", count: notifsList.length + broadcastList.length },
           { id: "unread", label: language === "mr" ? "न वाचलेले" : language === "hi" ? "अपठित" : "Unread", count: unreadCount },
           { id: "prediction", label: language === "mr" ? "पीक उत्पादन" : language === "hi" ? "फसल उपज" : "Yield Forecasts" },
           { id: "recommendation", label: language === "mr" ? "माती सल्ला" : language === "hi" ? "मृदा सलाह" : "Soil Advisories" },
@@ -344,6 +351,114 @@ export default function Notifications({ nav }) {
           );
         })}
       </div>
+
+      {/* OFFICIAL BROADCAST ADVISORIES SECTION */}
+      {broadcastList.length > 0 && (activeFilter === "all" || activeFilter === "unread") && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+            <span className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
+            <span>
+              {language === "mr"
+                ? "आपत्कालीन व जिल्हा कृषी सल्ले"
+                : language === "hi"
+                ? "आपातकालीन व जिला कृषि सलाह"
+                : "Official District Broadcast Advisories"}
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            {broadcastList
+              .filter((b) => (activeFilter === "unread" ? !(readBroadcastIds || []).includes(String(b.broadcast_id || b.id)) : true))
+              .map((rawAlert) => {
+                const alertKey = String(rawAlert.broadcast_id || rawAlert.id);
+                const locAlert = getLocalizedBroadcast(rawAlert, language);
+                const isUnread = !(readBroadcastIds || []).includes(alertKey);
+
+                return (
+                  <div
+                    key={alertKey}
+                    className={`card rounded-2xl border p-4 sm:p-5 transition-all shadow-xs ${
+                      (locAlert.severity || "").toLowerCase() === "critical"
+                        ? "bg-red-50/90 border-red-300 text-red-950"
+                        : (locAlert.severity || "").toLowerCase() === "warning"
+                        ? "bg-amber-50/90 border-amber-300 text-amber-950"
+                        : "bg-emerald-50/90 border-emerald-300 text-emerald-950"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div className="space-y-1.5 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
+                              (locAlert.severity || "").toLowerCase() === "critical"
+                                ? "bg-red-600 text-white"
+                                : (locAlert.severity || "").toLowerCase() === "warning"
+                                ? "bg-amber-500 text-white"
+                                : "bg-emerald-600 text-white"
+                            }`}
+                          >
+                            {locAlert.severityLabel}
+                          </span>
+                          <span className="text-[11px] font-semibold opacity-75">
+                            📍 {locAlert.districtLabel}
+                          </span>
+                          {locAlert.cropLabel && (
+                            <span className="text-[11px] font-semibold opacity-75">
+                              • 🌾 {locAlert.cropLabel}
+                            </span>
+                          )}
+                          {isUnread && (
+                            <span className="rounded-full bg-red-600 px-2 py-0.5 text-[9px] font-black uppercase text-white animate-pulse">
+                              {language === "mr" ? "नवीन" : language === "hi" ? "नया" : "NEW"}
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="text-sm sm:text-base font-bold text-gray-900">
+                          {locAlert.title}
+                        </h4>
+
+                        <p className="text-xs text-gray-700 leading-relaxed max-w-3xl">
+                          {locAlert.message}
+                        </p>
+
+                        {locAlert.remedy && (
+                          <div className="mt-2 rounded-xl bg-white/80 border border-emerald-200 p-2.5 text-emerald-950 font-medium text-xs flex items-start gap-2">
+                            <span>🌱</span>
+                            <div className="flex-1">
+                              <strong className="block text-emerald-900 font-bold mb-0.5">
+                                {language === "mr" ? "कृषी उपाययोजना / शिफारस:" : language === "hi" ? "अनुशंसित उपाय:" : "Recommended Action:"}
+                              </strong>
+                              {locAlert.remedy}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center sm:flex-col gap-2 shrink-0">
+                        {isUnread ? (
+                          <button
+                            type="button"
+                            onClick={() => markBroadcastAsRead(alertKey)}
+                            className="btn-shimmer inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-[#2E7D32] border border-emerald-300 shadow-xs hover:bg-emerald-50 cursor-pointer transition"
+                          >
+                            <CheckCheck size={14} />
+                            <span>{language === "mr" ? "वाचले" : language === "hi" ? "पढ़ा" : "Mark Read"}</span>
+                          </button>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-gray-400 flex items-center gap-1">
+                            <CheckCircle2 size={13} className="text-emerald-600" />
+                            <span>{language === "mr" ? "वाचले आहे" : language === "hi" ? "पढ़ा हुआ" : "Read"}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* NOTIFICATIONS LIST */}
       <div key={activeFilter} className="space-y-3 animate-fade-in-up">

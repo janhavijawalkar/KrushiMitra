@@ -40,8 +40,11 @@ export default function Topbar({ title, nav, setMobileOpen }) {
     changeTheme,
     notifications,
     farmerBroadcastAlerts,
+    readBroadcastIds,
+    markBroadcastAsRead,
     markAllNotificationsAsRead,
     clearAllNotifications,
+    getLocalizedBroadcast,
     t,
   } = useApp();
 
@@ -55,7 +58,10 @@ export default function Topbar({ title, nav, setMobileOpen }) {
 
   const notifsList = notifications || [];
   const broadcastList = farmerBroadcastAlerts || [];
-  const unreadCount = notifsList.filter((n) => n.unread).length + broadcastList.length;
+  const unreadBroadcasts = broadcastList.filter(
+    (b) => !(readBroadcastIds || []).includes(String(b.broadcast_id || b.id))
+  );
+  const unreadCount = notifsList.filter((n) => n.unread).length + unreadBroadcasts.length;
 
   const getNotifIcon = (type) => {
     switch (type) {
@@ -309,45 +315,57 @@ export default function Topbar({ title, nav, setMobileOpen }) {
                           : "Official Broadcast Advisories"}
                       </span>
                     </div>
-                    {broadcastList.map((alert) => (
-                      <div
-                        key={alert.broadcast_id || alert.id}
-                        className={`p-2.5 rounded-xl border text-left transition ${
-                          alert.severity === "critical"
-                            ? "bg-red-50/90 border-red-200 text-red-950 shadow-2xs"
-                            : alert.severity === "warning"
-                            ? "bg-amber-50/90 border-amber-200 text-amber-950"
-                            : "bg-emerald-50/90 border-emerald-200 text-emerald-950"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-xs font-bold truncate">{alert.title}</span>
-                          <span
-                            className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md ${
-                              alert.severity === "critical"
-                                ? "bg-red-600 text-white animate-pulse"
-                                : alert.severity === "warning"
-                                ? "bg-amber-500 text-white"
-                                : "bg-emerald-600 text-white"
-                            }`}
-                          >
-                            {alert.severity}
-                          </span>
-                        </div>
-                        <p className="text-[11px] mt-1 text-gray-700 leading-snug line-clamp-2">
-                          {alert.message}
-                        </p>
-                        {alert.remedy && (
-                          <p className="text-[10px] font-semibold mt-1 text-[#2E7D32] bg-white/70 p-1 rounded-md border border-emerald-100 line-clamp-1">
-                            🌱 {alert.remedy}
+                    {broadcastList.map((rawAlert) => {
+                      const alertKey = String(rawAlert.broadcast_id || rawAlert.id);
+                      const locAlert = getLocalizedBroadcast(rawAlert, language);
+                      const isUnread = !(readBroadcastIds || []).includes(alertKey);
+
+                      return (
+                        <div
+                          key={alertKey}
+                          onClick={() => markBroadcastAsRead(alertKey)}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer relative ${
+                            (locAlert.severity || "").toLowerCase() === "critical"
+                              ? "bg-red-50/90 border-red-200 text-red-950 shadow-2xs hover:bg-red-100/80"
+                              : (locAlert.severity || "").toLowerCase() === "warning"
+                              ? "bg-amber-50/90 border-amber-200 text-amber-950 hover:bg-amber-100/80"
+                              : "bg-emerald-50/90 border-emerald-200 text-emerald-950 hover:bg-emerald-100/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                              {isUnread && (
+                                <span className="h-2 w-2 rounded-full bg-red-600 shrink-0 animate-pulse" title="Unread" />
+                              )}
+                              <span className="text-xs font-bold truncate">{locAlert.title}</span>
+                            </div>
+                            <span
+                              className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md shrink-0 ${
+                                (locAlert.severity || "").toLowerCase() === "critical"
+                                  ? "bg-red-600 text-white animate-pulse"
+                                  : (locAlert.severity || "").toLowerCase() === "warning"
+                                  ? "bg-amber-500 text-white"
+                                  : "bg-emerald-600 text-white"
+                              }`}
+                            >
+                              {locAlert.severityLabel}
+                            </span>
+                          </div>
+                          <p className="text-[11px] mt-1 text-gray-700 leading-snug line-clamp-2">
+                            {locAlert.message}
                           </p>
-                        )}
-                        <div className="flex items-center justify-between mt-1 text-[9px] text-gray-500 font-medium">
-                          <span>📍 {alert.district || "Statewide"}</span>
-                          <span>{alert.crop ? `🌾 ${alert.crop}` : ""}</span>
+                          {locAlert.remedy && (
+                            <p className="text-[10px] font-semibold mt-1 text-[#2E7D32] bg-white/70 p-1 rounded-md border border-emerald-100 line-clamp-1">
+                              🌱 {locAlert.remedy}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between mt-1 text-[9px] text-gray-500 font-medium">
+                            <span>📍 {locAlert.districtLabel}</span>
+                            <span>{locAlert.cropLabel ? `🌾 ${locAlert.cropLabel}` : ""}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
