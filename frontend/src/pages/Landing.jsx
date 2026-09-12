@@ -2219,7 +2219,7 @@ export default function Landing({ nav }) {
       </footer>
 
       {/* KRUSHIMITRA MULTILINGUAL VOICE CHATBOT */}
-      <VoiceChatbot />
+      <VoiceChatbot nav={nav} openInstallModal={() => setShowInstallModal(true)} />
 
       {/* KRUSHIMITRA PWA INSTALL MODAL */}
       <InstallModal

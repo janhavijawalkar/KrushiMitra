@@ -5,6 +5,7 @@ import Topbar from "./Topbar";
 import OfflineBanner from "./OfflineBanner";
 import VoiceChatbot from "./VoiceChatbot";
 import MobileBottomNav from "./MobileBottomNav";
+import InstallModal from "./InstallModal";
 
 import { useApp } from "../context/AppContext";
 
@@ -17,6 +18,7 @@ export default function Layout({
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const titles = {
     dashboard: t("dashboard"),
@@ -120,7 +122,13 @@ export default function Layout({
       <MobileBottomNav page={page} setPage={nav} />
 
       {/* KRUSHIMITRA MULTILINGUAL VOICE CHATBOT */}
-      <VoiceChatbot />
+      <VoiceChatbot nav={nav} openInstallModal={() => setShowInstallModal(true)} />
+
+      {/* KRUSHIMITRA PWA / APK INSTALL MODAL */}
+      <InstallModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+      />
     </div>
   );
 }

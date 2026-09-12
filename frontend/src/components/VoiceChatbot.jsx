@@ -13,14 +13,79 @@ import {
   Trash2,
   Minimize2,
   Maximize2,
-  ChevronDown,
+  Compass,
+  ArrowRight,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { buildApiUrl } from "../utils/apiConfig";
 
-export default function VoiceChatbot() {
-  const { language } = useApp();
+/* =========================================================
+   LIGHTWEIGHT CLEAN MARKDOWN & BULLET FORMATTER
+   ========================================================= */
+function FormattedMessage({ content, isUser }) {
+  if (!content) return null;
+
+  const lines = content.split("\n");
+
+  const parseInline = (str) => {
+    const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+    return parts.map((part, pIdx) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={pIdx} className={`font-bold ${isUser ? "text-white" : "text-gray-900"}`}>
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      if (part.startsWith("*") && part.endsWith("*")) {
+        return (
+          <em key={pIdx} className={`italic ${isUser ? "text-green-100" : "text-gray-700"}`}>
+            {part.slice(1, -1)}
+          </em>
+        );
+      }
+      return part;
+    });
+  };
+
+  return (
+    <div className="space-y-1.5 leading-relaxed text-xs">
+      {lines.map((line, lIdx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={lIdx} className="h-1" />;
+        }
+
+        const isBullet =
+          trimmed.startsWith("•") ||
+          trimmed.startsWith("- ") ||
+          trimmed.startsWith("* ");
+        const bulletText = isBullet ? trimmed.replace(/^[•\-\*]\s*/, "") : trimmed;
+
+        if (isBullet) {
+          return (
+            <div key={lIdx} className="flex items-start gap-1.5 pl-1">
+              <span className={`font-bold mt-0.5 ${isUser ? "text-green-200" : "text-[#2E7D32]"}`}>
+                •
+              </span>
+              <span className="flex-1">{parseInline(bulletText)}</span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={lIdx} className={isUser ? "text-white" : "text-gray-800"}>
+            {parseInline(trimmed)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function VoiceChatbot({ nav, openInstallModal }) {
+  const { language, user } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
@@ -29,15 +94,16 @@ export default function VoiceChatbot() {
 
   const initialGreeting =
     language === "mr"
-      ? "नमस्कार शेतकरी बंधूंनो! 🙏 मी तुमचा कृषीमित्र AI सहाय्यक आहे. तुम्ही मला शेती, पिके, खते, कीड नियंत्रण किंवा शासकीय योजनांबद्दल बोलून अथवा लिहून प्रश्न विचारू शकता."
+      ? "नमस्कार शेतकरी बंधूंनो! 🙏 मी तुमचा कृषीमित्र AI सहाय्यक आहे.\n\nतुम्ही मला शेती, पिके, खते, कीड नियंत्रण, हवामान, शासकीय योजना किंवा कृषीमित्र वेबसाईटच्या कोणत्याही पानाबद्दल विचारू शकता."
       : language === "hi"
-      ? "नमस्ते किसान भाइयों! 🙏 मैं आपका कृषि-मित्र AI सहायक हूँ। आप मुझसे फसल, खाद, कीट नियंत्रण, मौसम या सरकारी योजनाओं के बारे में बोलकर या लिखकर पूछ सकते हैं।"
-      : "Hello farmer friends! 🙏 I am your KrushiMitra AI Assistant. You can ask me any question about crops, fertilizers, pest remedies, weather, or government schemes by voice or text.";
+      ? "नमस्ते किसान भाइयों! 🙏 मैं आपका कृषि-मित्र AI सहायक हूँ।\n\nआप मुझसे फसल, खाद, कीट नियंत्रण, मौसम, सरकारी योजनाओं या कृषि-मित्र वेबसाइट के किसी भी फीचर के बारे में पूछ सकते हैं।"
+      : "Hello farmer friends! 🙏 I am your KrushiMitra AI Assistant.\n\nYou can ask me anything about crops, fertilizers, pest control, weather, government schemes, or how to use any tool on KrushiMitra.";
 
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       content: initialGreeting,
+      action: null,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -65,6 +131,26 @@ export default function VoiceChatbot() {
       },
     });
 
+  // Action Button Click Handler (Navigate or Open Modal)
+  const handleActionClick = (action) => {
+    if (!action) return;
+    if (action.type === "modal" && action.target === "install_modal") {
+      if (openInstallModal) {
+        openInstallModal();
+      }
+    } else if (action.type === "navigate" && action.page) {
+      if (nav) {
+        if (!user && !["landing", "login", "register", "forgot"].includes(action.page)) {
+          nav("login");
+        } else {
+          nav(action.page);
+        }
+      }
+    } else if (action.type === "url" && action.url) {
+      window.open(action.url, "_blank", "noopener,noreferrer");
+    }
+  };
+
   // Text to Speech Functionality
   const handleSpeak = (text, index) => {
     if (!("speechSynthesis" in window)) return;
@@ -80,7 +166,8 @@ export default function VoiceChatbot() {
     // Clean markdown characters for pleasant voice reading
     const cleanText = text
       .replace(/[*_#`~]/g, "")
-      .replace(/🌱|🌿|🌾|🎋|🏛️|🧪|🍅|💡|🙏|✅|⚠️|❌/g, "")
+      .replace(/🌱|🌿|🌾|🎋|🏛️|🧪|🍅|💡|🙏|✅|⚠️|❌|🚀|🌦️|📲/g, "")
+      .replace(/\[\[ACTION:[^\]]+\]\]/g, "")
       .replace(/\n+/g, ". ");
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -101,6 +188,7 @@ export default function VoiceChatbot() {
     const userMsg = {
       role: "user",
       content: textToSend,
+      action: null,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -125,6 +213,7 @@ export default function VoiceChatbot() {
         const botMsg = {
           role: "assistant",
           content: data.reply,
+          action: data.action || null,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, botMsg]);
@@ -136,27 +225,117 @@ export default function VoiceChatbot() {
       const queryLower = textToSend.toLowerCase();
 
       let offlineReply = "";
-      if (queryLower.includes("fertilizer") || queryLower.includes("खत") || queryLower.includes("खाद") || queryLower.includes("npk")) {
+      let offlineAction = null;
+
+      if (
+        queryLower.includes("predict") ||
+        queryLower.includes("अंदाज") ||
+        queryLower.includes("अनुमान") ||
+        queryLower.includes("yield")
+      ) {
         offlineReply =
           language === "mr"
-            ? "🌾 [ऑफलाइन सल्ला]: पिकांसाठी संतुलित NPK खतांचा वापर करा. पेरणीच्या वेळी DAP किंवा 10:26:26 आणि वाढीच्या टप्प्यावर युरियाचा हप्ता देणे फायदेशीर ठरते."
+            ? "🌾 **पीक अंदाज (Crop Yield Prediction) साधन:**\n\nआपण 'पीक अंदाज' विभागात जाऊन जिल्हा, हंगाम, क्षेत्रफळ आणि माती घटक भरून हेक्टरी उत्पन्नाचा अचूक अंदाज घेऊ शकता."
             : language === "hi"
-            ? "🌾 [ऑफलाइन सलाह]: फसलों के लिए संतुलित NPK उर्वरक का उपयोग करें। बुवाई के समय DAP या 10:26:26 और वानस्पतिक वृद्धि पर यूरिया देना लाभकारी है।"
-            : "🌾 [Offline Advisory]: Maintain balanced NPK nutrition. Use basal DAP / 10:26:26 at sowing and split urea application during vegetative growth.";
-      } else if (queryLower.includes("water") || queryLower.includes("पाणी") || queryLower.includes("सिंचाई") || queryLower.includes("पाऊस")) {
+            ? "🌾 **फसल पूर्वानुमान टूल:**\n\nआप 'फसल पूर्वानुमान' पेज पर जाकर जिला, मौसम, रकबा और पोषक तत्व दर्ज कर सटीक उपज का अनुमान पा सकते हैं।"
+            : "🌾 **Crop Yield Prediction Tool:**\n\nNavigate to Yield Prediction to input district, season, area, and soil nutrients for AI-powered yield forecasting.";
+        offlineAction = {
+          type: "navigate",
+          page: "prediction",
+          label:
+            language === "mr"
+              ? "पीक अंदाज सुरू करा 🚀"
+              : language === "hi"
+              ? "फसल अनुमान शुरू करें 🚀"
+              : "Open Crop Prediction 🚀",
+        };
+      } else if (
+        queryLower.includes("soil") ||
+        queryLower.includes("माती") ||
+        queryLower.includes("मिट्टी") ||
+        queryLower.includes("recommend")
+      ) {
         offlineReply =
           language === "mr"
-            ? "💧 [ऑफलाइन सल्ला]: ठिबक सिंचनाचा (Drip) वापर करून पाण्याची बचत करा. पिकाच्या फुलोरा आणि दाणे भरण्याच्या टप्प्यावर पाण्याची कमतरता भासू देऊ नका."
+            ? "🧪 **माती परीक्षण व खत सल्ला (Soil Advisory):**\n\nनत्र (N), स्फुरद (P), पालाश (K) आणि सामू (pH) मूल्ये टाकून जमिनीसाठी सर्वात फायदेशीर टॉप ३ पिके आणि खतांचे वेळापत्रक मिळवा."
             : language === "hi"
-            ? "💧 [ऑफलाइन सलाह]: ड्रिप सिंचाई से पानी की बचत करें। फूल आने और दाना भरने के महत्वपूर्ण समय पर नियमित सिंचाई सुनिश्चित करें।"
-            : "💧 [Offline Advisory]: Drip irrigation saves 40-50% water. Ensure timely irrigation during critical flowering and grain-filling stages.";
+            ? "🧪 **मृदा परीक्षण एवं फसल सलाह:**\n\nNPK और pH स्तर दर्ज कर अपनी जमीन के लिए सर्वश्रेष्ठ ३ फसलें और उर्वरक शेड्यूल प्राप्त करें।"
+            : "🧪 **Soil Health & Crop Advisory:**\n\nInput NPK and pH values to discover the top 3 recommended crops and balanced fertilizer dosages.";
+        offlineAction = {
+          type: "navigate",
+          page: "recommendation",
+          label:
+            language === "mr"
+              ? "माती सल्ला उघडा 🧪"
+              : language === "hi"
+              ? "मृदा सलाह खोलें 🧪"
+              : "Open Soil Advisory 🧪",
+        };
+      } else if (
+        queryLower.includes("weather") ||
+        queryLower.includes("हवामान") ||
+        queryLower.includes("मौसम") ||
+        queryLower.includes("rain") ||
+        queryLower.includes("पाऊस")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "🌦️ **हवामान व शेती अंदाज:**\n\nमहाराष्ट्रातील ३६ जिल्ह्यांचे थेट हवामान आणि ५ दिवसांचा पाऊस व फवारणी अंदाज पाहण्यासाठी हवामान विभाग उघडा."
+            : language === "hi"
+            ? "🌦️ **मौसम पूर्वानुमान:**\n\nमहाराष्ट्र के ३६ जिलों का लाइव मौसम और आगामी ५ दिनों का पूर्वानुमान देखने के लिए मौसम पेज पर जाएं।"
+            : "🌦️ **Weather Forecast:**\n\nAccess hourly weather telemetry and 5-day agro-climatic outlooks for all 36 Maharashtra districts.";
+        offlineAction = {
+          type: "navigate",
+          page: "weather",
+          label:
+            language === "mr"
+              ? "हवामान पहा 🌦️"
+              : language === "hi"
+              ? "मौसम देखें 🌦️"
+              : "View Weather 🌦️",
+        };
+      } else if (
+        queryLower.includes("download") ||
+        queryLower.includes("app") ||
+        queryLower.includes("डाऊनलोड") ||
+        queryLower.includes("डाउनलोड") ||
+        queryLower.includes("apk")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "📲 **कृषीमित्र मोबाईल ॲप:**\n\nऑफलाइन शेती सल्ला, वेगवान नोटिफिकेशन आणि सुलभ वापरासाठी कृषीमित्र ॲप मोबाईलवर इन्स्टॉल करा."
+            : language === "hi"
+            ? "📲 **कृषि-मित्र मोबाइल ऐप:**\n\nऑफलाइन उपयोग और त्वरित अलर्ट के लिए कृषि-मित्र ऐप इंस्टॉल करें।"
+            : "📲 **KrushiMitra Mobile App:**\n\nInstall the mobile app for offline advisory and real-time farmer alerts.";
+        offlineAction = {
+          type: "modal",
+          target: "install_modal",
+          label:
+            language === "mr"
+              ? "ॲप इन्स्टॉल करा 📲"
+              : language === "hi"
+              ? "ऐप इंस्टॉल करें 📲"
+              : "Install Mobile App 📲",
+        };
+      } else if (
+        queryLower.includes("fertilizer") ||
+        queryLower.includes("खत") ||
+        queryLower.includes("खाद") ||
+        queryLower.includes("npk")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "🌾 **संतुलित खत व्यवस्थापन:**\n\nपिकांसाठी संतुलित NPK खतांचा वापर करा. पेरणीच्या वेळी DAP किंवा 10:26:26 आणि वाढीच्या टप्प्यावर युरियाचा हप्ता देणे फायदेशीर ठरते."
+            : language === "hi"
+            ? "🌾 **संतुलित उर्वरक प्रबंधन:**\n\nफसलों के लिए संतुलित NPK उर्वरक का उपयोग करें। बुवाई के समय DAP या 10:26:26 और वानस्पतिक वृद्धि पर यूरिया देना लाभकारी है।"
+            : "🌾 **Balanced Nutrition:**\n\nMaintain balanced NPK nutrition. Use basal DAP / 10:26:26 at sowing and split urea application during vegetative growth.";
       } else {
         offlineReply =
           language === "mr"
-            ? "🌱 [ऑफलाइन कृषीमित्र]: सध्या इंटरनेट उपलब्ध नाही, पण आपण वरील 'पीक अंदाज' व 'माती सल्ला' साधनांचा वापर करू शकता. इंटरनेट परत आल्यावर संपूर्ण AI चर्चा उपलब्ध होईल."
+            ? "🌱 **कृषीमित्र AI सहाय्यक:**\n\nसध्या इंटरनेट मर्यादित आहे, तरीही आपण वरील 'पीक अंदाज' व 'माती सल्ला' साधनांचा वापर करू शकता."
             : language === "hi"
-            ? "🌱 [ऑफलाइन कृषि-मित्र]: वर्तमान में इंटरनेट उपलब्ध नहीं है, परंतु आप 'फसल पूर्वानुमान' व 'मृदा सलाह' उपकरणों का उपयोग कर सकते हैं। ऑनलाइन होने पर पूर्ण AI चर्चा उपलब्ध होगी।"
-            : "🌱 [Offline KrushiMitra]: Server is offline, but you can use the Yield Predictor & Soil Advisory tabs. Full AI conversational answers will resume when back online.";
+            ? "🌱 **कृषि-मित्र AI सहायक:**\n\nवर्तमान में इंटरनेट सीमित है, परंतु आप 'फसल पूर्वानुमान' व 'मृदा सलाह' उपकरणों का उपयोग कर सकते हैं।"
+            : "🌱 **KrushiMitra AI Assistant:**\n\nRunning offline fallback. You can navigate to Yield Predictor & Soil Advisory tools using the menu.";
       }
 
       setMessages((prev) => [
@@ -164,6 +343,7 @@ export default function VoiceChatbot() {
         {
           role: "assistant",
           content: offlineReply,
+          action: offlineAction,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -179,6 +359,7 @@ export default function VoiceChatbot() {
       {
         role: "assistant",
         content: initialGreeting,
+        action: null,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -187,23 +368,29 @@ export default function VoiceChatbot() {
   const suggestionChips =
     language === "mr"
       ? [
-          "कापसावरील बोंड अळीसाठी उपाय",
-          "सोयाबीन खत व्यवस्थापन",
-          "पीएम-किसान योजनेची माहिती",
-          "टोमॅटो करपा रोग नियंत्रण",
+          { label: "🌾 पीक अंदाज कसा घ्यावा?", query: "पीक अंदाज कसा घ्यावा?" },
+          { label: "🧪 माती परीक्षण व खत सल्ला", query: "माती परीक्षण आणि खत शिफारस कशी मिळते?" },
+          { label: "🌦️ पुणे हवामान अंदाज", query: "पुणे जिल्ह्याचे आजचे हवामान काय आहे?" },
+          { label: "🏛️ पीएम-किसान योजना", query: "पीएम किसान योजनेचे पैसे कधी मिळतात?" },
+          { label: "🐛 कापूस बोंड अळी उपाय", query: "कापसावरील बोंड अळीसाठी काय उपाय करावेत?" },
+          { label: "📲 ॲप डाऊनलोड करा", query: "कृषीमित्र ॲप मोबाईलवर कसे डाऊनलोड करावे?" },
         ]
       : language === "hi"
       ? [
-          "कपास में गुलाबी सुंडी नियंत्रण",
-          "सोयाबीन के लिए खाद प्रबंधन",
-          "पीएम किसान योजना विवरण",
-          "टमाटर में झुलसा रोग उपाय",
+          { label: "🌾 फसल उपज अनुमान", query: "फसल उपज का अनुमान कैसे लगाएं?" },
+          { label: "🧪 मृदा परीक्षण और खाद", query: "मिट्टी की जांच और खाद की सलाह कैसे पाएं?" },
+          { label: "🌦️ मौसम पूर्वानुमान", query: "मौसम पूर्वानुमान कैसे चेक करें?" },
+          { label: "🏛️ पीएम-किसान योजना", query: "पीएम किसान योजना की जानकारी दीजिए" },
+          { label: "🐛 कपास गुलाबी सुंडी", query: "कपास में गुलाबी सुंडी का नियंत्रण कैसे करें?" },
+          { label: "📲 ऐप डाउनलोड करें", query: "कृषि-मित्र मोबाइल ऐप कैसे डाउनलोड करें?" },
         ]
       : [
-          "Cotton pink bollworm control",
-          "Soybean fertilizer schedule",
-          "PM-Kisan subsidy details",
-          "Tomato blight treatment",
+          { label: "🌾 How to predict yield?", query: "How to predict crop yield in KrushiMitra?" },
+          { label: "🧪 Soil & fertilizer guide", query: "How to get soil recommendation and fertilizer dosage?" },
+          { label: "🌦️ Weather forecast", query: "How to check agricultural weather forecast?" },
+          { label: "🏛️ PM-Kisan subsidy", query: "Explain PM-Kisan and Namo Shetkari schemes" },
+          { label: "🐛 Cotton pink bollworm", query: "How to control pink bollworm in cotton?" },
+          { label: "📲 Download App", query: "How do I download the mobile app?" },
         ];
 
   return (
@@ -329,18 +516,31 @@ export default function VoiceChatbot() {
                     </div>
 
                     <div
-                      className={`relative max-w-[82%] rounded-2xl p-3 text-xs shadow-2xs leading-relaxed ${
+                      className={`relative max-w-[85%] rounded-2xl p-3 text-xs shadow-2xs leading-relaxed ${
                         msg.role === "user"
                           ? "bg-[#2E7D32] text-white rounded-tr-none"
                           : "bg-white text-gray-800 border border-green-100/80 rounded-tl-none"
                       }`}
                     >
-                      {/* Message Content formatted */}
-                      <div className="whitespace-pre-wrap font-medium">
-                        {msg.content}
-                      </div>
+                      {/* Message Content Formatted */}
+                      <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
 
-                      <div className="mt-1.5 flex items-center justify-between gap-3 text-[9px] opacity-70">
+                      {/* Interactive Navigation Action Button */}
+                      {msg.action && (
+                        <div className="mt-2.5 pt-2 border-t border-green-100/90 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleActionClick(msg.action)}
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#15803D] px-3.5 py-2 text-xs font-bold text-white shadow-md hover:from-[#2E7D32] hover:to-[#388E3C] hover:shadow-lg active:scale-95 transition-all cursor-pointer border border-white/20 group"
+                          >
+                            <Compass size={14} className="text-yellow-300 group-hover:rotate-45 transition-transform" />
+                            <span>{msg.action.label}</span>
+                            <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="mt-2 flex items-center justify-between gap-3 text-[9px] opacity-70">
                         <span>{msg.time}</span>
 
                         {msg.role === "assistant" && (
@@ -412,12 +612,12 @@ export default function VoiceChatbot() {
                       key={idx}
                       type="button"
                       onClick={() => {
-                        setInput(chip);
-                        handleSendMessage(chip);
+                        setInput(chip.query);
+                        handleSendMessage(chip.query);
                       }}
                       className="shrink-0 rounded-full border border-green-200 bg-green-50/70 px-2.5 py-1 text-[10px] font-semibold text-[#1B5E20] hover:bg-[#2E7D32] hover:text-white transition cursor-pointer"
                     >
-                      {chip}
+                      {chip.label}
                     </button>
                   ))}
                 </div>
