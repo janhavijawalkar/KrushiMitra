@@ -109,6 +109,10 @@ DEVANAGARI_CITY_MAP = {
     "अहिल्यानगर": "ahilyanagar",
     "अकोला": "akola",
     "अमरावती": "amravati",
+    "अमरावतीत": "amravati",
+    "अमरावतीचे": "amravati",
+    "अमरावतीचा": "amravati",
+    "अमरावतीमधील": "amravati",
     "औरंगाबाद": "aurangabad",
     "संभाजीनगर": "chhatrapati sambhajinagar",
     "छत्रपती संभाजीनगर": "chhatrapati sambhajinagar",
@@ -132,13 +136,19 @@ DEVANAGARI_CITY_MAP = {
     "लातूर": "latur",
     "लातुर": "latur",
     "मुंबई": "mumbai",
+    "मुंबईत": "mumbai",
+    "मुंबईचे": "mumbai",
     "नागपूर": "nagpur",
     "नागपुर": "nagpur",
+    "नागपुरात": "nagpur",
+    "नागपूरचे": "nagpur",
     "नांदेड": "nanded",
     "नांदेड़": "nanded",
     "नंदुरबार": "nandurbar",
     "नाशिक": "nashik",
     "नासिक": "nashik",
+    "नाशिकचे": "nashik",
+    "नाशिकमध्ये": "nashik",
     "उस्मानाबाद": "osmanabad",
     "धाराशिव": "dharashiv",
     "पालघर": "palghar",
@@ -147,11 +157,16 @@ DEVANAGARI_CITY_MAP = {
     "पुण्याचे": "pune",
     "पुण्यात": "pune",
     "पुण्याचा": "pune",
+    "पुण्यातील": "pune",
+    "पुण्याला": "pune",
+    "पुण्यामध्ये": "pune",
     "रायगड": "raigad",
     "अलिबाग": "alibag",
     "रत्नागिरी": "ratnagiri",
     "सांगली": "sangli",
     "सातारा": "satara",
+    "साताऱ्यात": "satara",
+    "साताऱ्याचे": "satara",
     "सिंधुदुर्ग": "sindhudurg",
     "सोलापूर": "solapur",
     "सोलापुर": "solapur",
@@ -165,6 +180,63 @@ DEVANAGARI_CITY_MAP = {
     "कराड": "karad",
     "मालेगाव": "malegaon",
     "शिर्डी": "shirdi",
+    "दिल्ली": "delhi",
+    "नवी दिल्ली": "delhi",
+    "भोपाळ": "bhopal",
+    "भोपाल": "bhopal",
+    "इंदूर": "indore",
+    "इंदौर": "indore",
+    "जयपूर": "jaipur",
+    "जयपुर": "jaipur",
+}
+
+CITY_ALIASES = {
+    # Amravati aliases & abbreviations
+    "amt": "amravati",
+    "amt city": "amravati",
+    "amrawati": "amravati",
+    "amrawti": "amravati",
+    # Sambhajinagar / Aurangabad aliases
+    "abad": "aurangabad",
+    "abad city": "aurangabad",
+    "csn": "chhatrapati sambhajinagar",
+    "aurangabad": "aurangabad",
+    "sambhajinagar": "chhatrapati sambhajinagar",
+    "chhatrapati sambhajinagar": "chhatrapati sambhajinagar",
+    # Mumbai / Pune / Nashik
+    "bombay": "mumbai",
+    "mumbai city": "mumbai",
+    "poona": "pune",
+    "pune city": "pune",
+    "nasik": "nashik",
+    "sholapur": "solapur",
+    "nag": "nagpur",
+    "nagpur city": "nagpur",
+    "ahmed nagar": "ahmednagar",
+    "ahilyanagar": "ahmednagar",
+    "alibaug": "alibag",
+    "dharashiv": "osmanabad",
+    # National cities
+    "del": "delhi",
+    "new delhi": "delhi",
+    "blr": "bangalore",
+    "bengaluru": "bangalore",
+    "hyd": "hyderabad",
+    "bza": "vijayawada",
+    "calcutta": "kolkata",
+    "kolkata": "kolkata",
+    "madras": "chennai",
+    "chennai": "chennai",
+    "ahmedabad": "ahmedabad",
+    "surat": "surat",
+    "jaipur": "jaipur",
+    "indore": "indore",
+    "bhopal": "bhopal",
+    "lucknow": "lucknow",
+    "patna": "patna",
+    "chandigarh": "chandigarh",
+    "goa": "panaji",
+    "panaji": "panaji",
 }
 
 WEATHER_KEYWORDS = [
@@ -173,15 +245,87 @@ WEATHER_KEYWORDS = [
     "weather", "temperature", "forecast", "climate", "rainfall", "humidity", "rain"
 ]
 
-MY_CITY_KEYWORDS = [
+EXPLICIT_MY_CITY_KEYWORDS = [
     "my city", "my district", "my village", "my town", "my location", "my area", "here",
-    "today's weather", "today weather", "todays weather", "weather today", "what is the weather",
-    "current weather", "weather right now", "how is the weather", "whats the weather", "what's the weather",
+    "my farm", "my place", "around me", "where i am", "where i live",
     "माझ्या शहरात", "माझ्या शहराचे", "माझ्या शहरातील", "माझ्या गावात", "माझ्या गावातील", "माझ्या भागात",
-    "माझ्या जिल्ह्यात", "माझ्या जिल्ह्याचे", "इथले", "येथील", "आजचे हवामान", "आजचा पाऊस", "हवामान कसे आहे", "हवामान सांगा", "हवामान काय",
-    "मेरे शहर", "मेरे शहर का", "मेरे गांव", "मेरे गांव का", "मेरे जिले", "मेरे जिले का", "यहाँ का", "यहाँ",
-    "आज का मौसम", "आज बारिश", "मौसम कैसा है", "मौसम बताओ", "मौसम क्या है"
+    "माझ्या जिल्ह्यात", "माझ्या जिल्ह्याचे", "इथले", "येथील", "इथला पाऊस", "आमच्या गावात", "आमच्या शहरात",
+    "मेरे शहर", "मेरे शहर का", "मेरे गांव", "मेरे गांव का", "मेरे जिले", "मेरे जिले का", "यहाँ का", "यहाँ की", "यहाँ"
 ]
+
+STOP_WORDS = {
+    "today", "todays", "today's", "now", "tomorrow", "tonight", "live", "current", "right", "here",
+    "please", "tell", "me", "what", "is", "the", "a", "an", "city", "district", "village",
+    "area", "town", "my", "our", "this", "like", "how", "report", "update", "details",
+    "whats", "what's", "give", "show", "check", "info", "information",
+    "आज", "आता", "उद्या", "सध्या", "सांगा", "काय", "कसे", "आहे", "होते", "माहिती", "द्या",
+    "का", "के", "की", "में", "बताओ", "कैसा", "है", "दीजिये", "जानकारी", "शहराचे", "गावाचे"
+}
+
+def extract_target_city(query: str):
+    """
+    Extracts explicit city name, abbreviation (e.g., 'amt', 'csn', 'abad'),
+    or dynamic district name from natural language query.
+    """
+    q = query.strip()
+    q_lower = q.lower()
+
+    # 1. Check Devanagari mappings (longest first)
+    for dev_name in sorted(DEVANAGARI_CITY_MAP.keys(), key=len, reverse=True):
+        if dev_name in q:
+            city_key = DEVANAGARI_CITY_MAP[dev_name]
+            loc = MAHARASHTRA_LOCATIONS.get(city_key, {})
+            return city_key, loc.get("name", city_key.title())
+
+    # 2. Check full aliases & abbreviations (multi-word like 'amt city', 'chhatrapati sambhajinagar')
+    for alias, mapped_city in sorted(CITY_ALIASES.items(), key=lambda x: len(x[0]), reverse=True):
+        pattern = r'(?:\b|_)' + re.escape(alias) + r'(?:\b|_)'
+        if re.search(pattern, q_lower):
+            loc = MAHARASHTRA_LOCATIONS.get(mapped_city, {})
+            return mapped_city, loc.get("name", mapped_city.title())
+
+    # 3. Check known locations in MAHARASHTRA_LOCATIONS
+    for city_key, loc in sorted(MAHARASHTRA_LOCATIONS.items(), key=lambda x: len(x[0]), reverse=True):
+        pattern = r'(?:\b|_)' + re.escape(city_key) + r'(?:\b|_)'
+        if re.search(pattern, q_lower):
+            return city_key, loc.get("name", city_key.title())
+
+    # Check if this is an explicit "my city / my village / here" query
+    is_my_city_only = any(kw in q_lower or kw in q for kw in EXPLICIT_MY_CITY_KEYWORDS)
+    if is_my_city_only:
+        return None, None
+
+    # 4. Regex extraction for patterns like 'weather of/in/at/for <city>'
+    patterns = [
+        r'(?:weather|temperature|temp|forecast|rain|rainfall|climate)\s+(?:of|in|at|for)\s+([a-zA-Z\s]+)',
+        r'(?:how is the weather in|whats the weather in|what is the weather of|whats the weather of)\s+([a-zA-Z\s]+)',
+        r'([a-zA-Z\s]+?)\s+(?:weather|temperature|temp|forecast|rainfall|climate)',
+        r'(?:हवामान|पाऊस|तापमान)\s+([a-zA-Z\u0900-\u097F\s]+)',
+        r'([a-zA-Z\u0900-\u097F\s]+?)\s+(?:चे|चा|ची|त|मधील|तील|का|के|की|में)\s+(?:हवामान|पाऊस|तापमान|मौसम|बारिश)',
+    ]
+
+    for pat in patterns:
+        m = re.search(pat, q_lower if not any(ord(c) > 127 for c in q) else q, re.IGNORECASE)
+        if m:
+            candidate = m.group(1).strip()
+            # Remove punctuation
+            candidate = re.sub(r'[^\w\s\u0900-\u097F]', '', candidate)
+            words = candidate.split()
+            cleaned_words = [w for w in words if w.lower() not in STOP_WORDS]
+            if cleaned_words:
+                cand_str = " ".join(cleaned_words).strip().lower()
+                if cand_str in CITY_ALIASES:
+                    resolved = CITY_ALIASES[cand_str]
+                    loc = MAHARASHTRA_LOCATIONS.get(resolved, {})
+                    return resolved, loc.get("name", resolved.title())
+                for dev_name, c_key in DEVANAGARI_CITY_MAP.items():
+                    if dev_name in cand_str or cand_str in dev_name:
+                        loc = MAHARASHTRA_LOCATIONS.get(c_key, {})
+                        return c_key, loc.get("name", c_key.title())
+                if len(cand_str) >= 2:
+                    return cand_str, cand_str.title()
+
+    return None, None
 
 def detect_weather_query(query: str, farmer_district: str = None):
     """
@@ -194,55 +338,38 @@ def detect_weather_query(query: str, farmer_district: str = None):
     if not is_weather:
         return False, None, None, False
 
-    # 1. Check if user asked specifically for "my city / here / today"
-    is_my_city_requested = any(phrase in q for phrase in MY_CITY_KEYWORDS)
+    # 1. Attempt to extract explicit city requested in query
+    city_key, display_name = extract_target_city(query)
+    if city_key:
+        return True, city_key, display_name, False
 
-    # 2. Check Devanagari city matches in query
-    matched_city_key = None
-    matched_display_name = None
-
-    for dev_name, city_key in DEVANAGARI_CITY_MAP.items():
-        if dev_name in q or dev_name in query:
-            loc = MAHARASHTRA_LOCATIONS.get(city_key, {})
-            matched_city_key = city_key
-            matched_display_name = loc.get("name", city_key.title())
-            break
-
-    # 3. Check English city matches in query
-    if not matched_city_key:
-        for city_key, loc in MAHARASHTRA_LOCATIONS.items():
-            if city_key in q:
-                matched_city_key = city_key
-                matched_display_name = loc["name"]
-                break
-
-    # If an explicit city was mentioned and it's NOT just generic "my city", use that
-    if matched_city_key and not is_my_city_requested:
-        return True, matched_city_key, matched_display_name, False
-
-    # 4. If "my city / district" was asked or no specific city was named, resolve to farmer's district
+    # 2. No specific city named, or farmer explicitly asked for their own city/village:
+    # Resolve to farmer's district if available
     if farmer_district and str(farmer_district).strip():
         dist_clean = str(farmer_district).strip()
         dist_lower = dist_clean.lower()
 
-        # Check if farmer_district matches Devanagari map
+        # Check aliases
+        if dist_lower in CITY_ALIASES:
+            mapped = CITY_ALIASES[dist_lower]
+            loc = MAHARASHTRA_LOCATIONS.get(mapped, {})
+            return True, mapped, loc.get("name", dist_clean.title()), True
+
+        # Check Devanagari map
         if dist_clean in DEVANAGARI_CITY_MAP:
             d_key = DEVANAGARI_CITY_MAP[dist_clean]
             loc = MAHARASHTRA_LOCATIONS.get(d_key, {})
             return True, d_key, loc.get("name", dist_clean), True
 
-        # Check if matches English locations
+        # Check English locations
         for k, loc in MAHARASHTRA_LOCATIONS.items():
             if k in dist_lower or dist_lower in k:
                 return True, k, loc["name"], True
 
-        # Custom district not directly in map
+        # Custom district
         return True, dist_lower, dist_clean.title(), True
 
-    # 5. Fallback if no farmer_district was provided
-    if matched_city_key:
-        return True, matched_city_key, matched_display_name, False
-
+    # 3. Default fallback to Pune
     return True, "pune", "Pune", True
 
 def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr", is_my_city: bool = False) -> tuple:
@@ -272,15 +399,21 @@ def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr", 
     try:
         res = requests.get(url, params=params, timeout=8)
         if res.status_code != 200:
-            # Fallback to Pune coordinates if not found
-            fallback_loc = MAHARASHTRA_LOCATIONS["pune"]
+            # Try without ",IN" in case of non-India or alternate name
             res = requests.get(url, params={
-                "lat": fallback_loc["lat"],
-                "lon": fallback_loc["lon"],
+                "q": city_key,
                 "appid": OPENWEATHER_API_KEY,
                 "units": "metric"
             }, timeout=8)
-            city_title = display_name or "Pune"
+
+        if res.status_code != 200:
+            if lang == "mr":
+                err_text = f"🌦️ **हवामान माहिती ({city_title}):**\n‘{city_title}’ या शहराची थेट हवामान माहिती मिळू शकली नाही. कृपया शहराचे नाव तपासा किंवा जवळचा मुख्य जिल्हा विचारा (उदा. अमरावती, नागपूर, पुणे).\n\n[[ACTION:weather]]"
+            elif lang == "hi":
+                err_text = f"🌦️ **मौसम जानकारी ({city_title}):**\n‘{city_title}’ शहर की लाइव मौसम जानकारी नहीं मिल सकी। कृपया शहर का नाम जांचें या निकटतम मुख्य जिला पूछें (जैसे अमरावती, नागपुर, पुणे)।\n\n[[ACTION:weather]]"
+            else:
+                err_text = f"🌦️ **Weather Advisory ({city_title}):**\nCould not fetch live weather data for '{city_title}'. Please verify the city name or ask for a nearby major district (e.g. Amravati, Nagpur, Pune).\n\n[[ACTION:weather]]"
+            return err_text, None
 
         data = res.json()
         temp = round(float(data["main"]["temp"]), 1)
