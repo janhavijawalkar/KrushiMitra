@@ -15,6 +15,15 @@ import {
   Maximize2,
   Compass,
   ArrowRight,
+  Radio,
+  RotateCcw,
+  CloudSun,
+  Droplets,
+  Wind,
+  Thermometer,
+  CheckCircle2,
+  Square,
+  ExternalLink,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useVoiceInput } from "../hooks/useVoiceInput";
@@ -33,14 +42,14 @@ function FormattedMessage({ content, isUser }) {
     return parts.map((part, pIdx) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         return (
-          <strong key={pIdx} className={`font-bold ${isUser ? "text-white" : "text-gray-900"}`}>
+          <strong key={pIdx} className={`font-bold ${isUser ? "text-white" : "text-gray-900 dark:text-white"}`}>
             {part.slice(2, -2)}
           </strong>
         );
       }
       if (part.startsWith("*") && part.endsWith("*")) {
         return (
-          <em key={pIdx} className={`italic ${isUser ? "text-green-100" : "text-gray-700"}`}>
+          <em key={pIdx} className={`italic ${isUser ? "text-green-100" : "text-gray-700 dark:text-gray-300"}`}>
             {part.slice(1, -1)}
           </em>
         );
@@ -66,7 +75,7 @@ function FormattedMessage({ content, isUser }) {
         if (isBullet) {
           return (
             <div key={lIdx} className="flex items-start gap-1.5 pl-1">
-              <span className={`font-bold mt-0.5 ${isUser ? "text-green-200" : "text-[#2E7D32]"}`}>
+              <span className={`font-bold mt-0.5 ${isUser ? "text-green-200" : "text-[#2E7D32] dark:text-emerald-400"}`}>
                 •
               </span>
               <span className="flex-1">{parseInline(bulletText)}</span>
@@ -75,7 +84,7 @@ function FormattedMessage({ content, isUser }) {
         }
 
         return (
-          <p key={lIdx} className={isUser ? "text-white" : "text-gray-800"}>
+          <p key={lIdx} className={isUser ? "text-white" : "text-gray-800 dark:text-gray-200"}>
             {parseInline(trimmed)}
           </p>
         );
@@ -84,26 +93,149 @@ function FormattedMessage({ content, isUser }) {
   );
 }
 
+/* =========================================================
+   SIRI / ALEXA STYLE LIVE WEATHER WIDGET CARD
+   ========================================================= */
+function SiriWeatherCard({ card, nav, language }) {
+  if (!card) return null;
+
+  const isRain = card.condition_type === "rain";
+  const isHot = card.condition_type === "hot";
+
+  return (
+    <div
+      className={`mt-3 overflow-hidden rounded-2xl border shadow-md transition-all duration-300 ${
+        isRain
+          ? "bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 text-white border-blue-400/40"
+          : isHot
+          ? "bg-gradient-to-br from-amber-950 via-slate-900 to-orange-950 text-white border-amber-400/40"
+          : "bg-gradient-to-br from-[#0B2613] via-[#0E2015] to-[#07170D] text-white border-emerald-500/40"
+      }`}
+    >
+      <div className="p-3.5 pb-3">
+        {/* Top Header Row */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-xs text-xs">
+              📍
+            </span>
+            <h4 className="text-xs sm:text-sm font-black truncate text-white">
+              {card.city}
+            </h4>
+          </div>
+          <span className="shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>LIVE ⚡</span>
+          </span>
+        </div>
+
+        {/* Big Temperature & Animated Icon */}
+        <div className="flex items-center justify-between mt-2.5">
+          <div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm">
+                {card.temp}°
+              </span>
+              <span className="text-sm font-bold text-white/70">C</span>
+            </div>
+            <p className="text-[11px] font-medium text-white/80 mt-0.5">
+              {card.description} • {language === "mr" ? "भासणारे तापमान" : language === "hi" ? "महसूस" : "Feels like"} {card.feels_like}°C
+            </p>
+          </div>
+
+          <div className="text-4xl animate-bounce [animation-duration:3s]">
+            {isRain ? "🌧️" : isHot ? "☀️" : card.cloudiness > 60 ? "⛅" : "🌤️"}
+          </div>
+        </div>
+
+        {/* Weather Metrics Grid */}
+        <div className="grid grid-cols-3 gap-1.5 mt-3 pt-2.5 border-t border-white/10 text-center">
+          <div className="bg-white/10 rounded-xl p-1.5 backdrop-blur-xs">
+            <span className="text-[9px] text-white/70 block">
+              💧 {language === "mr" ? "आर्द्रता" : language === "hi" ? "नमी" : "Humidity"}
+            </span>
+            <span className="text-xs font-bold text-white">{card.humidity}%</span>
+          </div>
+          <div className="bg-white/10 rounded-xl p-1.5 backdrop-blur-xs">
+            <span className="text-[9px] text-white/70 block">
+              💨 {language === "mr" ? "वारा" : language === "hi" ? "वायु" : "Wind"}
+            </span>
+            <span className="text-xs font-bold text-white">{card.wind_speed} km/h</span>
+          </div>
+          <div className="bg-white/10 rounded-xl p-1.5 backdrop-blur-xs">
+            <span className="text-[9px] text-white/70 block">
+              🌧️ {language === "mr" ? "पाऊस" : language === "hi" ? "वर्षा" : "Rain"}
+            </span>
+            <span className="text-xs font-bold text-white">{card.rain || 0} mm</span>
+          </div>
+        </div>
+
+        {/* Agricultural Advisory Callout */}
+        {card.advice && (
+          <div className="mt-2.5 rounded-xl bg-black/30 p-2 text-[11px] leading-snug text-emerald-200 border border-emerald-500/20">
+            🌱 <strong className="text-white font-bold">{language === "mr" ? "शेती सल्ला:" : language === "hi" ? "कृषि सुझाव:" : "Agronomic Tip:"}</strong>{" "}
+            {card.advice.replace(/[*_#]/g, "")}
+          </div>
+        )}
+
+        {/* 1-Click Action to 5-Day Radar */}
+        {nav && (
+          <button
+            type="button"
+            onClick={() => nav("weather")}
+            className="w-full mt-2.5 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition backdrop-blur-xs cursor-pointer border border-white/10 active:scale-[0.98]"
+          >
+            <span>{language === "mr" ? "५ दिवसांचा सविस्तर हवामान अंदाज पहा 🌦️" : language === "hi" ? "५ दिवसीय विस्तृत मौसम देखें 🌦️" : "View 5-Day Detailed Radar 🌦️"}</span>
+            <ArrowRight size={13} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function VoiceChatbot({ nav, openInstallModal }) {
   const { language, user } = useApp();
   const [isOpen, setIsOpen] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(true); // Default to Siri/Alexa mode
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState(null);
+  const [isAutoSpeak, setIsAutoSpeak] = useState(true); // Hands-free Alexa/Siri auto voice reply
+  const [liveTranscript, setLiveTranscript] = useState("");
+
+  // Determine farmer's city/district from user profile or local storage
+  const farmerDistrict =
+    user?.district ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("krushimitra_selected_district") ||
+        (() => {
+          try {
+            const w = localStorage.getItem("krushimitra_last_weather");
+            if (w) {
+              const parsed = JSON.parse(w);
+              return parsed.city || parsed.district;
+            }
+          } catch (e) {}
+          return "Pune";
+        })()
+      : "Pune");
 
   const initialGreeting =
     language === "mr"
-      ? "नमस्कार शेतकरी बंधूंनो! 🙏 मी तुमचा कृषीमित्र AI सहाय्यक आहे.\n\nतुम्ही मला शेती, पिके, खते, कीड नियंत्रण, हवामान, शासकीय योजना किंवा कृषीमित्र वेबसाईटच्या कोणत्याही पानाबद्दल विचारू शकता."
+      ? `नमस्कार शेतकरी बंधूंनो! 🙏 मी तुमचा कृषीमित्र AI सहाय्यक आहे.\n\nतुम्ही मला **"आज माझ्या शहरात हवामान कसे आहे?"**, पिकांवरील कीड, खते, बाजारभाव किंवा सरकारी योजनांबद्दल थेट बोलून विचारू शकता!`
       : language === "hi"
-      ? "नमस्ते किसान भाइयों! 🙏 मैं आपका कृषि-मित्र AI सहायक हूँ।\n\nआप मुझसे फसल, खाद, कीट नियंत्रण, मौसम, सरकारी योजनाओं या कृषि-मित्र वेबसाइट के किसी भी फीचर के बारे में पूछ सकते हैं।"
-      : "Hello farmer friends! 🙏 I am your KrushiMitra AI Assistant.\n\nYou can ask me anything about crops, fertilizers, pest control, weather, government schemes, or how to use any tool on KrushiMitra.";
+      ? `नमस्ते किसान भाइयों! 🙏 मैं आपका कृषि-मित्र AI सहायक हूँ।\n\nआप मुझसे **"आज मेरे शहर का मौसम कैसा है?"**, फसल रोग, खाद, मंडी भाव या सरकारी योजनाओं के बारे में सीधे बोलकर पूछ सकते हैं!`
+      : `Hello farmer friends! 🙏 I am your KrushiMitra AI Assistant.\n\nYou can ask me aloud: **"Hey, what's today's weather of my city?"**, crop pests, fertilizer doses, mandi market prices, or government schemes!`;
 
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       content: initialGreeting,
       action: null,
+      weather_card: null,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -115,18 +247,19 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
   };
 
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen && !isMinimized && !isVoiceMode) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [messages, isOpen, isMinimized, isVoiceMode]);
 
-  // Voice Input Hook
+  // Voice Input Hook (Speech-to-Text)
   const { isListening, startListening, stopListening, isSupported } =
     useVoiceInput({
       onResult: (spokenText) => {
         if (spokenText) {
+          setLiveTranscript(spokenText);
           setInput(spokenText);
-          handleSendMessage(spokenText);
+          handleSendMessage(spokenText, true);
         }
       },
     });
@@ -135,9 +268,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
   const handleActionClick = (action) => {
     if (!action) return;
     if (action.type === "modal" && action.target === "install_modal") {
-      if (openInstallModal) {
-        openInstallModal();
-      }
+      if (openInstallModal) openInstallModal();
     } else if (action.type === "navigate" && action.page) {
       if (nav) {
         if (!user && !["landing", "login", "register", "forgot"].includes(action.page)) {
@@ -151,37 +282,57 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
     }
   };
 
-  // Text to Speech Functionality
-  const handleSpeak = (text, index) => {
+  // Text-to-Speech Functionality (TTS)
+  const handleSpeak = (text, index = null) => {
     if (!("speechSynthesis" in window)) return;
 
-    if (speakingIndex === index) {
+    if (speakingIndex !== null) {
       window.speechSynthesis.cancel();
       setSpeakingIndex(null);
-      return;
+      if (speakingIndex === index) return;
     }
 
     window.speechSynthesis.cancel();
 
-    // Clean markdown characters for pleasant voice reading
+    // Clean text for natural, friendly voice reading
     const cleanText = text
       .replace(/[*_#`~]/g, "")
-      .replace(/🌱|🌿|🌾|🎋|🏛️|🧪|🍅|💡|🙏|✅|⚠️|❌|🚀|🌦️|📲/g, "")
+      .replace(/🌱|🌿|🌾|🎋|🏛️|🧪|🍅|💡|🙏|✅|⚠️|❌|🚀|🌦️|📲|☀️|🌧️|💧|💨|💰|⚡/g, "")
       .replace(/\[\[ACTION:[^\]]+\]\]/g, "")
+      .replace(/https?:\/\/[^\s]+/g, "")
       .replace(/\n+/g, ". ");
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = language === "mr" ? "mr-IN" : language === "hi" ? "hi-IN" : "en-IN";
-    utterance.rate = 0.95; // Friendly cadence for farmers
+    utterance.rate = 0.95; // Friendly, clear cadence for farmers
+
+    // Select the best matching native voice if available
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      const targetPrefix = language === "mr" ? "mr" : language === "hi" ? "hi" : "en";
+      const matchedVoice = voices.find(
+        (v) => v.lang && (v.lang.toLowerCase().startsWith(targetPrefix) || v.lang.toLowerCase().includes(targetPrefix))
+      );
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      }
+    } catch (e) {}
 
     utterance.onend = () => setSpeakingIndex(null);
     utterance.onerror = () => setSpeakingIndex(null);
 
-    setSpeakingIndex(index);
+    setSpeakingIndex(index !== null ? index : "active");
     window.speechSynthesis.speak(utterance);
   };
 
-  const handleSendMessage = async (customMessage) => {
+  const stopSpeaking = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+    }
+  };
+
+  const handleSendMessage = async (customMessage, isFromVoice = false) => {
     const textToSend = (customMessage || input).trim();
     if (!textToSend || loading) return;
 
@@ -189,12 +340,14 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
       role: "user",
       content: textToSend,
       action: null,
+      weather_card: null,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
+    setLiveTranscript(textToSend);
 
     try {
       const response = await fetch(buildApiUrl("/ai/chat"), {
@@ -203,7 +356,8 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
         body: JSON.stringify({
           message: textToSend,
           language: language,
-          history: messages.slice(-4), // keep context
+          history: messages.slice(-4),
+          farmer_district: farmerDistrict,
         }),
       });
 
@@ -214,20 +368,57 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
           role: "assistant",
           content: data.reply,
           action: data.action || null,
+          weather_card: data.weather_card || null,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
+
         setMessages((prev) => [...prev, botMsg]);
+
+        // Alexa/Siri Hands-free auto voice answer
+        if (isAutoSpeak || isFromVoice) {
+          handleSpeak(data.reply, "active");
+        }
       } else {
         throw new Error(data.message || "Failed to get reply");
       }
     } catch (err) {
-      console.warn("AI Chat offline, generating local agronomy advice:", err);
+      console.warn("AI Chat offline, generating fallback response:", err);
       const queryLower = textToSend.toLowerCase();
 
       let offlineReply = "";
       let offlineAction = null;
 
       if (
+        queryLower.includes("weather") ||
+        queryLower.includes("हवामान") ||
+        queryLower.includes("मौसम") ||
+        queryLower.includes("rain") ||
+        queryLower.includes("पाऊस")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? `🌦️ **${farmerDistrict} हवामान व शेती अंदाज:**\n\nआपल्या ${farmerDistrict} जिल्ह्याचे थेट हवामान, पावसाची शक्यता आणि ५ दिवसांचा फवारणी अंदाज पाहण्यासाठी हवामान विभाग उघडा.`
+            : language === "hi"
+            ? `🌦️ **${farmerDistrict} मौसम पूर्वानुमान:**\n\nअपने ${farmerDistrict} जिले का लाइव मौसम और ५ दिवसीय पूर्वानुमान देखने हेतु मौसम पेज पर जाएं।`
+            : `🌦️ **Weather Forecast for ${farmerDistrict}:**\n\nCheck live hourly weather and 5-day agro-climatic outlooks on the Weather page.`;
+        offlineAction = {
+          type: "navigate",
+          page: "weather",
+          label: language === "mr" ? "हवामान पहा 🌦️" : language === "hi" ? "मौसम देखें 🌦️" : "View Weather 🌦️",
+        };
+      } else if (
+        queryLower.includes("rate") ||
+        queryLower.includes("भाव") ||
+        queryLower.includes("mandi") ||
+        queryLower.includes("बाजारभाव")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "💰 **महाराष्ट्र बाजारभाव (APMC Rates):**\n\n• सोयाबीन: ₹४,४०० ते ₹४,८५०/क्विंटल (MSP: ₹४,८९२)\n• कापूस: ₹६,९०० ते ₹७,३५०/क्विंटल (MSP: ₹७,१२१)\n• कांदा: ₹१,४०० ते ₹२,४००/क्विंटल"
+            : language === "hi"
+            ? "💰 **मंडी भाव (APMC Rates):**\n\n• सोयाबीन: ₹४,४०० से ₹४,८५०/क्विंटल (MSP: ₹४,८९२)\n• कपास: ₹६,९०० से ₹७,३५०/क्विंटल (MSP: ₹७,१२१)\n• प्याज: ₹१,४०० से ₹२,४००/क्विंटल"
+            : "💰 **Maharashtra APMC Mandi Rates:**\n\n• Soybean: ₹4,400 to ₹4,850/quintal (MSP: ₹4,892)\n• Cotton: ₹6,900 to ₹7,350/quintal (MSP: ₹7,121)\n• Onion: ₹1,400 to ₹2,400/quintal";
+      } else if (
         queryLower.includes("predict") ||
         queryLower.includes("अंदाज") ||
         queryLower.includes("अनुमान") ||
@@ -242,262 +433,397 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
         offlineAction = {
           type: "navigate",
           page: "prediction",
-          label:
-            language === "mr"
-              ? "पीक अंदाज सुरू करा 🚀"
-              : language === "hi"
-              ? "फसल अनुमान शुरू करें 🚀"
-              : "Open Crop Prediction 🚀",
+          label: language === "mr" ? "पीक अंदाज सुरू करा 🚀" : language === "hi" ? "फसल अनुमान शुरू करें 🚀" : "Open Crop Prediction 🚀",
         };
-      } else if (
-        queryLower.includes("soil") ||
-        queryLower.includes("माती") ||
-        queryLower.includes("मिट्टी") ||
-        queryLower.includes("recommend")
-      ) {
-        offlineReply =
-          language === "mr"
-            ? "🧪 **माती परीक्षण व खत सल्ला (Soil Advisory):**\n\nनत्र (N), स्फुरद (P), पालाश (K) आणि सामू (pH) मूल्ये टाकून जमिनीसाठी सर्वात फायदेशीर टॉप ३ पिके आणि खतांचे वेळापत्रक मिळवा."
-            : language === "hi"
-            ? "🧪 **मृदा परीक्षण एवं फसल सलाह:**\n\nNPK और pH स्तर दर्ज कर अपनी जमीन के लिए सर्वश्रेष्ठ ३ फसलें और उर्वरक शेड्यूल प्राप्त करें।"
-            : "🧪 **Soil Health & Crop Advisory:**\n\nInput NPK and pH values to discover the top 3 recommended crops and balanced fertilizer dosages.";
-        offlineAction = {
-          type: "navigate",
-          page: "recommendation",
-          label:
-            language === "mr"
-              ? "माती सल्ला उघडा 🧪"
-              : language === "hi"
-              ? "मृदा सलाह खोलें 🧪"
-              : "Open Soil Advisory 🧪",
-        };
-      } else if (
-        queryLower.includes("weather") ||
-        queryLower.includes("हवामान") ||
-        queryLower.includes("मौसम") ||
-        queryLower.includes("rain") ||
-        queryLower.includes("पाऊस")
-      ) {
-        offlineReply =
-          language === "mr"
-            ? "🌦️ **हवामान व शेती अंदाज:**\n\nमहाराष्ट्रातील ३६ जिल्ह्यांचे थेट हवामान आणि ५ दिवसांचा पाऊस व फवारणी अंदाज पाहण्यासाठी हवामान विभाग उघडा."
-            : language === "hi"
-            ? "🌦️ **मौसम पूर्वानुमान:**\n\nमहाराष्ट्र के ३६ जिलों का लाइव मौसम और आगामी ५ दिनों का पूर्वानुमान देखने के लिए मौसम पेज पर जाएं।"
-            : "🌦️ **Weather Forecast:**\n\nAccess hourly weather telemetry and 5-day agro-climatic outlooks for all 36 Maharashtra districts.";
-        offlineAction = {
-          type: "navigate",
-          page: "weather",
-          label:
-            language === "mr"
-              ? "हवामान पहा 🌦️"
-              : language === "hi"
-              ? "मौसम देखें 🌦️"
-              : "View Weather 🌦️",
-        };
-      } else if (
-        queryLower.includes("download") ||
-        queryLower.includes("app") ||
-        queryLower.includes("डाऊनलोड") ||
-        queryLower.includes("डाउनलोड") ||
-        queryLower.includes("apk")
-      ) {
-        offlineReply =
-          language === "mr"
-            ? "📲 **कृषीमित्र मोबाईल ॲप:**\n\nऑफलाइन शेती सल्ला, वेगवान नोटिफिकेशन आणि सुलभ वापरासाठी कृषीमित्र ॲप मोबाईलवर इन्स्टॉल करा."
-            : language === "hi"
-            ? "📲 **कृषि-मित्र मोबाइल ऐप:**\n\nऑफलाइन उपयोग और त्वरित अलर्ट के लिए कृषि-मित्र ऐप इंस्टॉल करें।"
-            : "📲 **KrushiMitra Mobile App:**\n\nInstall the mobile app for offline advisory and real-time farmer alerts.";
-        offlineAction = {
-          type: "modal",
-          target: "install_modal",
-          label:
-            language === "mr"
-              ? "ॲप इन्स्टॉल करा 📲"
-              : language === "hi"
-              ? "ऐप इंस्टॉल करें 📲"
-              : "Install Mobile App 📲",
-        };
-      } else if (
-        queryLower.includes("fertilizer") ||
-        queryLower.includes("खत") ||
-        queryLower.includes("खाद") ||
-        queryLower.includes("npk")
-      ) {
-        offlineReply =
-          language === "mr"
-            ? "🌾 **संतुलित खत व्यवस्थापन:**\n\nपिकांसाठी संतुलित NPK खतांचा वापर करा. पेरणीच्या वेळी DAP किंवा 10:26:26 आणि वाढीच्या टप्प्यावर युरियाचा हप्ता देणे फायदेशीर ठरते."
-            : language === "hi"
-            ? "🌾 **संतुलित उर्वरक प्रबंधन:**\n\nफसलों के लिए संतुलित NPK उर्वरक का उपयोग करें। बुवाई के समय DAP या 10:26:26 और वानस्पतिक वृद्धि पर यूरिया देना लाभकारी है।"
-            : "🌾 **Balanced Nutrition:**\n\nMaintain balanced NPK nutrition. Use basal DAP / 10:26:26 at sowing and split urea application during vegetative growth.";
       } else {
         offlineReply =
           language === "mr"
-            ? "🌱 **कृषीमित्र AI सहाय्यक:**\n\nसध्या इंटरनेट मर्यादित आहे, तरीही आपण वरील 'पीक अंदाज' व 'माती सल्ला' साधनांचा वापर करू शकता."
+            ? "🌱 **कृषीमित्र AI शेती सहाय्यक:**\n\nआपण मला हवामान, खत व्यवस्थापन, कीड नियंत्रण (कापूस बोंड अळी, सोयाबीन), बाजारभाव किंवा सरकारी योजनांबद्दल थेट विचारू शकता."
             : language === "hi"
-            ? "🌱 **कृषि-मित्र AI सहायक:**\n\nवर्तमान में इंटरनेट सीमित है, परंतु आप 'फसल पूर्वानुमान' व 'मृदा सलाह' उपकरणों का उपयोग कर सकते हैं।"
-            : "🌱 **KrushiMitra AI Assistant:**\n\nRunning offline fallback. You can navigate to Yield Predictor & Soil Advisory tools using the menu.";
+            ? "🌱 **कृषि-मित्र AI कृषि सहायक:**\n\nआप मुझसे मौसम, खाद, कीट नियंत्रण (कपास सुंडी, सोयाबीन), मंडी भाव या सरकारी योजनाओं के बारे में पूछ सकते हैं।"
+            : "🌱 **KrushiMitra AI Agronomy Assistant:**\n\nYou can ask about live weather, fertilizer dosage, crop diseases (cotton, soybean), mandi rates, or government schemes.";
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: offlineReply,
-          action: offlineAction,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
+      const botMsg = {
+        role: "assistant",
+        content: offlineReply,
+        action: offlineAction,
+        weather_card: null,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+
+      if (isAutoSpeak || isFromVoice) {
+        handleSpeak(offlineReply, "active");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const clearChat = () => {
-    window.speechSynthesis?.cancel();
-    setSpeakingIndex(null);
+    stopSpeaking();
     setMessages([
       {
         role: "assistant",
         content: initialGreeting,
         action: null,
+        weather_card: null,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
+    setLiveTranscript("");
   };
 
-  const suggestionChips =
+  // Quick spoken suggestion chips across all 3 languages
+  const spokenPrompts =
     language === "mr"
       ? [
-          { label: "🌾 पीक अंदाज कसा घ्यावा?", query: "पीक अंदाज कसा घ्यावा?" },
-          { label: "🧪 माती परीक्षण व खत सल्ला", query: "माती परीक्षण आणि खत शिफारस कशी मिळते?" },
-          { label: "🌦️ पुणे हवामान अंदाज", query: "पुणे जिल्ह्याचे आजचे हवामान काय आहे?" },
-          { label: "🏛️ पीएम-किसान योजना", query: "पीएम किसान योजनेचे पैसे कधी मिळतात?" },
-          { label: "🐛 कापूस बोंड अळी उपाय", query: "कापसावरील बोंड अळीसाठी काय उपाय करावेत?" },
-          { label: "📲 ॲप डाऊनलोड करा", query: "कृषीमित्र ॲप मोबाईलवर कसे डाऊनलोड करावे?" },
+          { icon: "🌦️", label: "आजचे हवामान", query: "आज माझ्या शहरात हवामान कसे आहे?" },
+          { icon: "🐛", label: "कापूस बोंड अळी उपाय", query: "कापसावरील बोंड अळीसाठी काय उपाय करावेत?" },
+          { icon: "💰", label: "सोयाबीन बाजारभाव", query: "सोयाबीनचा आजचा बाजारभाव काय आहे?" },
+          { icon: "🧪", label: "खत व माती सल्ला", query: "माती परीक्षण आणि खत शिफारस कशी मिळते?" },
+          { icon: "🏛️", label: "पीएम किसान योजना", query: "पीएम किसान योजनेचे पैसे कधी मिळतात?" },
+          { icon: "🌾", label: "पीक अंदाज कसा घ्यावा?", query: "पीक अंदाज कसा घ्यावा?" },
         ]
       : language === "hi"
       ? [
-          { label: "🌾 फसल उपज अनुमान", query: "फसल उपज का अनुमान कैसे लगाएं?" },
-          { label: "🧪 मृदा परीक्षण और खाद", query: "मिट्टी की जांच और खाद की सलाह कैसे पाएं?" },
-          { label: "🌦️ मौसम पूर्वानुमान", query: "मौसम पूर्वानुमान कैसे चेक करें?" },
-          { label: "🏛️ पीएम-किसान योजना", query: "पीएम किसान योजना की जानकारी दीजिए" },
-          { label: "🐛 कपास गुलाबी सुंडी", query: "कपास में गुलाबी सुंडी का नियंत्रण कैसे करें?" },
-          { label: "📲 ऐप डाउनलोड करें", query: "कृषि-मित्र मोबाइल ऐप कैसे डाउनलोड करें?" },
+          { icon: "🌦️", label: "आज का मौसम", query: "आज मेरे शहर का मौसम कैसा है?" },
+          { icon: "🐛", label: "कपास गुलाबी सुंडी", query: "कपास में गुलाबी सुंडी का नियंत्रण कैसे करें?" },
+          { icon: "💰", label: "सोयाबीन मंडी भाव", query: "सोयाबीन का आज का मंडी भाव क्या है?" },
+          { icon: "🧪", label: "मृदा व खाद सलाह", query: "मिट्टी की जांच और खाद की सलाह कैसे पाएं?" },
+          { icon: "🏛️", label: "पीएम-किसान योजना", query: "पीएम किसान योजना की जानकारी दीजिए" },
+          { icon: "🌾", label: "फसल उपज अनुमान", query: "फसल उपज का अनुमान कैसे लगाएं?" },
         ]
       : [
-          { label: "🌾 How to predict yield?", query: "How to predict crop yield in KrushiMitra?" },
-          { label: "🧪 Soil & fertilizer guide", query: "How to get soil recommendation and fertilizer dosage?" },
-          { label: "🌦️ Weather forecast", query: "How to check agricultural weather forecast?" },
-          { label: "🏛️ PM-Kisan subsidy", query: "Explain PM-Kisan and Namo Shetkari schemes" },
-          { label: "🐛 Cotton pink bollworm", query: "How to control pink bollworm in cotton?" },
-          { label: "📲 Download App", query: "How do I download the mobile app?" },
+          { icon: "🌦️", label: "Today's Weather", query: "Hey what's today's weather of my city?" },
+          { icon: "🐛", label: "Cotton Bollworm", query: "How to control pink bollworm in cotton?" },
+          { icon: "💰", label: "Soybean Mandi Price", query: "What is today's soybean market rate?" },
+          { icon: "🧪", label: "Soil & Fertilizer", query: "How to get soil recommendation and fertilizer dosage?" },
+          { icon: "🏛️", label: "PM-Kisan Scheme", query: "Explain PM-Kisan and Namo Shetkari schemes" },
+          { icon: "🌾", label: "Predict Crop Yield", query: "How to predict crop yield in KrushiMitra?" },
         ];
+
+  // Get the latest assistant response for Voice Mode display
+  const latestBotMsg = [...messages].reverse().find((m) => m.role === "assistant") || messages[0];
+  const latestUserMsg = [...messages].reverse().find((m) => m.role === "user");
 
   return (
     <>
       {/* FLOATING ACTION BUTTON */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] px-4 py-3.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer border-2 border-white/40"
+          onClick={() => {
+            setIsOpen(true);
+            setIsVoiceMode(true);
+          }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] px-4.5 py-3.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer border-2 border-white/40 ring-4 ring-green-600/20"
           title={
             language === "mr"
-              ? "कृषीमित्र AI सह बोला 🎙️"
+              ? "कृषीमित्र AI व्हॉइस असिस्टंट (Siri / Alexa प्रमाणे बोला) 🎙️"
               : language === "hi"
-              ? "कृषि-मित्र AI से बात करें 🎙️"
-              : "Ask KrushiMitra AI 🎙️"
+              ? "कृषि-मित्र AI वॉइस असिस्टेंट (Siri / Alexa जैसे बोलें) 🎙️"
+              : "Ask KrushiMitra AI Voice Assistant (Siri / Alexa style) 🎙️"
           }
         >
           <div className="relative">
-            <Bot size={22} className="group-hover:rotate-12 transition-transform" />
+            <Radio size={22} className="group-hover:rotate-12 transition-transform text-yellow-300" />
             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
             </span>
           </div>
 
-          <span className="text-xs font-extrabold tracking-wide hidden sm:inline">
-            {language === "mr"
-              ? "कृषीमित्र AI 🎙️"
-              : language === "hi"
-              ? "कृषि-मित्र AI 🎙️"
-              : "KrushiMitra AI 🎙️"}
-          </span>
+          <div className="flex flex-col items-start leading-none hidden sm:flex">
+            <span className="text-xs font-black tracking-wide">
+              {language === "mr" ? "कृषीमित्र AI 🎙️" : language === "hi" ? "कृषि-मित्र AI 🎙️" : "KrushiMitra AI 🎙️"}
+            </span>
+            <span className="text-[9px] text-green-200 font-semibold mt-0.5">
+              {language === "mr" ? "बोलून प्रश्न विचारा (Siri/Alexa)" : language === "hi" ? "बोलकर पूछें (Siri/Alexa)" : "Voice Assistant"}
+            </span>
+          </div>
         </button>
       )}
 
-      {/* CHAT DRAWER / WINDOW */}
+      {/* ASSISTANT WINDOW */}
       {isOpen && (
         <div
-          className={`fixed right-4 bottom-4 z-50 flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-green-200 transition-all duration-300 ${
+          className={`fixed right-3 sm:right-6 bottom-4 z-50 flex flex-col overflow-hidden rounded-3xl bg-white dark:bg-[#0D1710] shadow-2xl border border-green-200 dark:border-[#24402A] transition-all duration-300 ${
             isMinimized
               ? "h-16 w-80 sm:w-96"
-              : "h-[560px] max-h-[85vh] w-[92vw] sm:w-[420px]"
+              : isExpanded
+              ? "h-[88vh] w-[95vw] sm:w-[580px]"
+              : "h-[600px] max-h-[88vh] w-[94vw] sm:w-[440px]"
           }`}
         >
           {/* HEADER */}
-          <div className="flex items-center justify-between bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#15803D] px-4 py-3 text-white">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-xs">
+          <div className="flex items-center justify-between bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#15803D] px-4 py-3 text-white shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-xs">
                 <Sparkles size={18} className="text-yellow-300" />
               </div>
-              <div>
-                <h3 className="text-xs font-extrabold flex items-center gap-1.5">
-                  {language === "mr"
-                    ? "कृषीमित्र AI सहाय्यक"
-                    : language === "hi"
-                    ? "कृषि-मित्र AI सहायक"
-                    : "KrushiMitra AI Bot"}
-                  <span className="text-[9px] font-semibold bg-green-500/80 px-1.5 py-0.5 rounded-full">
-                    {language.toUpperCase()}
+              <div className="min-w-0">
+                <h3 className="text-xs font-black truncate flex items-center gap-1.5">
+                  {language === "mr" ? "कृषीमित्र AI व्हॉइस" : language === "hi" ? "कृषि-मित्र AI वॉइस" : "KrushiMitra Voice AI"}
+                  <span className="text-[9px] font-bold bg-green-500/80 px-1.5 py-0.2 rounded-full uppercase">
+                    {language}
                   </span>
                 </h3>
-                <p className="text-[10px] text-green-100 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                  {language === "mr"
-                    ? "२४/७ शेती सल्लागार"
-                    : language === "hi"
-                    ? "२४/७ कृषि सलाहकार"
-                    : "24/7 Agronomy Assistant"}
+                <p className="text-[10px] text-green-100 flex items-center gap-1 truncate">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+                  <span>📍 {farmerDistrict}</span>
+                  <span>• {isVoiceMode ? "Siri/Alexa Mode" : "Chat Mode"}</span>
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 text-white/80">
-              <button
-                type="button"
-                onClick={clearChat}
-                className="rounded-lg p-1.5 hover:bg-white/20 hover:text-white transition cursor-pointer"
-                title="Clear Chat"
-              >
-                <Trash2 size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="rounded-lg p-1.5 hover:bg-white/20 hover:text-white transition cursor-pointer"
-                title={isMinimized ? "Maximize" : "Minimize"}
-              >
-                {isMinimized ? <Maximize2 size={15} /> : <Minimize2 size={15} />}
-              </button>
+            {/* Mode Switcher & Controls */}
+            <div className="flex items-center gap-1 text-white/90 shrink-0">
+              {/* Voice / Chat Tab Switcher */}
+              <div className="flex items-center rounded-lg bg-black/20 p-0.5 backdrop-blur-xs mr-1">
+                <button
+                  type="button"
+                  onClick={() => setIsVoiceMode(true)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                    isVoiceMode ? "bg-white text-[#1B5E20] shadow-2xs" : "text-white/80 hover:text-white"
+                  }`}
+                  title="Voice Assistant Mode"
+                >
+                  <Radio size={12} />
+                  <span className="hidden sm:inline">Voice</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsVoiceMode(false)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                    !isVoiceMode ? "bg-white text-[#1B5E20] shadow-2xs" : "text-white/80 hover:text-white"
+                  }`}
+                  title="Text Chat Mode"
+                >
+                  <MessageSquare size={12} />
+                  <span className="hidden sm:inline">Chat</span>
+                </button>
+              </div>
+
+              {/* Auto-Speak Toggle */}
               <button
                 type="button"
                 onClick={() => {
-                  window.speechSynthesis?.cancel();
+                  if (speakingIndex !== null) stopSpeaking();
+                  setIsAutoSpeak(!isAutoSpeak);
+                }}
+                className={`rounded-lg p-1.5 transition cursor-pointer ${
+                  isAutoSpeak ? "bg-white/20 text-yellow-300" : "hover:bg-white/20 text-white/60"
+                }`}
+                title={isAutoSpeak ? "Auto-Voice ON (बोलून उत्तर द्या)" : "Auto-Voice Muted (आवाज बंद)"}
+              >
+                {isAutoSpeak ? <Volume2 size={15} /> : <VolumeX size={15} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={clearChat}
+                className="rounded-lg p-1.5 hover:bg-white/20 transition cursor-pointer"
+                title="Clear"
+              >
+                <Trash2 size={14} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="rounded-lg p-1.5 hover:bg-white/20 transition cursor-pointer hidden sm:inline-flex"
+                title={isExpanded ? "Restore" : "Expand"}
+              >
+                {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  stopSpeaking();
                   setIsOpen(false);
                 }}
-                className="rounded-lg p-1.5 hover:bg-white/20 hover:text-white transition cursor-pointer"
+                className="rounded-lg p-1.5 hover:bg-white/20 transition cursor-pointer"
                 title="Close"
               >
-                <X size={17} />
+                <X size={16} />
               </button>
             </div>
           </div>
 
-          {/* BODY & MESSAGES */}
-          {!isMinimized && (
+          {/* MAIN BODY: VOICE MODE (SIRI / ALEXA STYLE) */}
+          {!isMinimized && isVoiceMode && (
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4 sm:p-5 bg-radial from-[#12331B] via-[#0D2414] to-[#08170D] text-white">
+              {/* TOP STATUS BAR */}
+              <div className="flex items-center justify-between text-[11px] text-emerald-200/80 pb-2 border-b border-white/10">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>📍 {farmerDistrict}</span>
+                  <span>({language.toUpperCase()})</span>
+                </span>
+                {speakingIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={stopSpeaking}
+                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/30 text-red-300 border border-red-400/40 hover:bg-red-500/50 cursor-pointer"
+                  >
+                    <Square size={10} />
+                    <span>{language === "mr" ? "थांबवा" : language === "hi" ? "रोकें" : "Stop"}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* LATEST EXCHANGE / ANSWER DISPLAY */}
+              <div className="my-auto py-3 space-y-3">
+                {latestUserMsg && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300/90 bg-white/5 rounded-xl px-3 py-2 border border-white/10">
+                    <User size={14} className="shrink-0 text-emerald-400" />
+                    <span className="truncate">"{latestUserMsg.content}"</span>
+                  </div>
+                )}
+
+                {/* Siri Weather Card Display if Available */}
+                {latestBotMsg.weather_card ? (
+                  <SiriWeatherCard card={latestBotMsg.weather_card} nav={nav} language={language} />
+                ) : (
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/15 shadow-xl max-h-56 overflow-y-auto">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/30 text-emerald-300 border border-emerald-400/40">
+                        <Bot size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <FormattedMessage content={latestBotMsg.content} isUser={false} />
+
+                        {latestBotMsg.action && (
+                          <button
+                            type="button"
+                            onClick={() => handleActionClick(latestBotMsg.action)}
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:from-emerald-600 hover:to-green-700 transition cursor-pointer"
+                          >
+                            <Compass size={13} className="text-yellow-300" />
+                            <span>{latestBotMsg.action.label}</span>
+                            <ArrowRight size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* CENTER: SIRI / ALEXA GLOWING VOICE ORB & SOUND WAVES */}
+              <div className="flex flex-col items-center justify-center my-3">
+                <div className="relative flex items-center justify-center">
+                  {/* Concentric Pulsing Sound Rings */}
+                  {(isListening || speakingIndex !== null) && (
+                    <>
+                      <span className="absolute h-40 w-40 rounded-full bg-emerald-500/20 animate-ping [animation-duration:2.5s]" />
+                      <span className="absolute h-48 w-48 rounded-full bg-green-400/15 animate-pulse" />
+                    </>
+                  )}
+
+                  {/* Equalizer Sound Wave Bars */}
+                  <div className="absolute flex items-center justify-center gap-1.5 z-0 pointer-events-none">
+                    {[30, 60, 95, 45, 80, 55, 90, 40].map((h, i) => (
+                      <span
+                        key={i}
+                        className={`w-1.5 rounded-full transition-all duration-150 ${
+                          isListening
+                            ? "bg-red-400 animate-pulse"
+                            : speakingIndex !== null
+                            ? "bg-emerald-300 animate-pulse"
+                            : "bg-white/10"
+                        }`}
+                        style={{
+                          height: isListening || speakingIndex !== null ? `${Math.max(14, h * 0.55)}px` : "6px",
+                          animationDelay: `${i * 110}ms`,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Main Center Glowing Mic Button */}
+                  <button
+                    type="button"
+                    onClick={isListening ? stopListening : () => startListening()}
+                    className={`relative z-10 flex h-24 w-24 items-center justify-center rounded-full shadow-2xl transition-all duration-300 cursor-pointer ${
+                      isListening
+                        ? "bg-gradient-to-tr from-red-600 to-rose-500 text-white scale-110 ring-8 ring-red-500/30 animate-pulse"
+                        : loading
+                        ? "bg-gradient-to-tr from-amber-600 to-yellow-500 text-white scale-105 ring-8 ring-amber-500/30"
+                        : speakingIndex !== null
+                        ? "bg-gradient-to-tr from-emerald-600 to-teal-500 text-white ring-8 ring-emerald-500/30"
+                        : "bg-gradient-to-tr from-[#1B5E20] via-[#2E7D32] to-[#10B981] text-white hover:scale-105 active:scale-95 ring-8 ring-emerald-500/20"
+                    }`}
+                  >
+                    {isListening ? (
+                      <MicOff size={34} className="animate-bounce" />
+                    ) : loading ? (
+                      <Sparkles size={34} className="animate-spin text-yellow-300" />
+                    ) : speakingIndex !== null ? (
+                      <Volume2 size={34} className="animate-pulse text-emerald-200" />
+                    ) : (
+                      <Mic size={34} className="text-white drop-shadow-md" />
+                    )}
+                  </button>
+                </div>
+
+                {/* State Label Below Orb */}
+                <p className="text-xs font-bold text-center mt-3 text-emerald-200">
+                  {isListening
+                    ? language === "mr"
+                      ? "👂 ऐकत आहे... बोला... (Listening...)"
+                      : language === "hi"
+                      ? "👂 सुन रहा हूँ... बोलें... (Listening...)"
+                      : "👂 Listening... Speak now..."
+                    : loading
+                    ? language === "mr"
+                      ? "🧠 माहिती शोधत आहे... (Thinking...)"
+                      : language === "hi"
+                      ? "🧠 विश्लेषण हो रहा है... (Thinking...)"
+                      : "🧠 Thinking & Analyzing..."
+                    : speakingIndex !== null
+                    ? language === "mr"
+                      ? "🔊 उत्तर सांगत आहे... (Speaking...)"
+                      : language === "hi"
+                      ? "🔊 उत्तर बता रहा हूँ... (Speaking...)"
+                      : "🔊 Speaking answer aloud..."
+                    : language === "mr"
+                    ? "🎙️ टॅप करा आणि विचारा (उदा. 'हवामान काय आहे?')"
+                    : language === "hi"
+                    ? "🎙️ टैप करें और बोलें (उदा. 'मौसम कैसा है?')"
+                    : "🎙️ Tap mic & speak (e.g. 'What's the weather?')" }
+                </p>
+              </div>
+
+              {/* QUICK VOICE PROMPTS CAROUSEL */}
+              <div className="pt-2 border-t border-white/10">
+                <p className="text-[10px] font-bold text-emerald-300/70 mb-1.5">
+                  {language === "mr" ? "💡 बोलण्यासाठी त्वरित प्रश्न (टॅप करा):" : language === "hi" ? "💡 बोलकर पूछें (टैप करें):" : "💡 Try saying aloud (tap to ask):"}
+                </p>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  {spokenPrompts.map((p, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSendMessage(p.query, true)}
+                      className="shrink-0 flex items-center gap-1 rounded-full border border-white/15 bg-white/10 hover:bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white transition cursor-pointer backdrop-blur-xs"
+                    >
+                      <span>{p.icon}</span>
+                      <span>{p.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MAIN BODY: TRADITIONAL CHAT MODE */}
+          {!isMinimized && !isVoiceMode && (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-[#F7FAF6] to-[#F1F6F0]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-[#F7FAF6] to-[#F1F6F0] dark:from-[#0D1710] dark:to-[#08120B]">
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -509,25 +835,30 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                       className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
                         msg.role === "user"
                           ? "bg-[#2E7D32] text-white"
-                          : "bg-green-100 text-[#1B5E20] border border-green-300"
+                          : "bg-green-100 dark:bg-emerald-900/50 text-[#1B5E20] dark:text-emerald-300 border border-green-300 dark:border-emerald-800"
                       }`}
                     >
                       {msg.role === "user" ? <User size={14} /> : <Bot size={15} />}
                     </div>
 
                     <div
-                      className={`relative max-w-[85%] rounded-2xl p-3 text-xs shadow-2xs leading-relaxed ${
+                      className={`relative max-w-[88%] rounded-2xl p-3 text-xs shadow-2xs leading-relaxed ${
                         msg.role === "user"
                           ? "bg-[#2E7D32] text-white rounded-tr-none"
-                          : "bg-white text-gray-800 border border-green-100/80 rounded-tl-none"
+                          : "bg-white dark:bg-[#132218] text-gray-800 dark:text-gray-200 border border-green-100/80 dark:border-[#24402A] rounded-tl-none"
                       }`}
                     >
                       {/* Message Content Formatted */}
                       <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
 
+                      {/* Interactive Siri-Style Weather Widget if attached */}
+                      {msg.weather_card && (
+                        <SiriWeatherCard card={msg.weather_card} nav={nav} language={language} />
+                      )}
+
                       {/* Interactive Navigation Action Button */}
                       {msg.action && (
-                        <div className="mt-2.5 pt-2 border-t border-green-100/90 flex flex-wrap items-center gap-2">
+                        <div className="mt-2.5 pt-2 border-t border-green-100/90 dark:border-white/10 flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleActionClick(msg.action)}
@@ -547,22 +878,18 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                           <button
                             type="button"
                             onClick={() => handleSpeak(msg.content, idx)}
-                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-green-50 text-[#1B5E20] font-bold cursor-pointer transition"
-                            title={
-                              speakingIndex === idx
-                                ? "Stop Speaking"
-                                : "Listen (Text-to-Speech)"
-                            }
+                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-green-50 dark:hover:bg-white/10 text-[#1B5E20] dark:text-emerald-300 font-bold cursor-pointer transition"
+                            title={speakingIndex === idx ? "Stop Speaking" : "Listen (Text-to-Speech)"}
                           >
                             {speakingIndex === idx ? (
                               <>
                                 <VolumeX size={13} className="text-red-500 animate-pulse" />
-                                <span className="text-red-500">थांबवा</span>
+                                <span className="text-red-500">{language === "mr" ? "थांबवा" : language === "hi" ? "रोकें" : "Stop"}</span>
                               </>
                             ) : (
                               <>
                                 <Volume2 size={13} />
-                                <span>ऐका 🔊</span>
+                                <span>{language === "mr" ? "ऐका 🔊" : language === "hi" ? "सुनें 🔊" : "Listen 🔊"}</span>
                               </>
                             )}
                           </button>
@@ -574,20 +901,16 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
 
                 {loading && (
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-green-100 text-[#1B5E20]">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-emerald-900/50 text-[#1B5E20] dark:text-emerald-300">
                       <Bot size={15} />
                     </div>
-                    <div className="rounded-2xl rounded-tl-none bg-white p-3.5 border border-green-100 shadow-2xs">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <div className="rounded-2xl rounded-tl-none bg-white dark:bg-[#132218] p-3.5 border border-green-100 dark:border-[#24402A] shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                         <span className="h-2 w-2 rounded-full bg-[#2E7D32] animate-bounce" />
                         <span className="h-2 w-2 rounded-full bg-[#2E7D32] animate-bounce [animation-delay:0.2s]" />
                         <span className="h-2 w-2 rounded-full bg-[#2E7D32] animate-bounce [animation-delay:0.4s]" />
-                        <span className="ml-1.5 text-[11px] font-semibold text-[#1B5E20]">
-                          {language === "mr"
-                            ? "माहिती शोधत आहे..."
-                            : language === "hi"
-                            ? "जानकारी खोज रहा हूँ..."
-                            : "Thinking..."}
+                        <span className="ml-1.5 text-[11px] font-semibold text-[#1B5E20] dark:text-emerald-400">
+                          {language === "mr" ? "माहिती शोधत आहे..." : language === "hi" ? "जानकारी खोज रहा हूँ..." : "Thinking..."}
                         </span>
                       </div>
                     </div>
@@ -598,33 +921,24 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
               </div>
 
               {/* QUICK SUGGESTIONS */}
-              <div className="border-t border-green-100 bg-white px-3 py-2">
-                <p className="text-[10px] font-bold text-gray-400 mb-1.5">
-                  {language === "mr"
-                    ? "💡 त्वरित प्रश्न विचारा:"
-                    : language === "hi"
-                    ? "💡 तुरंत पूछें:"
-                    : "💡 Suggested questions:"}
-                </p>
+              <div className="border-t border-green-100 dark:border-[#24402A] bg-white dark:bg-[#0D1710] px-3 py-2">
                 <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                  {suggestionChips.map((chip, idx) => (
+                  {spokenPrompts.map((chip, idx) => (
                     <button
                       key={idx}
                       type="button"
-                      onClick={() => {
-                        setInput(chip.query);
-                        handleSendMessage(chip.query);
-                      }}
-                      className="shrink-0 rounded-full border border-green-200 bg-green-50/70 px-2.5 py-1 text-[10px] font-semibold text-[#1B5E20] hover:bg-[#2E7D32] hover:text-white transition cursor-pointer"
+                      onClick={() => handleSendMessage(chip.query, false)}
+                      className="shrink-0 flex items-center gap-1 rounded-full border border-green-200 dark:border-[#24402A] bg-green-50/70 dark:bg-[#183321] px-2.5 py-1 text-[10px] font-semibold text-[#1B5E20] dark:text-emerald-300 hover:bg-[#2E7D32] hover:text-white transition cursor-pointer"
                     >
-                      {chip.label}
+                      <span>{chip.icon}</span>
+                      <span>{chip.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* FOOTER & INPUT */}
-              <div className="border-t border-gray-100 bg-white p-3">
+              {/* INPUT BAR */}
+              <div className="border-t border-gray-100 dark:border-[#24402A] bg-white dark:bg-[#0D1710] p-3">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -632,7 +946,6 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                   }}
                   className="flex items-center gap-2"
                 >
-                  {/* MIC BUTTON */}
                   {isSupported && (
                     <button
                       type="button"
@@ -640,23 +953,11 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition duration-200 cursor-pointer ${
                         isListening
                           ? "bg-red-500 text-white animate-pulse ring-4 ring-red-200"
-                          : "bg-green-100 text-[#1B5E20] hover:bg-green-200 active:scale-95"
+                          : "bg-green-100 dark:bg-[#183321] text-[#1B5E20] dark:text-emerald-300 hover:bg-green-200"
                       }`}
-                      title={
-                        isListening
-                          ? "Stop Listening"
-                          : language === "mr"
-                          ? "बोलून प्रश्न विचारा (मराठी/हिंदी/इंग्रजी)"
-                          : language === "hi"
-                          ? "बोलकर प्रश्न पूछें (मराठी/हिंदी/अंग्रेजी)"
-                          : "Speak question (Marathi/Hindi/English)"
-                      }
+                      title={isListening ? "Stop" : "Speak question"}
                     >
-                      {isListening ? (
-                        <MicOff size={18} className="animate-bounce" />
-                      ) : (
-                        <Mic size={18} />
-                      )}
+                      {isListening ? <MicOff size={18} className="animate-bounce" /> : <Mic size={18} />}
                     </button>
                   )}
 
@@ -677,7 +978,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                         ? "कृषि प्रश्न यहाँ पूछें..."
                         : "Ask your farming question..."
                     }
-                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-800 outline-none transition focus:border-[#2E7D32] focus:bg-white focus:ring-2 focus:ring-green-100"
+                    className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] px-3.5 py-2.5 text-xs text-gray-800 dark:text-white outline-none transition focus:border-[#2E7D32]"
                   />
 
                   <button

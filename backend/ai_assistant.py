@@ -173,33 +173,82 @@ WEATHER_KEYWORDS = [
     "weather", "temperature", "forecast", "climate", "rainfall", "humidity", "rain"
 ]
 
-def detect_weather_query(query: str):
+MY_CITY_KEYWORDS = [
+    "my city", "my district", "my village", "my town", "my location", "my area", "here",
+    "today's weather", "today weather", "todays weather", "weather today", "what is the weather",
+    "current weather", "weather right now", "how is the weather", "whats the weather", "what's the weather",
+    "माझ्या शहरात", "माझ्या शहराचे", "माझ्या शहरातील", "माझ्या गावात", "माझ्या गावातील", "माझ्या भागात",
+    "माझ्या जिल्ह्यात", "माझ्या जिल्ह्याचे", "इथले", "येथील", "आजचे हवामान", "आजचा पाऊस", "हवामान कसे आहे", "हवामान सांगा", "हवामान काय",
+    "मेरे शहर", "मेरे शहर का", "मेरे गांव", "मेरे गांव का", "मेरे जिले", "मेरे जिले का", "यहाँ का", "यहाँ",
+    "आज का मौसम", "आज बारिश", "मौसम कैसा है", "मौसम बताओ", "मौसम क्या है"
+]
+
+def detect_weather_query(query: str, farmer_district: str = None):
     """
     Checks if a query is asking for weather or climate information.
-    Returns (is_weather, city_key, original_name)
+    Resolves specific city names OR defaults intelligently to farmer's district/city.
+    Returns (is_weather, city_key, original_name, is_my_city)
     """
     q = query.lower().strip()
     is_weather = any(kw in q for kw in WEATHER_KEYWORDS)
     if not is_weather:
-        return False, None, None
+        return False, None, None, False
 
-    # Check Devanagari city matches
+    # 1. Check if user asked specifically for "my city / here / today"
+    is_my_city_requested = any(phrase in q for phrase in MY_CITY_KEYWORDS)
+
+    # 2. Check Devanagari city matches in query
+    matched_city_key = None
+    matched_display_name = None
+
     for dev_name, city_key in DEVANAGARI_CITY_MAP.items():
         if dev_name in q or dev_name in query:
             loc = MAHARASHTRA_LOCATIONS.get(city_key, {})
-            return True, city_key, loc.get("name", city_key.title())
+            matched_city_key = city_key
+            matched_display_name = loc.get("name", city_key.title())
+            break
 
-    # Check English city matches
-    for city_key, loc in MAHARASHTRA_LOCATIONS.items():
-        if city_key in q:
-            return True, city_key, loc["name"]
+    # 3. Check English city matches in query
+    if not matched_city_key:
+        for city_key, loc in MAHARASHTRA_LOCATIONS.items():
+            if city_key in q:
+                matched_city_key = city_key
+                matched_display_name = loc["name"]
+                break
 
-    # If general weather was asked without explicit city, default to Pune
-    return True, "pune", "Pune"
+    # If an explicit city was mentioned and it's NOT just generic "my city", use that
+    if matched_city_key and not is_my_city_requested:
+        return True, matched_city_key, matched_display_name, False
 
-def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr") -> str:
+    # 4. If "my city / district" was asked or no specific city was named, resolve to farmer's district
+    if farmer_district and str(farmer_district).strip():
+        dist_clean = str(farmer_district).strip()
+        dist_lower = dist_clean.lower()
+
+        # Check if farmer_district matches Devanagari map
+        if dist_clean in DEVANAGARI_CITY_MAP:
+            d_key = DEVANAGARI_CITY_MAP[dist_clean]
+            loc = MAHARASHTRA_LOCATIONS.get(d_key, {})
+            return True, d_key, loc.get("name", dist_clean), True
+
+        # Check if matches English locations
+        for k, loc in MAHARASHTRA_LOCATIONS.items():
+            if k in dist_lower or dist_lower in k:
+                return True, k, loc["name"], True
+
+        # Custom district not directly in map
+        return True, dist_lower, dist_clean.title(), True
+
+    # 5. Fallback if no farmer_district was provided
+    if matched_city_key:
+        return True, matched_city_key, matched_display_name, False
+
+    return True, "pune", "Pune", True
+
+def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr", is_my_city: bool = False) -> tuple:
     """
     Fetches real-time weather from OpenWeather and generates an agricultural weather advisory.
+    Returns (formatted_text, weather_card_dict)
     """
     loc = MAHARASHTRA_LOCATIONS.get(city_key.lower()) if city_key else None
     
@@ -243,6 +292,27 @@ def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr") 
         cloudiness = int(data.get("clouds", {}).get("all", 0))
         rain_1h = float(data.get("rain", {}).get("1h", 0))
 
+        # Add "Your City / आपले शहर" badge if requested
+        if is_my_city:
+            if lang == "mr":
+                city_header = f"{city_title} (आपले शहर)"
+            elif lang == "hi":
+                city_header = f"{city_title} (आपका शहर)"
+            else:
+                city_header = f"{city_title} (Your City)"
+        else:
+            city_header = city_title
+
+        # Determine condition tag for UI card
+        if rain_1h > 0 or "rain" in description.lower() or "drizzle" in description.lower():
+            condition_type = "rain"
+        elif temp > 35:
+            condition_type = "hot"
+        elif cloudiness > 60:
+            condition_type = "cloudy"
+        else:
+            condition_type = "clear"
+
         # Agricultural recommendations based on live numbers
         if lang == "mr":
             agri_advice = []
@@ -260,7 +330,7 @@ def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr") 
 
             advice_text = "\n".join(agri_advice)
 
-            return f"""🌦️ **{city_title} चे थेट हवामान व शेती सल्ला:**
+            text_report = f"""🌦️ **{city_header} चे थेट हवामान व शेती सल्ला:**
 
 • 🌡️ **सध्याचे तापमान:** {temp}°C (अंगाला भासणारे: {feels_like}°C)
 • 🌤️ **हवामान स्थिती:** {description} (ढगाळ प्रमाण: {cloudiness}%)
@@ -286,7 +356,7 @@ def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr") 
 
             advice_text = "\n".join(agri_advice)
 
-            return f"""🌦️ **{city_title} का लाइव मौसम एवं कृषि सलाह:**
+            text_report = f"""🌦️ **{city_header} का लाइव मौसम एवं कृषि सलाह:**
 
 • 🌡️ **वर्तमान तापमान:** {temp}°C (महसूस होने वाला: {feels_like}°C)
 • 🌤️ **मौसम स्थिति:** {description} (बादल: {cloudiness}%)
@@ -312,7 +382,7 @@ def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr") 
 
             advice_text = "\n".join(agri_advice)
 
-            return f"""🌦️ **Live Weather & Farm Advisory for {city_title}:**
+            text_report = f"""🌦️ **Live Weather & Farm Advisory for {city_header}:**
 
 • 🌡️ **Current Temperature:** {temp}°C (Feels like: {feels_like}°C)
 • 🌤️ **Weather Conditions:** {description} (Cloudiness: {cloudiness}%)
@@ -325,14 +395,34 @@ def get_live_weather_report(city_key: str, display_name: str, lang: str = "mr") 
 
 [[ACTION:weather]]"""
 
+        weather_card = {
+            "city": city_header,
+            "raw_city": city_title,
+            "district": city_key,
+            "temp": temp,
+            "feels_like": feels_like,
+            "humidity": humidity,
+            "pressure": pressure,
+            "wind_speed": wind_speed,
+            "description": description,
+            "cloudiness": cloudiness,
+            "rain": rain_1h,
+            "advice": advice_text,
+            "condition_type": condition_type,
+            "is_my_city": is_my_city
+        }
+
+        return text_report, weather_card
+
     except Exception as e:
         print(f"[Weather Error]: {e}")
         if lang == "mr":
-            return f"🌦️ **हवामान माहिती ({city_title}):**\nसध्या हवामान सर्व्हरशी संपर्क साधता आला नाही. कृपया शहराचे नाव पुन्हा तपासा किंवा काही वेळाने पुन्हा विचारा."
+            err_text = f"🌦️ **हवामान माहिती ({city_title}):**\nसध्या हवामान सर्व्हरशी संपर्क साधता आला नाही. कृपया काही वेळाने पुन्हा विचारा."
         elif lang == "hi":
-            return f"🌦️ **मौसम जानकारी ({city_title}):**\nवर्तमान में मौसम डेटा उपलब्ध नहीं हो सका। कृपया पुनः प्रयास करें।"
+            err_text = f"🌦️ **मौसम जानकारी ({city_title}):**\nवर्तमान में मौसम डेटा उपलब्ध नहीं हो सका। कृपया पुनः प्रयास करें।"
         else:
-            return f"🌦️ **Weather Advisory ({city_title}):**\nCould not fetch live weather data at this moment. Please try again."
+            err_text = f"🌦️ **Weather Advisory ({city_title}):**\nCould not fetch live weather data at this moment. Please try again."
+        return err_text, None
 
 # =========================================================
 # DOMAIN KNOWLEDGE BASE (Offline Maharashtra Agronomy Engine)
@@ -810,6 +900,57 @@ KNOWLEDGE_BASE = [
 • **Kisan Call Center (KCC) National Toll-Free:** 1800-180-1551 (24/7 free agri guidance)
 • **Maharashtra Agriculture Department Helpline:** 14443
 • You can also ask any question directly to KrushiMitra AI right here!"""
+    },
+    {
+        "keywords": ["बाजारभाव", "मंडी भाव", "भाव काय", "rate", "mandi price", "market price", "सोयाबीन भाव", "कापूस भाव", "कांदा भाव", "गहू भाव", "bazar bhav", "apmc"],
+        "mr": """💰 **महाराष्ट्र प्रमुख बाजार समिती (APMC) बाजारभाव व विक्री सल्ला:**
+
+१. **सोयाबीन (लातूर / अकोला / वाशिम):**
+   • सरासरी भाव: **₹४,४०० ते ₹४,८५० / क्विंटल** (हमीभाव MSP: ₹४,८९२)
+   • सल्ला: दाण्यातील ओलावा १०% पेक्षा कमी असावा. चांगल्या भावासाठी माल ग्रेडिंग करून विका.
+२. **कापूस (जळगाव / यवतमाळ / छत्रपती संभाजीनगर):**
+   • सरासरी भाव: **₹६,९०० ते ₹७,३५० / क्विंटल** (हमीभाव MSP: ₹७,१२१)
+   • सल्ला: लांब धाग्याच्या आणि स्वच्छ कापसाला चांगला दर मिळतो.
+३. **कांदा (लासलगाव / पिंपळगाव / पुणे):**
+   • सरासरी भाव: **₹१,४०० ते ₹२,४०० / क्विंटल**
+   • सल्ला: प्रतवारीनुसार सुपर कांदा आणि गोल्टी कांदा वेगळा करून विकावा.
+४. **तूर / हरभरा:**
+   • तूर भाव: **₹९,००० ते ₹१०,२५० / क्विंटल**
+   • हरभरा भाव: **₹५,८०० ते ₹६,३०० / क्विंटल**
+
+💡 *टीप: बाजारभाव दररोज आवक व दर्जानुसार बदलतात. बाजारात नेण्यापूर्वी स्थानिक APMC शी संपर्क साधावा.*""",
+        "hi": """💰 **महाराष्ट्र प्रमुख कृषि उपज मंडी (APMC) भाव एवं विपणन सुझाव:**
+
+१. **सोयाबीन (लातूर / अकोला / वाशिम):**
+   • औसत भाव: **₹४,४०० से ₹४,८५० / क्विंटल** (MSP: ₹४,८९२)
+   • सुझाव: दाने में नमी १०% से कम रखें। अच्छी गुणवत्ता पर अधिक दर मिलती है।
+२. **कपास (जलगांव / यवतमाल / संभाजीनगर):**
+   • औसत भाव: **₹६,९०० से ₹७,३५० / क्विंटल** (MSP: ₹७,१२१)
+   • सुझाव: सूखी और साफ कपास मंडी लाएं।
+३. **प्याज (लासलगांव / पिंपलगांव / पुणे):**
+   • औसत भाव: **₹१,४०० से ₹२,४०० / क्विंटल**
+   • सुझाव: ग्रेडिंग अनुसार सुपर व मीडियम प्याज अलग कर बेचें।
+४. **अरहर / चना:**
+   • अरहर (तूर): **₹९,००० से ₹१०,२५० / क्विंटल**
+   • चना: **₹५,८०० से ₹६,३०० / क्विंटल**
+
+💡 *सुझाव: दैनिक भाव आवक अनुसार बदलते हैं। मंडी ले जाने से पूर्व स्थानीय APMC से दर सत्यापित करें।*""",
+        "en": """💰 **Maharashtra APMC Mandi Market Prices & Advisory:**
+
+1. **Soybean (Latur / Akola / Washim APMC):**
+   • Current Range: **₹4,400 to ₹4,850 / quintal** (Govt MSP: ₹4,892)
+   • Tip: Ensure moisture content is under 10% for premium buyers.
+2. **Cotton (Jalgaon / Yavatmal / Sambhajinagar APMC):**
+   • Current Range: **₹6,900 to ₹7,350 / quintal** (Govt MSP: ₹7,121)
+   • Tip: Clean, dry, long-staple cotton fetches peak market rates.
+3. **Onion (Lasalgaon / Pimpalgaon / Pune APMC):**
+   • Current Range: **₹1,400 to ₹2,400 / quintal**
+   • Tip: Grade into super, medium, and small bulbs to maximize revenue.
+4. **Pigeon Pea (Tur) & Gram (Chana):**
+   • Tur: **₹9,000 to ₹10,250 / quintal**
+   • Chana: **₹5,800 to ₹6,300 / quintal**
+
+💡 *Note: Real-time rates fluctuate daily based on arrivals and quality grading.*"""
     }
 ]
 
@@ -958,13 +1099,14 @@ Regarding your query **"{query}"**, here is best-practice guidance:
 
     return reply, None
 
-def chat_with_ai(message: str, lang: str = "mr", history: list = None) -> dict:
+def chat_with_ai(message: str, lang: str = "mr", history: list = None, farmer_district: str = None) -> dict:
     """
-    Main Assistant Chat Controller (ChatGPT / Gemini Grade):
-    1. Detects real-time live weather requests for 50+ Maharashtra locations.
-    2. Calls Gemini 1.5/2.0 Flash with full conversation history and platform sitemap if GEMINI_API_KEY is available.
-    3. Seamlessly falls back to the comprehensive multi-intent KrushiMitra Knowledge Engine.
-    4. Automatically extracts actionable platform navigation buttons.
+    Main Assistant Chat Controller (ChatGPT / Gemini Grade & Siri/Alexa Style):
+    1. Detects real-time live weather requests for farmer's city or 50+ Maharashtra locations.
+    2. Returns structured weather_card metadata alongside rich voice-ready text.
+    3. Calls Gemini 1.5/2.0 Flash with full conversation history, farmer location, and platform sitemap.
+    4. Seamlessly falls back to the comprehensive multi-intent KrushiMitra Knowledge Engine.
+    5. Automatically extracts actionable platform navigation buttons.
     """
     clean_msg = (message or "").strip()
     if not clean_msg:
@@ -974,16 +1116,17 @@ def chat_with_ai(message: str, lang: str = "mr", history: list = None) -> dict:
             "language": lang
         }
 
-    # STEP 1: Live Weather Intent Detection
-    is_weather, city_key, original_city = detect_weather_query(clean_msg)
+    # STEP 1: Live Weather Intent Detection (with farmer_district support)
+    is_weather, city_key, original_city, is_my_city = detect_weather_query(clean_msg, farmer_district=farmer_district)
     if is_weather and city_key:
-        weather_reply = get_live_weather_report(city_key, original_city, lang)
+        weather_reply, weather_card = get_live_weather_report(city_key, original_city, lang, is_my_city=is_my_city)
         cleaned_text, action_obj = extract_action_from_reply(weather_reply, lang)
         return {
             "success": True,
             "reply": cleaned_text,
             "language": lang,
             "action": action_obj,
+            "weather_card": weather_card,
             "source": "live_weather"
         }
 
@@ -993,11 +1136,12 @@ def chat_with_ai(message: str, lang: str = "mr", history: list = None) -> dict:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
             prompt_lang = "Marathi (मराठी)" if lang == "mr" else "Hindi (हिन्दी)" if lang == "hi" else "English"
+            location_note = f"\nFarmer Location: Currently based in {farmer_district or 'Maharashtra'}, India. If they ask about their city, crops, or weather without specifying a location, reference {farmer_district or 'Maharashtra'}."
             
             contents = []
             contents.append({
                 "role": "user",
-                "parts": [{"text": f"System Guidelines:\n{SYSTEM_PROMPT}\nAlways answer in {prompt_lang}."}]
+                "parts": [{"text": f"System Guidelines:\n{SYSTEM_PROMPT}{location_note}\nAlways answer in {prompt_lang}."}]
             })
             contents.append({
                 "role": "model",

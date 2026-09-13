@@ -1567,8 +1567,14 @@ def ai_chat():
         message = data.get("message", "")
         lang = data.get("language", "mr")
         history = data.get("history", [])
+        farmer_district = data.get("farmer_district") or data.get("district") or data.get("city") or "Pune"
         
-        result = ai_assistant.chat_with_ai(message=message, lang=lang, history=history)
+        result = ai_assistant.chat_with_ai(
+            message=message,
+            lang=lang,
+            history=history,
+            farmer_district=farmer_district
+        )
         return jsonify(result), 200
     except Exception as e:
         print(f"[AI Chat Error]: {e}")
