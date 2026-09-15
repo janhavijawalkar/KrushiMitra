@@ -15,6 +15,8 @@ import {
   BarChart3,
   Smartphone,
   Download,
+  Leaf,
+  Landmark,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -49,6 +51,16 @@ export default function Sidebar({
       id: "recommendation",
       label: t("recommendation"),
       icon: Sprout,
+    },
+    {
+      id: "plant-doctor",
+      label: t("plantDoctor") || "AI Plant Doctor",
+      icon: Leaf,
+    },
+    {
+      id: "schemes",
+      label: t("schemes") || "Govt Schemes",
+      icon: Landmark,
     },
     {
       id: "weather",

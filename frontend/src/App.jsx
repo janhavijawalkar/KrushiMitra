@@ -17,6 +17,8 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
+import PlantDoctor from "./pages/PlantDoctor";
+import Schemes from "./pages/Schemes";
 
 import Layout from "./components/Layout";
 import OfflineBanner from "./components/OfflineBanner";
@@ -156,6 +158,8 @@ export default function App() {
         {page === "reports" && <Reports nav={navigate} />}
         {page === "analytics" && <Analytics nav={navigate} />}
         {page === "history" && <History nav={navigate} />}
+        {page === "plant-doctor" && <PlantDoctor nav={navigate} />}
+        {page === "schemes" && <Schemes nav={navigate} />}
 
         {![
           "dashboard",
@@ -165,6 +169,8 @@ export default function App() {
           "reports",
           "analytics",
           "history",
+          "plant-doctor",
+          "schemes",
           "profile",
           "settings",
           "notifications",

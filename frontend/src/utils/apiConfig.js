@@ -30,8 +30,12 @@ export const getApiBaseUrl = () => {
 export const API_BASE_URL = getApiBaseUrl();
 
 export const buildApiUrl = (endpoint) => {
-  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  let cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   const base = getApiBaseUrl();
+  // Prevent double '/api/api/...' when caller provides '/api/...'
+  if (base.endsWith("/api") && cleanEndpoint.startsWith("/api/")) {
+    cleanEndpoint = cleanEndpoint.substring(4);
+  }
   return `${base}${cleanEndpoint}`;
 };
 

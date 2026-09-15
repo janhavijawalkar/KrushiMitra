@@ -13,12 +13,14 @@ import {
   Activity,
   AlertCircle,
   Loader2,
+  Share2,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenSoilData, convertDevanagariDigits } from "../utils/voiceParser";
 import { buildApiUrl } from "../utils/apiConfig";
+import { openWhatsAppShare, formatRecommendationShareText } from "../utils/whatsappShare";
 
 export default function Recommendation({ nav }) {
   const { addRecommendation, language, t, tCrop } = useApp();
@@ -637,6 +639,28 @@ export default function Recommendation({ nav }) {
               >
                 <RotateCcw size={14} />
                 {t("newRecommendation")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  openWhatsAppShare(
+                    formatRecommendationShareText({
+                      crop: tCrop ? tCrop(result.crop) : result.crop,
+                      nitrogen: form.nitrogen || "--",
+                      phosphorus: form.phosphorus || "--",
+                      potassium: form.potassium || "--",
+                      ph: form.ph || "--",
+                      confidence: result.confidence ? Math.round(result.confidence * 100) : 95,
+                      lang: language,
+                    })
+                  )
+                }
+                className="flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 py-3 text-xs font-extrabold shadow-md transition hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                title="Share on WhatsApp"
+              >
+                <Share2 size={14} />
+                <span>{language === "mr" ? "WhatsApp वर सल्ला शेअर करा" : language === "hi" ? "व्हाट्सएप पर शेयर करें" : "Share Advisory on WhatsApp"}</span>
               </button>
 
             </div>

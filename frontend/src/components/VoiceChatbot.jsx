@@ -24,10 +24,16 @@ import {
   CheckCircle2,
   Square,
   ExternalLink,
+  Sun,
+  Moon,
+  Camera,
+  Image,
+  Share2,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { buildApiUrl } from "../utils/apiConfig";
+import { openWhatsAppShare } from "../utils/whatsappShare";
 
 /* =========================================================
    LIGHTWEIGHT CLEAN MARKDOWN & BULLET FORMATTER
@@ -35,7 +41,8 @@ import { buildApiUrl } from "../utils/apiConfig";
 function FormattedMessage({ content, isUser }) {
   if (!content) return null;
 
-  const lines = content.split("\n");
+  const sanitized = content.replace(/\[\[ACTION:[^\]]+\]\]/gi, "").trim();
+  const lines = sanitized.split("\n");
 
   const parseInline = (str) => {
     const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
@@ -94,9 +101,9 @@ function FormattedMessage({ content, isUser }) {
 }
 
 /* =========================================================
-   SIRI / ALEXA STYLE LIVE WEATHER WIDGET CARD
+   INTERACTIVE LIVE WEATHER WIDGET CARD
    ========================================================= */
-function SiriWeatherCard({ card, nav, language }) {
+function LiveWeatherCard({ card, nav, language }) {
   if (!card) return null;
 
   const isRain = card.condition_type === "rain";
@@ -195,16 +202,34 @@ function SiriWeatherCard({ card, nav, language }) {
 }
 
 export default function VoiceChatbot({ nav, openInstallModal }) {
-  const { language, user } = useApp();
+  const { language, user, theme, changeTheme } = useApp();
+  const isDark =
+    theme === "dark" ||
+    (theme === "auto" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+
   const [isOpen, setIsOpen] = useState(false);
-  const [isVoiceMode, setIsVoiceMode] = useState(true); // Default to Siri/Alexa mode
+  const [isVoiceMode, setIsVoiceMode] = useState(true); // Default to Voice mode
   const [isMinimized, setIsMinimized] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState(null);
-  const [isAutoSpeak, setIsAutoSpeak] = useState(true); // Hands-free Alexa/Siri auto voice reply
+  const [isAutoSpeak, setIsAutoSpeak] = useState(false); // Only speak on explicit voice interaction
   const [liveTranscript, setLiveTranscript] = useState("");
+  const [attachedImage, setAttachedImage] = useState(null);
+  const chatFileInputRef = useRef(null);
+
+  const handleAttachImage = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setAttachedImage(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Determine farmer's city/district from user profile or local storage
   const farmerDistrict =
@@ -264,10 +289,14 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
       },
     });
 
-  // Action Button Click Handler (Navigate or Open Modal)
+  // Action Button Click Handler (Theme, Navigate, or Open Modal)
   const handleActionClick = (action) => {
     if (!action) return;
-    if (action.type === "modal" && action.target === "install_modal") {
+    if (action.type === "theme" && action.value) {
+      if (changeTheme) {
+        changeTheme(action.value);
+      }
+    } else if (action.type === "modal" && action.target === "install_modal") {
       if (openInstallModal) openInstallModal();
     } else if (action.type === "navigate" && action.page) {
       if (nav) {
@@ -298,7 +327,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
     const cleanText = text
       .replace(/[*_#`~]/g, "")
       .replace(/🌱|🌿|🌾|🎋|🏛️|🧪|🍅|💡|🙏|✅|⚠️|❌|🚀|🌦️|📲|☀️|🌧️|💧|💨|💰|⚡/g, "")
-      .replace(/\[\[ACTION:[^\]]+\]\]/g, "")
+      .replace(/\[\[ACTION:[^\]]+\]\]/gi, "")
       .replace(/https?:\/\/[^\s]+/g, "")
       .replace(/\n+/g, ". ");
 
@@ -333,12 +362,26 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
   };
 
   const handleSendMessage = async (customMessage, isFromVoice = false) => {
-    const textToSend = (customMessage || input).trim();
-    if (!textToSend || loading) return;
+    let textToSend = (customMessage || input).trim();
+    if (!textToSend && !attachedImage) return;
+    if (loading) return;
+
+    if (!textToSend && attachedImage) {
+      textToSend =
+        language === "mr"
+          ? "कृपया या पिकाच्या पानाची तपासणी करून कोणता रोग आहे व औषध काय फवारावे ते सांगा."
+          : language === "hi"
+          ? "कृपया इस पत्ते की जांच कर बताएं कि कौन सा रोग है और क्या दवा छिड़कें।"
+          : "Please examine this crop leaf photo, diagnose the disease, and recommend spray dosages.";
+    }
+
+    const currentImage = attachedImage;
+    setAttachedImage(null);
 
     const userMsg = {
       role: "user",
       content: textToSend,
+      image: currentImage,
       action: null,
       weather_card: null,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -358,15 +401,17 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
           language: language,
           history: messages.slice(-4),
           farmer_district: farmerDistrict,
+          image_data: currentImage || "",
         }),
       });
 
       const data = await response.json();
 
       if (data.success && data.reply) {
+        const cleanReply = (data.reply || "").replace(/\[\[ACTION:[^\]]+\]\]/gi, "").trim();
         const botMsg = {
           role: "assistant",
-          content: data.reply,
+          content: cleanReply,
           action: data.action || null,
           weather_card: data.weather_card || null,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -374,9 +419,20 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
 
         setMessages((prev) => [...prev, botMsg]);
 
-        // Alexa/Siri Hands-free auto voice answer
-        if (isAutoSpeak || isFromVoice) {
-          handleSpeak(data.reply, "active");
+        // Speak aloud ONLY when user interacted via voice microphone (silent during text chat)
+        if (isFromVoice) {
+          handleSpeak(cleanReply, "active");
+        }
+
+        // Auto-execute Theme Change or Page Navigation
+        if (data.action) {
+          if (data.action.type === "theme") {
+            handleActionClick(data.action);
+          } else if (data.action.type === "navigate" && data.action.auto_navigate) {
+            setTimeout(() => {
+              handleActionClick(data.action);
+            }, 600);
+          }
         }
       } else {
         throw new Error(data.message || "Failed to get reply");
@@ -389,6 +445,57 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
       let offlineAction = null;
 
       if (
+        queryLower.includes("dark mode") ||
+        queryLower.includes("dark theme") ||
+        queryLower.includes("डार्क मोड") ||
+        queryLower.includes("डार्क थीम") ||
+        queryLower.includes("काळा मोड")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "🌙 **डार्क मोड सक्रिय केला आहे!** डोळ्यांना त्रास होणार नाही."
+            : language === "hi"
+            ? "🌙 **डार्क मोड सक्रिय किया गया!** आँखों के लिए आरामदायक।"
+            : "🌙 **Dark Mode activated!** Easy on your eyes.";
+        offlineAction = { type: "theme", value: "dark", label: "Dark Mode 🌙" };
+        if (changeTheme) changeTheme("dark");
+      } else if (
+        queryLower.includes("light mode") ||
+        queryLower.includes("light theme") ||
+        queryLower.includes("व्हाइट मोड") ||
+        queryLower.includes("लाइट मोड") ||
+        queryLower.includes("लाइट थीम")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "☀️ **लाइट मोड सक्रिय केला आहे!**"
+            : language === "hi"
+            ? "☀️ **लाइट मोड सक्रिय किया गया!**"
+            : "☀️ **Light Mode activated!**";
+        offlineAction = { type: "theme", value: "light", label: "Light Mode ☀️" };
+        if (changeTheme) changeTheme("light");
+      } else if (
+        queryLower.includes("recommend") ||
+        queryLower.includes("recomend") ||
+        queryLower.includes("शिफारस") ||
+        queryLower.includes("सिफारिश")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "🌱 **पीक शिफारस (Crop Recommendation) विभाग उघडत आहे...**\n\nयेथे आपण माती परीक्षण घटक भरून योग्य पिकांची शिफारस मिळवू शकता."
+            : language === "hi"
+            ? "🌱 **फसल सिफारिश (Crop Recommendation) पेज पर ले जा रहे हैं...**\n\nयहाँ आप मिट्टी के पोषक तत्वों के आधार पर फसलों की सिफारिश पा सकते हैं।"
+            : "🌱 **Navigating to Crop Recommendation page...**\n\nEnter soil N-P-K parameters to get customized crop suggestions.";
+        offlineAction = {
+          type: "navigate",
+          page: "recommendation",
+          label: language === "mr" ? "पीक शिफारस उघडा 🌱" : language === "hi" ? "फसल सिफारिश खोलें 🌱" : "Open Recommendation 🌱",
+          auto_navigate: true,
+        };
+        setTimeout(() => {
+          handleActionClick(offlineAction);
+        }, 600);
+      } else if (
         queryLower.includes("weather") ||
         queryLower.includes("हवामान") ||
         queryLower.includes("मौसम") ||
@@ -405,7 +512,11 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
           type: "navigate",
           page: "weather",
           label: language === "mr" ? "हवामान पहा 🌦️" : language === "hi" ? "मौसम देखें 🌦️" : "View Weather 🌦️",
+          auto_navigate: true,
         };
+        setTimeout(() => {
+          handleActionClick(offlineAction);
+        }, 600);
       } else if (
         queryLower.includes("rate") ||
         queryLower.includes("भाव") ||
@@ -434,7 +545,59 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
           type: "navigate",
           page: "prediction",
           label: language === "mr" ? "पीक अंदाज सुरू करा 🚀" : language === "hi" ? "फसल अनुमान शुरू करें 🚀" : "Open Crop Prediction 🚀",
+          auto_navigate: true,
         };
+        setTimeout(() => {
+          handleActionClick(offlineAction);
+        }, 600);
+      } else if (
+        queryLower.includes("doctor") ||
+        queryLower.includes("रोग") ||
+        queryLower.includes("फवारणी") ||
+        queryLower.includes("कीड") ||
+        queryLower.includes("disease") ||
+        queryLower.includes("spray") ||
+        queryLower.includes("बोंड अळी")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "🌿 **एआय पीक डॉक्टर विभाग उघडत आहे...**\n\nयेथे पानाचा फोटो अपलोड करा व रोगाचे निदान आणि पंपनिहाय फवारणीचे अचूक प्रमाण मिळवा."
+            : language === "hi"
+            ? "🌿 **एआई प्लांट डॉक्टर पेज पर ले जा रहे हैं...**\n\nयहाँ पत्ती की फोटो अपलोड करें और रोग निदान व स्प्रे पंप अनुसार सटीक खुराक पाएं।"
+            : "🌿 **Navigating to AI Plant Doctor...**\n\nUpload leaf photos for instant disease diagnosis and exact spray pump dosages.";
+        offlineAction = {
+          type: "navigate",
+          page: "plant-doctor",
+          label: language === "mr" ? "पीक डॉक्टर उघडा 🌿" : language === "hi" ? "प्लांट डॉक्टर खोलें 🌿" : "Open Plant Doctor 🌿",
+          auto_navigate: true,
+        };
+        setTimeout(() => {
+          handleActionClick(offlineAction);
+        }, 600);
+      } else if (
+        queryLower.includes("scheme") ||
+        queryLower.includes("योजना") ||
+        queryLower.includes("अनुदान") ||
+        queryLower.includes("subsidy") ||
+        queryLower.includes("mahadbt") ||
+        queryLower.includes("pm kisan") ||
+        queryLower.includes("पीएम किसान")
+      ) {
+        offlineReply =
+          language === "mr"
+            ? "🏛️ **शासकीय योजना व पात्रता तपासणी विभाग उघडत आहे...**\n\nयेथे पीएम-किसान, नमो शेतकरी, सौर पंप आणि महाडीबीटी योजनांची माहिती व अर्ज प्रक्रिया पहा."
+            : language === "hi"
+            ? "🏛️ **सरकारी योजना व पात्रता पेज पर ले जा रहे हैं...**\n\nयहाँ पीएम-किसान, नमो शेतकरी, सोलर पंप और महाडीबीटी योजनाओं की जानकारी व आवेदन लिंक देखें।"
+            : "🏛️ **Navigating to Government Schemes & Eligibility Matcher...**\n\nCheck your eligibility for PM-Kisan, Namo Shetkari, PM-KUSUM, and MahaDBT subsidies.";
+        offlineAction = {
+          type: "navigate",
+          page: "schemes",
+          label: language === "mr" ? "शासकीय योजना पहा 🏛️" : language === "hi" ? "सरकारी योजनाएं देखें 🏛️" : "View Govt Schemes 🏛️",
+          auto_navigate: true,
+        };
+        setTimeout(() => {
+          handleActionClick(offlineAction);
+        }, 600);
       } else {
         offlineReply =
           language === "mr"
@@ -454,7 +617,8 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
 
       setMessages((prev) => [...prev, botMsg]);
 
-      if (isAutoSpeak || isFromVoice) {
+      // Speak aloud ONLY when user interacted via voice microphone (silent during text chat)
+      if (isFromVoice) {
         handleSpeak(offlineReply, "active");
       }
     } finally {
@@ -480,29 +644,38 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
   const spokenPrompts =
     language === "mr"
       ? [
+          { icon: "🌱", label: "पीक शिफारस उघडा", query: "पीक शिफारस पेजवर जा" },
+          { icon: "🌙", label: "डार्क मोड", query: "डार्क मोड करा" },
+          { icon: "☀️", label: "लाइट मोड", query: "लाइट मोड करा" },
           { icon: "🌦️", label: "आजचे हवामान", query: "आज माझ्या शहरात हवामान कसे आहे?" },
           { icon: "🐛", label: "कापूस बोंड अळी उपाय", query: "कापसावरील बोंड अळीसाठी काय उपाय करावेत?" },
           { icon: "💰", label: "सोयाबीन बाजारभाव", query: "सोयाबीनचा आजचा बाजारभाव काय आहे?" },
+          { icon: "🌾", label: "पीक अंदाज घ्या", query: "पीक अंदाज पेजवर जा" },
           { icon: "🧪", label: "खत व माती सल्ला", query: "माती परीक्षण आणि खत शिफारस कशी मिळते?" },
           { icon: "🏛️", label: "पीएम किसान योजना", query: "पीएम किसान योजनेचे पैसे कधी मिळतात?" },
-          { icon: "🌾", label: "पीक अंदाज कसा घ्यावा?", query: "पीक अंदाज कसा घ्यावा?" },
         ]
       : language === "hi"
       ? [
+          { icon: "🌱", label: "फसल सिफारिश खोलें", query: "फसल सिफारिश पेज पर जाओ" },
+          { icon: "🌙", label: "डार्क मोड", query: "डार्क मोड चालू करो" },
+          { icon: "☀️", label: "लाइट मोड", query: "लाइट मोड चालू करो" },
           { icon: "🌦️", label: "आज का मौसम", query: "आज मेरे शहर का मौसम कैसा है?" },
           { icon: "🐛", label: "कपास गुलाबी सुंडी", query: "कपास में गुलाबी सुंडी का नियंत्रण कैसे करें?" },
           { icon: "💰", label: "सोयाबीन मंडी भाव", query: "सोयाबीन का आज का मंडी भाव क्या है?" },
+          { icon: "🌾", label: "फसल उपज अनुमान", query: "फसल उपज अनुमान पेज पर जाओ" },
           { icon: "🧪", label: "मृदा व खाद सलाह", query: "मिट्टी की जांच और खाद की सलाह कैसे पाएं?" },
           { icon: "🏛️", label: "पीएम-किसान योजना", query: "पीएम किसान योजना की जानकारी दीजिए" },
-          { icon: "🌾", label: "फसल उपज अनुमान", query: "फसल उपज का अनुमान कैसे लगाएं?" },
         ]
       : [
+          { icon: "🌱", label: "Recommendation", query: "Go to recommendation page" },
+          { icon: "🌙", label: "Dark Mode", query: "Switch to dark mode" },
+          { icon: "☀️", label: "Light Mode", query: "Switch to light mode" },
           { icon: "🌦️", label: "Today's Weather", query: "Hey what's today's weather of my city?" },
           { icon: "🐛", label: "Cotton Bollworm", query: "How to control pink bollworm in cotton?" },
           { icon: "💰", label: "Soybean Mandi Price", query: "What is today's soybean market rate?" },
+          { icon: "🌾", label: "Crop Prediction", query: "Go to crop prediction page" },
           { icon: "🧪", label: "Soil & Fertilizer", query: "How to get soil recommendation and fertilizer dosage?" },
           { icon: "🏛️", label: "PM-Kisan Scheme", query: "Explain PM-Kisan and Namo Shetkari schemes" },
-          { icon: "🌾", label: "Predict Crop Yield", query: "How to predict crop yield in KrushiMitra?" },
         ];
 
   // Get the latest assistant response for Voice Mode display
@@ -521,10 +694,10 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] px-4.5 py-3.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer border-2 border-white/40 ring-4 ring-green-600/20"
           title={
             language === "mr"
-              ? "कृषीमित्र AI व्हॉइस असिस्टंट (Siri / Alexa प्रमाणे बोला) 🎙️"
+              ? "कृषीमित्र AI व्हॉइस असिस्टंट 🎙️"
               : language === "hi"
-              ? "कृषि-मित्र AI वॉइस असिस्टेंट (Siri / Alexa जैसे बोलें) 🎙️"
-              : "Ask KrushiMitra AI Voice Assistant (Siri / Alexa style) 🎙️"
+              ? "कृषि-मित्र AI वॉइस असिस्टेंट 🎙️"
+              : "KrushiMitra AI Voice Assistant 🎙️"
           }
         >
           <div className="relative">
@@ -540,7 +713,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
               {language === "mr" ? "कृषीमित्र AI 🎙️" : language === "hi" ? "कृषि-मित्र AI 🎙️" : "KrushiMitra AI 🎙️"}
             </span>
             <span className="text-[9px] text-green-200 font-semibold mt-0.5">
-              {language === "mr" ? "बोलून प्रश्न विचारा (Siri/Alexa)" : language === "hi" ? "बोलकर पूछें (Siri/Alexa)" : "Voice Assistant"}
+              {language === "mr" ? "बोलून प्रश्न विचारा 🎙️" : language === "hi" ? "बोलकर पूछें 🎙️" : "Voice Assistant"}
             </span>
           </div>
         </button>
@@ -573,7 +746,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                 <p className="text-[10px] text-green-100 flex items-center gap-1 truncate">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
                   <span>📍 {farmerDistrict}</span>
-                  <span>• {isVoiceMode ? "Siri/Alexa Mode" : "Chat Mode"}</span>
+                  <span>• {isVoiceMode ? (language === "mr" ? "व्हॉइस" : language === "hi" ? "वॉइस" : "Voice") : (language === "mr" ? "चॅट" : language === "hi" ? "चैट" : "Chat")}</span>
                 </p>
               </div>
             </div>
@@ -621,6 +794,16 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                 {isAutoSpeak ? <Volume2 size={15} /> : <VolumeX size={15} />}
               </button>
 
+              {/* Theme Toggle Button */}
+              <button
+                type="button"
+                onClick={() => changeTheme?.(isDark ? "light" : "dark")}
+                className="rounded-lg p-1.5 hover:bg-white/20 transition cursor-pointer text-white/90 hover:text-white"
+                title={isDark ? "Switch to Light Mode ☀️" : "Switch to Dark Mode 🌙"}
+              >
+                {isDark ? <Sun size={15} className="text-amber-300" /> : <Moon size={15} />}
+              </button>
+
               <button
                 type="button"
                 onClick={clearChat}
@@ -653,13 +836,13 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
             </div>
           </div>
 
-          {/* MAIN BODY: VOICE MODE (SIRI / ALEXA STYLE) */}
+          {/* MAIN BODY: VOICE ASSISTANT MODE */}
           {!isMinimized && isVoiceMode && (
-            <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4 sm:p-5 bg-radial from-[#12331B] via-[#0D2414] to-[#08170D] text-white">
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4 sm:p-5 bg-gradient-to-b from-[#EBF5EC] via-[#F6FAF6] to-[#E5F2E7] dark:bg-radial dark:from-[#12331B] dark:via-[#0D2414] dark:to-[#08170D] text-slate-800 dark:text-white transition-colors duration-300">
               {/* TOP STATUS BAR */}
-              <div className="flex items-center justify-between text-[11px] text-emerald-200/80 pb-2 border-b border-white/10">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="flex items-center justify-between text-[11px] text-emerald-800 dark:text-emerald-200/80 pb-2 border-b border-emerald-200/70 dark:border-white/10">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>📍 {farmerDistrict}</span>
                   <span>({language.toUpperCase()})</span>
                 </span>
@@ -667,7 +850,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                   <button
                     type="button"
                     onClick={stopSpeaking}
-                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/30 text-red-300 border border-red-400/40 hover:bg-red-500/50 cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-600 dark:bg-red-500/30 dark:text-red-300 border border-red-400/40 hover:bg-red-500/30 dark:hover:bg-red-500/50 cursor-pointer"
                   >
                     <Square size={10} />
                     <span>{language === "mr" ? "थांबवा" : language === "hi" ? "रोकें" : "Stop"}</span>
@@ -678,29 +861,29 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
               {/* LATEST EXCHANGE / ANSWER DISPLAY */}
               <div className="my-auto py-3 space-y-3">
                 {latestUserMsg && (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300/90 bg-white/5 rounded-xl px-3 py-2 border border-white/10">
-                    <User size={14} className="shrink-0 text-emerald-400" />
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-950 dark:text-emerald-300/90 bg-white/90 dark:bg-white/5 rounded-xl px-3 py-2 border border-emerald-200/80 dark:border-white/10 shadow-2xs">
+                    <User size={14} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
                     <span className="truncate">"{latestUserMsg.content}"</span>
                   </div>
                 )}
 
-                {/* Siri Weather Card Display if Available */}
+                {/* Weather Card Display if Available */}
                 {latestBotMsg.weather_card ? (
-                  <SiriWeatherCard card={latestBotMsg.weather_card} nav={nav} language={language} />
+                  <LiveWeatherCard card={latestBotMsg.weather_card} nav={nav} language={language} />
                 ) : (
-                  <div className="rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/15 shadow-xl max-h-56 overflow-y-auto">
+                  <div className="rounded-2xl bg-white/95 dark:bg-white/10 backdrop-blur-md p-4 border border-emerald-200 dark:border-white/15 shadow-lg max-h-56 overflow-y-auto">
                     <div className="flex items-start gap-2.5">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/30 text-emerald-300 border border-emerald-400/40">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-500/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-400/40">
                         <Bot size={15} />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 text-slate-800 dark:text-white">
                         <FormattedMessage content={latestBotMsg.content} isUser={false} />
 
                         {latestBotMsg.action && (
                           <button
                             type="button"
                             onClick={() => handleActionClick(latestBotMsg.action)}
-                            className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:from-emerald-600 hover:to-green-700 transition cursor-pointer"
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 dark:from-emerald-500 dark:to-green-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-green-800 transition cursor-pointer"
                           >
                             <Compass size={13} className="text-yellow-300" />
                             <span>{latestBotMsg.action.label}</span>
@@ -713,14 +896,14 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                 )}
               </div>
 
-              {/* CENTER: SIRI / ALEXA GLOWING VOICE ORB & SOUND WAVES */}
+              {/* CENTER: GLOWING VOICE ORB & SOUND WAVES */}
               <div className="flex flex-col items-center justify-center my-3">
                 <div className="relative flex items-center justify-center">
                   {/* Concentric Pulsing Sound Rings */}
                   {(isListening || speakingIndex !== null) && (
                     <>
-                      <span className="absolute h-40 w-40 rounded-full bg-emerald-500/20 animate-ping [animation-duration:2.5s]" />
-                      <span className="absolute h-48 w-48 rounded-full bg-green-400/15 animate-pulse" />
+                      <span className="absolute h-40 w-40 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 animate-ping [animation-duration:2.5s]" />
+                      <span className="absolute h-48 w-48 rounded-full bg-green-500/10 dark:bg-green-400/15 animate-pulse" />
                     </>
                   )}
 
@@ -731,10 +914,10 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                         key={i}
                         className={`w-1.5 rounded-full transition-all duration-150 ${
                           isListening
-                            ? "bg-red-400 animate-pulse"
+                            ? "bg-red-500 dark:bg-red-400 animate-pulse"
                             : speakingIndex !== null
-                            ? "bg-emerald-300 animate-pulse"
-                            : "bg-white/10"
+                            ? "bg-emerald-600 dark:bg-emerald-300 animate-pulse"
+                            : "bg-emerald-200/80 dark:bg-white/10"
                         }`}
                         style={{
                           height: isListening || speakingIndex !== null ? `${Math.max(14, h * 0.55)}px` : "6px",
@@ -771,7 +954,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                 </div>
 
                 {/* State Label Below Orb */}
-                <p className="text-xs font-bold text-center mt-3 text-emerald-200">
+                <p className="text-xs font-bold text-center mt-3 text-emerald-950 dark:text-emerald-200">
                   {isListening
                     ? language === "mr"
                       ? "👂 ऐकत आहे... बोला... (Listening...)"
@@ -799,8 +982,8 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
               </div>
 
               {/* QUICK VOICE PROMPTS CAROUSEL */}
-              <div className="pt-2 border-t border-white/10">
-                <p className="text-[10px] font-bold text-emerald-300/70 mb-1.5">
+              <div className="pt-2 border-t border-emerald-200/70 dark:border-white/10">
+                <p className="text-[10px] font-bold text-emerald-800/80 dark:text-emerald-300/70 mb-1.5">
                   {language === "mr" ? "💡 बोलण्यासाठी त्वरित प्रश्न (टॅप करा):" : language === "hi" ? "💡 बोलकर पूछें (टैप करें):" : "💡 Try saying aloud (tap to ask):"}
                 </p>
                 <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
@@ -809,7 +992,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                       key={idx}
                       type="button"
                       onClick={() => handleSendMessage(p.query, true)}
-                      className="shrink-0 flex items-center gap-1 rounded-full border border-white/15 bg-white/10 hover:bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white transition cursor-pointer backdrop-blur-xs"
+                      className="shrink-0 flex items-center gap-1 rounded-full border border-emerald-200 dark:border-white/15 bg-white/90 dark:bg-white/10 hover:bg-emerald-50 dark:hover:bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-900 dark:text-white transition cursor-pointer backdrop-blur-xs shadow-2xs"
                     >
                       <span>{p.icon}</span>
                       <span>{p.label}</span>
@@ -848,12 +1031,19 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                           : "bg-white dark:bg-[#132218] text-gray-800 dark:text-gray-200 border border-green-100/80 dark:border-[#24402A] rounded-tl-none"
                       }`}
                     >
+                      {/* Attached Image Thumbnail if User sent a photo */}
+                      {msg.image && (
+                        <div className="mb-2 rounded-xl overflow-hidden border border-white/25 shadow-xs max-w-[200px]">
+                          <img src={msg.image} alt="Attached leaf scan" className="w-full h-28 object-cover" />
+                        </div>
+                      )}
+
                       {/* Message Content Formatted */}
                       <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
 
-                      {/* Interactive Siri-Style Weather Widget if attached */}
+                      {/* Interactive Weather Widget if attached */}
                       {msg.weather_card && (
-                        <SiriWeatherCard card={msg.weather_card} nav={nav} language={language} />
+                        <LiveWeatherCard card={msg.weather_card} nav={nav} language={language} />
                       )}
 
                       {/* Interactive Navigation Action Button */}
@@ -871,29 +1061,47 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                         </div>
                       )}
 
-                      <div className="mt-2 flex items-center justify-between gap-3 text-[9px] opacity-70">
+                      <div className="mt-2 flex items-center justify-between gap-3 text-[9px] opacity-80">
                         <span>{msg.time}</span>
 
-                        {msg.role === "assistant" && (
-                          <button
-                            type="button"
-                            onClick={() => handleSpeak(msg.content, idx)}
-                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-green-50 dark:hover:bg-white/10 text-[#1B5E20] dark:text-emerald-300 font-bold cursor-pointer transition"
-                            title={speakingIndex === idx ? "Stop Speaking" : "Listen (Text-to-Speech)"}
-                          >
-                            {speakingIndex === idx ? (
-                              <>
-                                <VolumeX size={13} className="text-red-500 animate-pulse" />
-                                <span className="text-red-500">{language === "mr" ? "थांबवा" : language === "hi" ? "रोकें" : "Stop"}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Volume2 size={13} />
-                                <span>{language === "mr" ? "ऐका 🔊" : language === "hi" ? "सुनें 🔊" : "Listen 🔊"}</span>
-                              </>
-                            )}
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {msg.role === "assistant" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openWhatsAppShare(
+                                  `🌾 *कृषीमित्र सल्ला (KrushiMitra AI Advisory):*\n\n${msg.content}\n\n🌱 *कृषीमित्र — शेतकऱ्यांचा डिजिटल मित्र*`
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-green-500/20 text-green-700 dark:text-emerald-300 font-bold cursor-pointer transition"
+                              title="Share on WhatsApp"
+                            >
+                              <Share2 size={11} />
+                              <span>WhatsApp</span>
+                            </button>
+                          )}
+
+                          {msg.role === "assistant" && (
+                            <button
+                              type="button"
+                              onClick={() => handleSpeak(msg.content, idx)}
+                              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-green-50 dark:hover:bg-white/10 text-[#1B5E20] dark:text-emerald-300 font-bold cursor-pointer transition"
+                              title={speakingIndex === idx ? "Stop Speaking" : "Listen (Text-to-Speech)"}
+                            >
+                              {speakingIndex === idx ? (
+                                <>
+                                  <VolumeX size={13} className="text-red-500 animate-pulse" />
+                                  <span className="text-red-500">{language === "mr" ? "थांबवा" : language === "hi" ? "रोकें" : "Stop"}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 size={13} />
+                                  <span>{language === "mr" ? "ऐका 🔊" : language === "hi" ? "सुनें 🔊" : "Listen 🔊"}</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -939,6 +1147,35 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
 
               {/* INPUT BAR */}
               <div className="border-t border-gray-100 dark:border-[#24402A] bg-white dark:bg-[#0D1710] p-3">
+                {/* ATTACHED IMAGE PREVIEW BAR */}
+                {attachedImage && (
+                  <div className="mb-2 flex items-center justify-between rounded-xl bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 p-1.5 px-2">
+                    <div className="flex items-center gap-2">
+                      <img src={attachedImage} alt="Preview" className="h-9 w-9 rounded-lg object-cover border border-green-300 dark:border-green-700" />
+                      <div className="text-[11px] font-bold text-green-900 dark:text-green-300">
+                        {language === "mr" ? "🌿 पाण्याचा फोटो जोडला (Leaf photo attached)" : "🌿 Leaf photo attached"}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedImage(null)}
+                      className="rounded-full bg-black/10 dark:bg-white/10 text-gray-700 dark:text-gray-300 p-1 hover:bg-red-500 hover:text-white transition cursor-pointer"
+                      title="Remove image"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )}
+
+                {/* HIDDEN PHOTO INPUT */}
+                <input
+                  ref={chatFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleAttachImage(e.target.files?.[0])}
+                />
+
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -946,6 +1183,20 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                   }}
                   className="flex items-center gap-2"
                 >
+                  {/* ATTACH PHOTO BUTTON */}
+                  <button
+                    type="button"
+                    onClick={() => chatFileInputRef.current?.click()}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition duration-200 cursor-pointer border ${
+                      attachedImage
+                        ? "bg-green-600 text-white border-green-700 shadow-xs"
+                        : "bg-green-50 dark:bg-[#183321] text-[#1B5E20] dark:text-emerald-300 hover:bg-green-100 dark:hover:bg-[#20432c] border-green-200 dark:border-[#24402A]"
+                    }`}
+                    title={language === "mr" ? "पानाचा फोटो जोडा (Camera/Upload)" : "Attach leaf photo"}
+                  >
+                    <Camera size={17} />
+                  </button>
+
                   {isSupported && (
                     <button
                       type="button"
@@ -966,7 +1217,13 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={
-                      isListening
+                      attachedImage
+                        ? language === "mr"
+                          ? "या फोटोबद्दल विचारा (उदा. कोणता रोग आहे?)..."
+                          : language === "hi"
+                          ? "इस फोटो के बारे में पूछें (उदा. कौन सा रोग है?)..."
+                          : "Ask about this leaf photo..."
+                        : isListening
                         ? language === "mr"
                           ? "ऐकत आहे... बोला..."
                           : language === "hi"
@@ -983,8 +1240,8 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
 
                   <button
                     type="submit"
-                    disabled={!input.trim() || loading}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2E7D32] text-white transition hover:bg-[#1B5E20] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                    disabled={(!input.trim() && !attachedImage) || loading}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2E7D32] text-white transition hover:bg-[#1B5E20] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-xs"
                     title="Send"
                   >
                     <Send size={16} />

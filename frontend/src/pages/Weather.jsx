@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   Sparkles,
   Calendar,
+  Share2,
 } from "lucide-react";
 
 import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
@@ -22,6 +23,7 @@ import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
 import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenDistrict } from "../utils/voiceParser";
 import { buildApiUrl } from "../utils/apiConfig";
+import { openWhatsAppShare, formatWeatherShareText } from "../utils/whatsappShare";
 
 export default function Weather({ nav }) {
   const { t, tDistrict, tWeather, language } = useApp();
@@ -379,8 +381,32 @@ export default function Weather({ nav }) {
 
               </div>
 
-              <div className="text-8xl select-none animate-float-slow filter drop-shadow-md">
-                🌤️
+              <div className="flex flex-col items-center md:items-end gap-3">
+                <div className="text-8xl select-none animate-float-slow filter drop-shadow-md">
+                  🌤️
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    openWhatsAppShare(
+                      formatWeatherShareText({
+                        district: tDistrict ? tDistrict(weather.city) : weather.city,
+                        temp: weather.temperature,
+                        condition: tWeather ? tWeather(weather.condition) : weather.condition,
+                        humidity: weather.humidity,
+                        wind: weather.wind,
+                        rainChance: weather.rainfall > 0 ? 85 : 10,
+                        lang: language,
+                      })
+                    )
+                  }
+                  className="flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 text-xs font-extrabold shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                  title="Share on WhatsApp"
+                >
+                  <Share2 size={14} />
+                  <span>{language === "mr" ? "WhatsApp वर शेअर करा" : language === "hi" ? "व्हाट्सएप पर शेयर करें" : "Share on WhatsApp"}</span>
+                </button>
               </div>
 
             </div>

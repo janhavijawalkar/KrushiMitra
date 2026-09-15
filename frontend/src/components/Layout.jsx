@@ -28,6 +28,8 @@ export default function Layout({
     reports: t("reports"),
     analytics: t("analytics") || "Agri Analytics",
     history: t("history"),
+    "plant-doctor": t("plantDoctor") || "AI Plant Doctor",
+    schemes: t("schemes") || "Govt Schemes",
 
     profile: t("profile"),
     settings: t("settings"),

@@ -1559,6 +1559,7 @@ def history_recommendations():
 # =========================================================
 
 import ai_assistant
+import schemes_data
 
 @app.route("/api/ai/chat", methods=["POST"])
 def ai_chat():
@@ -1568,12 +1569,16 @@ def ai_chat():
         lang = data.get("language", "mr")
         history = data.get("history", [])
         farmer_district = data.get("farmer_district") or data.get("district") or data.get("city") or "Pune"
+        image_data = data.get("image_data") or data.get("image")
+        mime_type = data.get("mime_type", "image/jpeg")
         
         result = ai_assistant.chat_with_ai(
             message=message,
             lang=lang,
             history=history,
-            farmer_district=farmer_district
+            farmer_district=farmer_district,
+            image_data=image_data,
+            mime_type=mime_type
         )
         return jsonify(result), 200
     except Exception as e:
@@ -1583,6 +1588,62 @@ def ai_chat():
             "reply": "क्षमा करा, तांत्रिक अडचणीमुळे उत्तर देता आले नाही." if data.get("language") == "mr" else "Sorry, an error occurred while processing your query.",
             "error": str(e)
         }), 500
+
+
+@app.route("/api/ai/diagnose-crop", methods=["POST"])
+def ai_diagnose_crop():
+    try:
+        data = request.get_json() or {}
+        image_data = data.get("image_data") or data.get("image")
+        mime_type = data.get("mime_type", "image/jpeg")
+        lang = data.get("language") or data.get("lang", "mr")
+        user_query = data.get("query", "") or data.get("crop", "") or data.get("user_query", "")
+        file_name = data.get("file_name", "") or data.get("fileName", "")
+        
+        if not image_data and not user_query and not file_name:
+            return jsonify({
+                "success": False,
+                "message": "Please provide an image or specify a crop to diagnose."
+            }), 400
+        
+        diagnosis = ai_assistant.diagnose_crop_disease(
+            image_data=image_data,
+            mime_type=mime_type,
+            lang=lang,
+            user_query=user_query,
+            file_name=file_name
+        )
+        return jsonify(diagnosis), 200
+    except Exception as e:
+        print(f"[AI Diagnose Crop Error]: {e}")
+        return jsonify({
+            "success": False,
+            "message": "Error processing leaf diagnosis",
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/schemes", methods=["GET"])
+def get_government_schemes():
+    try:
+        land = request.args.get("land_acres", None)
+        category = request.args.get("category", "ALL")
+        needs_raw = request.args.get("needs", "")
+        needs = [n.strip() for n in needs_raw.split(",") if n.strip()] if needs_raw else None
+        
+        if land or category != "ALL" or needs:
+            schemes = schemes_data.filter_eligible_schemes(land_acres=land, category=category, needs=needs)
+        else:
+            schemes = schemes_data.get_all_schemes()
+            
+        return jsonify({
+            "success": True,
+            "schemes": schemes,
+            "count": len(schemes)
+        }), 200
+    except Exception as e:
+        print(f"[Schemes API Error]: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # =========================================================

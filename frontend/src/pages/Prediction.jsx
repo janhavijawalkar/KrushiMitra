@@ -11,6 +11,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  Share2,
 } from "lucide-react";
 
 import { useApp, MAHARASHTRA_DISTRICTS } from "../context/AppContext";
@@ -25,6 +26,7 @@ import {
   convertDevanagariDigits,
 } from "../utils/voiceParser";
 import { buildApiUrl } from "../utils/apiConfig";
+import { openWhatsAppShare, formatPredictionShareText } from "../utils/whatsappShare";
 
 export default function Prediction({ nav }) {
   const {
@@ -616,8 +618,31 @@ export default function Prediction({ nav }) {
               </div>
 
               <button
+                type="button"
+                onClick={() =>
+                  openWhatsAppShare(
+                    formatPredictionShareText({
+                      crop: tCrop ? tCrop(result.crop) : result.crop,
+                      district: tDistrict ? tDistrict(result.district) : result.district,
+                      season: tSeason ? tSeason(result.season) : result.season,
+                      area: form.area || 1,
+                      areaUnit: language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "Hectares",
+                      predictedYield: Number(result.productivity).toFixed(2),
+                      totalProduction: result.production || (Number(result.productivity) * (parseFloat(form.area) || 1)).toFixed(1),
+                      lang: language,
+                    })
+                  )
+                }
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 px-4 text-xs font-extrabold shadow-sm transition hover:shadow-md active:scale-95 cursor-pointer"
+                title="Share on WhatsApp"
+              >
+                <Share2 size={14} />
+                <span>{language === "mr" ? "अंदाज WhatsApp वर शेअर करा" : language === "hi" ? "पूर्वानुमान व्हाट्सएप पर शेयर करें" : "Share Estimate on WhatsApp"}</span>
+              </button>
+
+              <button
                 onClick={() => nav?.("history")}
-                className="mt-5 block w-full text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
+                className="mt-4 block w-full text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer"
               >
                 {t("viewAll") || (language === "mr" ? "सर्व इतिहास पाहा" : language === "hi" ? "पूरा इतिहास देखें" : "View All")} →
               </button>
