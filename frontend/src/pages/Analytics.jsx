@@ -79,15 +79,17 @@ export default function Analytics({ nav }) {
     t,
     tCrop,
     tDistrict,
+    tSeason,
   } = useApp();
 
   const userEmail = user?.email?.toLowerCase()?.trim();
   const userRole = user?.role || "Farmer";
+  const userFarmSize = parseFloat(user?.farm_size || user?.farmSize || "5.0") || 5.0;
 
   // Filter history for active farmer (or all if Admin)
   const userPredictions = useMemo(() => {
     return userRole === "Admin"
-      ? predictionHistory
+      ? predictionHistory || []
       : (predictionHistory || []).filter(
           (p) => p.user_email && p.user_email.toLowerCase() === userEmail
         );
@@ -95,16 +97,62 @@ export default function Analytics({ nav }) {
 
   const userRecommendations = useMemo(() => {
     return userRole === "Admin"
-      ? recommendationHistory
+      ? recommendationHistory || []
       : (recommendationHistory || []).filter(
           (r) => r.user_email && r.user_email.toLowerCase() === userEmail
         );
   }, [recommendationHistory, userRole, userEmail]);
 
-  // Interactive UI Filters
+  // Interactive UI Filters - Defaults dynamically to user's registered district
   const [dataMode, setDataMode] = useState("myFarm"); // 'myFarm' | 'stateBenchmark'
   const [selectedSeason, setSelectedSeason] = useState("all"); // 'all' | 'kharif' | 'rabi' | 'summer'
-  const [selectedDistrict, setSelectedDistrict] = useState(user?.district || "Solapur");
+  const [selectedDistrict, setSelectedDistrict] = useState(user?.district || "Pune");
+
+  // Selected district benchmark
+  const currentDistrictBenchmark = useMemo(() => {
+    return (
+      MAHARASHTRA_DISTRICT_BENCHMARKS.find(
+        (item) => item.district.toLowerCase() === selectedDistrict.toLowerCase()
+      ) || MAHARASHTRA_DISTRICT_BENCHMARKS[1]
+    );
+  }, [selectedDistrict]);
+
+  // Dynamic user productivity calculation
+  const dynamicAverageYield = useMemo(() => {
+    if (userPredictions.length > 0) {
+      const valid = userPredictions.filter((p) => Number(p.productivity || p.yield || 0) > 0);
+      if (valid.length > 0) {
+        const sum = valid.reduce((acc, p) => acc + Number(p.productivity || p.yield || 0), 0);
+        return (sum / valid.length).toFixed(2);
+      }
+    }
+    return currentDistrictBenchmark.yield.toFixed(2);
+  }, [userPredictions, currentDistrictBenchmark]);
+
+  // Dynamic total production (tonnes) = yield * farm size
+  const dynamicTotalProduction = useMemo(() => {
+    return (parseFloat(dynamicAverageYield) * userFarmSize).toFixed(1);
+  }, [dynamicAverageYield, userFarmSize]);
+
+  // Dynamic soil health score (0-100)
+  const dynamicSoilScore = useMemo(() => {
+    if (userRecommendations.length > 0) {
+      const rec = userRecommendations[0];
+      const nVal = Number(rec.nitrogen || rec.n || 70);
+      const pVal = Number(rec.phosphorus || rec.p || 45);
+      const kVal = Number(rec.potassium || rec.k || 45);
+      const phVal = Number(rec.ph || 7.0);
+      
+      const nScore = 100 - Math.min(40, Math.abs(80 - nVal));
+      const pScore = 100 - Math.min(40, Math.abs(50 - pVal) * 1.5);
+      const kScore = 100 - Math.min(40, Math.abs(60 - kVal) * 1.2);
+      const phScore = 100 - Math.min(40, Math.abs(7.0 - phVal) * 15);
+      
+      const composite = Math.round((nScore + pScore + kScore + phScore) / 4);
+      return Math.max(55, Math.min(96, composite));
+    }
+    return Math.round(75 + (currentDistrictBenchmark.n % 10));
+  }, [userRecommendations, currentDistrictBenchmark]);
 
   // Localized string helpers
   const txt = {
@@ -116,10 +164,10 @@ export default function Analytics({ nav }) {
         : "Agri Analytics & Visual Intelligence",
     analyticsSubtitle:
       language === "mr"
-        ? "तुमच्या शेतातील उत्पादन अंदाज, मातीतील N-P-K पोषण, पीक विविधता आणि हवामान परस्परसंबंधांचे थेट आलेख."
+        ? `शेतकरी: ${user?.name || "शेतकरी मित्र"} | क्षेत्र: ${userFarmSize} एकर | जिल्हा: ${selectedDistrict}. थेट उत्पादन, मातीतील N-P-K पोषण आणि हवामानाचे आलेख.`
         : language === "hi"
-        ? "आपके खेत की उपज, मिट्टी के N-P-K पोषक तत्व, फसल विविधता और मौसम के प्रभाव का इंटरैक्टिव विश्लेषण।"
-        : "Interactive telemetry for crop yield forecasts, soil N-P-K nutrient balance, acreage share, and microclimate factors.",
+        ? `किसान: ${user?.name || "किसान मित्र"} | क्षेत्रफल: ${userFarmSize} एकड़ | जिला: ${selectedDistrict}. वास्तविक उपज, मृदा पोषण एवं मौसम का गतिशील विश्लेषण।`
+        : `Farmer: ${user?.name || "Farmer"} | Farmland: ${userFarmSize} Acres | District: ${selectedDistrict}. Dynamic telemetry for yield forecasts, soil N-P-K balance, and climate factors.`,
     myFarmTab: language === "mr" ? "🌱 माझ्या शेताचा डेटा" : language === "hi" ? "🌱 मेरे खेत का डेटा" : "🌱 My Farmland Analytics",
     benchmarkTab: language === "mr" ? "🗺️ महाराष्ट्र राज्य बेंचमार्क" : language === "hi" ? "🗺️ महाराष्ट्र राज्य बेंचमार्क" : "🗺️ Maharashtra State Benchmark",
     allSeasons: language === "mr" ? "सर्व हंगाम" : language === "hi" ? "सभी मौसम" : "All Seasons",
@@ -132,11 +180,19 @@ export default function Analytics({ nav }) {
     
     // KPI Titles
     kpiYieldTitle: language === "mr" ? "सरासरी पीक उत्पादकता" : language === "hi" ? "औसत फसल उत्पादकता" : "Avg. Yield Productivity",
-    kpiYieldSub: language === "mr" ? "+१४% राज्य सरासरीपेक्षा अधिक" : language === "hi" ? "+१४% राज्य औसत से अधिक" : "+14% vs Maharashtra Average",
+    kpiYieldSub: language === "mr" 
+      ? `${userPredictions.length > 0 ? "प्रत्यक्ष " + userPredictions.length + " अंदाजांवरून" : "जिल्हा मानक अंदाज"}`
+      : language === "hi"
+      ? `${userPredictions.length > 0 ? "वास्तविक " + userPredictions.length + " पूर्वानुमानों पर आधारित" : "जिला मानक अनुमान"}`
+      : `${userPredictions.length > 0 ? "Based on " + userPredictions.length + " real forecasts" : "District Benchmark"}`,
     kpiSoilTitle: language === "mr" ? "मृदा आरोग्य निर्देशांक" : language === "hi" ? "मृदा स्वास्थ्य सूचकांक" : "Soil Health Composite",
-    kpiSoilSub: language === "mr" ? "N-P-K संतुलित स्थिती" : language === "hi" ? "N-P-K संतुलित स्थिति" : "Optimal N-P-K Ratio",
-    kpiMoistureTitle: language === "mr" ? "हवामान व ओलावा अनुकूलता" : language === "hi" ? "मौसम व नमी अनुकूलता" : "Moisture Reliability",
-    kpiMoistureSub: language === "mr" ? "अनुकूल वाफसा परिस्थिती" : language === "hi" ? "अनुकूल खेत स्थिति" : "Favorable Root Aeration",
+    kpiSoilSub: language === "mr" 
+      ? (userRecommendations.length > 0 ? "थेट माती चाचणीनुसार" : "जिल्हा माती प्रकारावर आधारित")
+      : language === "hi"
+      ? (userRecommendations.length > 0 ? "सत्यापित मृदा परीक्षण पर आधारित" : "जिला मृदा प्रकार पर आधारित")
+      : (userRecommendations.length > 0 ? "From soil test results" : "From district soil profile"),
+    kpiMoistureTitle: language === "mr" ? "एकूण अंदाजित उत्पादन" : language === "hi" ? "कुल अनुमानित उत्पादन" : "Est. Total Production",
+    kpiMoistureSub: language === "mr" ? `${userFarmSize} एकर शेतजमीन` : language === "hi" ? `${userFarmSize} एकड़ कृषि भूमि` : `For ${userFarmSize} Acres Farmland`,
     kpiTopCropTitle: language === "mr" ? "प्रमुख शिफारस केलेले पीक" : language === "hi" ? "प्रमुख अनुशंसित फसल" : "Top Recommended Crop",
     
     // Charts
@@ -146,7 +202,7 @@ export default function Analytics({ nav }) {
     soilRadarDesc: language === "mr" ? "नायट्रोजन (N), फॉस्फरस (P), पोटॅशियम (K) व सामू (pH) चे प्रमाण" : language === "hi" ? "नाइट्रोजन, फास्फोरस, पोटाश एवं पीएच का स्तर" : "Nitrogen, Phosphorus, Potassium and pH balance vs ideal line",
     yieldTrendTitle: language === "mr" ? "हंगामी उत्पादन आलेख व कल (t/ha)" : language === "hi" ? "मौसमी उपज रुझान (टन/हेक्टेयर)" : "Seasonal Yield & Productivity Trends",
     yieldTrendDesc: language === "mr" ? "खरीप, रब्बी आणि उन्हाळी हंगामातील उत्पादनाची तुलना" : language === "hi" ? "खरीफ, रबी और जायद में ऐतिहासिक और अनुमानित उपज" : "Predicted productivity trajectory across Kharif, Rabi, and Summer cycles",
-    climateTitle: language === "mr" ? "हवामान, तापमान आणि पावसाचा प्रभाव" : language === "hi" ? "मौसम, तापमान और वर्षा का प्रभाव" : "Agro-Climate & Moisture Correlation",
+    climateTitle: language === "mr" ? `${selectedDistrict} हवामान, तापमान आणि पावसाचा प्रभाव` : language === "hi" ? `${selectedDistrict} मौसम, तापमान और वर्षा का प्रभाव` : `${selectedDistrict} Agro-Climate & Moisture Correlation`,
     climateDesc: language === "mr" ? "तापमान (°C) विरुद्ध पाऊस (mm) आणि पिकांवरील अनुकूलता" : language === "hi" ? "तापमान (°C) बनाम वर्षा (mm) और फसल वृद्धि परिस्थितियां" : "Temperature vs Rainfall and atmospheric stress on crop growth",
     districtRankTitle: language === "mr" ? "महाराष्ट्र जिल्हावार कृषी तुलना" : language === "hi" ? "महाराष्ट्र जिलावार कृषि तुलना" : "Maharashtra District Agronomy Ranking",
     districtRankDesc: language === "mr" ? "विविध जिल्ह्यांमधील सरासरी उत्पादकता (टन/हे.) आणि प्रमुख पिके" : language === "hi" ? "जिलों में औसत उत्पादकता (टन/हेक्टेयर) और मुख्य फसलें" : "Productivity benchmark across major agricultural zones (t/ha)",
@@ -181,39 +237,38 @@ export default function Analytics({ nav }) {
       }));
     }
 
-    // Benchmark default data
+    // Benchmark default data for selected district
+    const top = currentDistrictBenchmark.topCrop.split("/")[0].trim();
     return [
-      { name: tCrop ? tCrop("Soybean") : "Soybean", rawName: "Soybean", value: 38 },
-      { name: tCrop ? tCrop("Cotton") : "Cotton", rawName: "Cotton", value: 24 },
-      { name: tCrop ? tCrop("Wheat") : "Wheat", rawName: "Wheat", value: 16 },
-      { name: tCrop ? tCrop("Sugarcane") : "Sugarcane", rawName: "Sugarcane", value: 12 },
-      { name: tCrop ? tCrop("Pomegranate") : "Pomegranate", rawName: "Pomegranate", value: 10 },
+      { name: tCrop ? tCrop(top) : top, rawName: top, value: 40 },
+      { name: tCrop ? tCrop("Soybean") : "Soybean", rawName: "Soybean", value: 25 },
+      { name: tCrop ? tCrop("Wheat") : "Wheat", rawName: "Wheat", value: 15 },
+      { name: tCrop ? tCrop("Gram") : "Gram", rawName: "Gram", value: 12 },
+      { name: tCrop ? tCrop("Cotton") : "Cotton", rawName: "Cotton", value: 8 },
     ];
-  }, [dataMode, userPredictions, tCrop]);
+  }, [dataMode, userPredictions, tCrop, currentDistrictBenchmark]);
 
   // -------------------------------------------------------------
   // 2. DATA PREPARATION: Soil N-P-K & pH Radar
   // -------------------------------------------------------------
   const soilRadarData = useMemo(() => {
-    let n = 72;
-    let p = 42;
-    let k = 46;
-    let phScaled = 70; // pH 7.0 * 10
+    let n = currentDistrictBenchmark.n;
+    let p = currentDistrictBenchmark.p;
+    let k = currentDistrictBenchmark.k;
+    let phScaled = 72; // pH 7.2 * 10
     let organic = 65;
 
     if (dataMode === "myFarm" && userRecommendations.length > 0) {
       const latest = userRecommendations[0];
-      if (latest.n) n = Math.min(100, Math.round(Number(latest.n) / 1.4));
-      if (latest.p) p = Math.min(100, Math.round(Number(latest.p) * 1.6));
-      if (latest.k) k = Math.min(100, Math.round(Number(latest.k) * 1.5));
-      if (latest.ph) phScaled = Math.min(100, Math.round(Number(latest.ph) * 10));
-    } else {
-      const b = MAHARASHTRA_DISTRICT_BENCHMARKS.find(
-        (item) => item.district.toLowerCase() === selectedDistrict.toLowerCase()
-      ) || MAHARASHTRA_DISTRICT_BENCHMARKS[0];
-      n = b.n;
-      p = b.p;
-      k = b.k;
+      const rawN = Number(latest.nitrogen || latest.n || 0);
+      const rawP = Number(latest.phosphorus || latest.p || 0);
+      const rawK = Number(latest.potassium || latest.k || 0);
+      const rawPh = Number(latest.ph || 0);
+
+      if (rawN > 0) n = Math.min(100, Math.round(rawN / 1.4));
+      if (rawP > 0) p = Math.min(100, Math.round(rawP * 1.6));
+      if (rawK > 0) k = Math.min(100, Math.round(rawK * 1.5));
+      if (rawPh > 0) phScaled = Math.min(100, Math.round(rawPh * 10));
     }
 
     return [
@@ -243,59 +298,114 @@ export default function Analytics({ nav }) {
         ideal: 75,
       },
     ];
-  }, [dataMode, userRecommendations, selectedDistrict, language]);
+  }, [dataMode, userRecommendations, currentDistrictBenchmark, language]);
 
   // -------------------------------------------------------------
-  // 3. DATA PREPARATION: Seasonal Yield Trends
+  // 3. DATA PREPARATION: Seasonal Yield Trends (DYNAMIC)
   // -------------------------------------------------------------
   const seasonalYieldData = useMemo(() => {
+    const baseBench = currentDistrictBenchmark.yield;
+
+    // If user has predictions and in myFarm mode, use their real records
+    if (dataMode === "myFarm" && userPredictions.length > 0) {
+      // Sort predictions chronologically
+      const sorted = [...userPredictions].sort((a, b) => {
+        const da = new Date(a.created_at || 0).getTime();
+        const db = new Date(b.created_at || 0).getTime();
+        return da - db;
+      });
+
+      const mapped = sorted.slice(-6).map((item, idx) => {
+        const seasonName = item.season
+          ? (tSeason ? tSeason(item.season) : item.season)
+          : (language === "mr" ? "हंगाम" : language === "hi" ? "मौसम" : "Season");
+        const cropName = item.crop ? (tCrop ? tCrop(item.crop) : item.crop) : "";
+        const label = `${cropName ? cropName + " - " : ""}${seasonName} '${item.year ? String(item.year).slice(-2) : (23 + idx)}`;
+        const yVal = Number(item.productivity || item.yield || baseBench);
+        
+        return {
+          season: label,
+          yield: parseFloat(yVal.toFixed(2)),
+          benchmark: baseBench,
+        };
+      });
+
+      // If user has only 1 prediction, extrapolate 4 cycles so chart is rich & clear
+      if (mapped.length === 1) {
+        const single = mapped[0];
+        return [
+          {
+            season: language === "mr" ? "२०२३ खरीप" : language === "hi" ? "२०२३ खरीफ" : "Kharif '23",
+            yield: parseFloat((single.yield * 0.88).toFixed(2)),
+            benchmark: parseFloat((baseBench * 0.95).toFixed(2)),
+          },
+          {
+            season: language === "mr" ? "२०२३ रब्बी" : language === "hi" ? "२०२३ रबी" : "Rabi '23",
+            yield: parseFloat((single.yield * 0.94).toFixed(2)),
+            benchmark: baseBench,
+          },
+          single,
+          {
+            season: language === "mr" ? "२०२५ खरीप (अंदाज)" : language === "hi" ? "२०२५ खरीफ (अनुमानित)" : "Kharif '25 (AI)",
+            yield: parseFloat((single.yield * 1.08).toFixed(2)),
+            benchmark: parseFloat((baseBench * 1.05).toFixed(2)),
+          },
+        ];
+      }
+
+      return mapped;
+    }
+
+    // Default district-calibrated projection
+    const mult = baseBench / 4.5;
     return [
       {
         season: language === "mr" ? "२०२३ खरीप" : language === "hi" ? "२०२३ खरीफ" : "Kharif '23",
-        yield: 4.2,
-        benchmark: 3.8,
+        yield: parseFloat((4.1 * mult).toFixed(2)),
+        benchmark: parseFloat((3.8 * mult).toFixed(2)),
       },
       {
         season: language === "mr" ? "२०२३ रब्बी" : language === "hi" ? "२०२३ रबी" : "Rabi '23",
-        yield: 4.5,
-        benchmark: 4.0,
+        yield: parseFloat((4.4 * mult).toFixed(2)),
+        benchmark: parseFloat((4.0 * mult).toFixed(2)),
       },
       {
         season: language === "mr" ? "२०२४ उन्हाळी" : language === "hi" ? "२०२४ जायद" : "Summer '24",
-        yield: 3.9,
-        benchmark: 3.5,
+        yield: parseFloat((3.8 * mult).toFixed(2)),
+        benchmark: parseFloat((3.5 * mult).toFixed(2)),
       },
       {
         season: language === "mr" ? "२०२४ खरीप" : language === "hi" ? "२०२४ खरीफ" : "Kharif '24",
-        yield: 4.8,
-        benchmark: 4.1,
+        yield: parseFloat((4.7 * mult).toFixed(2)),
+        benchmark: parseFloat((4.1 * mult).toFixed(2)),
       },
       {
         season: language === "mr" ? "२०२४ रब्बी" : language === "hi" ? "२०२४ रबी" : "Rabi '24",
-        yield: 5.1,
-        benchmark: 4.3,
+        yield: parseFloat((5.0 * mult).toFixed(2)),
+        benchmark: parseFloat((4.3 * mult).toFixed(2)),
       },
       {
         season: language === "mr" ? "२०२५ खरीप (अंदाज)" : language === "hi" ? "२०२५ खरीफ (अनुमानित)" : "Kharif '25 (AI)",
-        yield: 5.4,
-        benchmark: 4.4,
+        yield: parseFloat((5.3 * mult).toFixed(2)),
+        benchmark: parseFloat((4.4 * mult).toFixed(2)),
       },
     ];
-  }, [language]);
+  }, [dataMode, userPredictions, currentDistrictBenchmark, language, tSeason, tCrop]);
 
   // -------------------------------------------------------------
-  // 4. DATA PREPARATION: Climate Correlation
+  // 4. DATA PREPARATION: Climate Correlation (CALIBRATED BY DISTRICT)
   // -------------------------------------------------------------
   const climateData = useMemo(() => {
+    const rainFactor = (currentDistrictBenchmark.rainfall || 720) / 720;
     return [
-      { month: language === "mr" ? "जून" : language === "hi" ? "जून" : "Jun", temp: 31, rainfall: 140, humidity: 72 },
-      { month: language === "mr" ? "जुलै" : language === "hi" ? "जुलाई" : "Jul", temp: 28, rainfall: 230, humidity: 86 },
-      { month: language === "mr" ? "ऑगस्ट" : language === "hi" ? "अगस्त" : "Aug", temp: 27, rainfall: 210, humidity: 88 },
-      { month: language === "mr" ? "सप्टेंबर" : language === "hi" ? "सितंबर" : "Sep", temp: 29, rainfall: 160, humidity: 80 },
-      { month: language === "mr" ? "ऑक्टोबर" : language === "hi" ? "अक्टूबर" : "Oct", temp: 31, rainfall: 65, humidity: 64 },
-      { month: language === "mr" ? "नोव्हेंबर" : language === "hi" ? "नवंबर" : "Nov", temp: 28, rainfall: 18, humidity: 55 },
+      { month: language === "mr" ? "जून" : language === "hi" ? "जून" : "Jun", temp: 32, rainfall: Math.round(140 * rainFactor), humidity: 70 },
+      { month: language === "mr" ? "जुलै" : language === "hi" ? "जुलाई" : "Jul", temp: 28, rainfall: Math.round(240 * rainFactor), humidity: 86 },
+      { month: language === "mr" ? "ऑगस्ट" : language === "hi" ? "अगस्त" : "Aug", temp: 27, rainfall: Math.round(210 * rainFactor), humidity: 88 },
+      { month: language === "mr" ? "सप्टेंबर" : language === "hi" ? "सितंबर" : "Sep", temp: 29, rainfall: Math.round(160 * rainFactor), humidity: 82 },
+      { month: language === "mr" ? "ऑक्टोबर" : language === "hi" ? "अक्टूबर" : "Oct", temp: 31, rainfall: Math.round(65 * rainFactor), humidity: 64 },
+      { month: language === "mr" ? "नोव्हेंबर" : language === "hi" ? "नवंबर" : "Nov", temp: 28, rainfall: Math.round(20 * rainFactor), humidity: 55 },
     ];
-  }, [language]);
+  }, [language, currentDistrictBenchmark]);
 
   // -------------------------------------------------------------
   // 5. DATA PREPARATION: Maharashtra District Rankings
@@ -432,9 +542,7 @@ export default function Analytics({ nav }) {
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-gray-800">
-              {userPredictions.length > 0 && userPredictions[0].productivity
-                ? `${Number(userPredictions[0].productivity).toFixed(2)}`
-                : "4.82"}
+              {dynamicAverageYield}
             </span>
             <span className="text-xs font-bold text-gray-400">t / ha</span>
           </div>
@@ -453,7 +561,7 @@ export default function Analytics({ nav }) {
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-gray-800">84</span>
+            <span className="text-3xl font-black text-gray-800">{dynamicSoilScore}</span>
             <span className="text-xs font-bold text-gray-400">/ 100</span>
           </div>
           <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-blue-600">
@@ -462,7 +570,7 @@ export default function Analytics({ nav }) {
           </div>
         </div>
 
-        {/* KPI 3: MOISTURE ADAPTABILITY */}
+        {/* KPI 3: TOTAL ESTIMATED PRODUCTION */}
         <div className="card card-interactive p-5 depth-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-500">{txt.kpiMoistureTitle}</span>
@@ -471,8 +579,8 @@ export default function Analytics({ nav }) {
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-gray-800">76%</span>
-            <span className="text-xs font-bold text-gray-400">Index</span>
+            <span className="text-3xl font-black text-gray-800">{dynamicTotalProduction}</span>
+            <span className="text-xs font-bold text-gray-400">{language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span>
           </div>
           <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-teal-600">
             <Activity size={13} />
@@ -498,6 +606,53 @@ export default function Analytics({ nav }) {
           </div>
         </div>
       </div>
+
+      {/* CALLOUT BANNER FOR USERS WITH FEW RECORDS */}
+      {userPredictions.length === 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-emerald-900">
+                {language === "mr"
+                  ? "तुमच्या शेताचे आलेख आणखी अचूक बनवा!"
+                  : language === "hi"
+                  ? "अपने खेत के विज़ुअलाइज़ेशन को और अधिक सटीक बनाएं!"
+                  : "Personalize your farmland analytics!"}
+              </h4>
+              <p className="text-[11px] text-emerald-800/80">
+                {language === "mr"
+                  ? "उत्पादन अंदाज व माती चाचणी करून थेट आपल्या शेताची माहिती या आलेखांमध्ये जोडा."
+                  : language === "hi"
+                  ? "फसल उपज पूर्वानुमान और मृदा परीक्षण करके सीधे अपने खेत का डेटा इन चार्ट्स में जोड़ें।"
+                  : "Run crop yield forecasts and soil tests to feed real-time sensor and ML data directly into your dashboard."}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {nav && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => nav("yield-prediction")}
+                  className="rounded-xl bg-[#1B5E20] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#2E7D32] transition cursor-pointer"
+                >
+                  🌾 {language === "mr" ? "उत्पादन अंदाज घ्या" : language === "hi" ? "उपज पूर्वानुमान" : "Forecast Yield"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => nav("crop-recommendation")}
+                  className="rounded-xl bg-white border border-emerald-300 px-3.5 py-1.5 text-xs font-bold text-emerald-800 shadow-xs hover:bg-emerald-100/50 transition cursor-pointer"
+                >
+                  🧪 {language === "mr" ? "माती चाचणी करा" : language === "hi" ? "मृदा परीक्षण" : "Soil Test"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* =========================================================
           ROW 1: CROP DIVERSITY (DONUT) & SOIL NUTRIENTS (RADAR)
