@@ -8,9 +8,13 @@ import numpy as np
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, ".env"))
+load_dotenv(os.path.join(BASE_DIR, ".env"), override=True)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+def get_gemini_api_key():
+    load_dotenv(os.path.join(BASE_DIR, ".env"), override=True)
+    return (os.getenv("GEMINI_API_KEY") or "").strip()
+
+GEMINI_API_KEY = get_gemini_api_key()
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
 SYSTEM_PROMPT = """
@@ -1697,9 +1701,10 @@ def chat_with_ai(message: str, lang: str = "mr", history: list = None, farmer_di
             clean_b64 = clean_b64.split(",", 1)[1]
 
     # STEP 3: Gemini API Integration (Multimodal & Conversational)
-    if GEMINI_API_KEY and GEMINI_API_KEY.strip():
+    active_key = get_gemini_api_key()
+    if active_key:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={active_key}"
 
             prompt_lang = "Marathi (मराठी)" if lang == "mr" else "Hindi (हिन्दी)" if lang == "hi" else "English"
             location_note = f"\nFarmer Location: Currently based in {farmer_district or 'Maharashtra'}, India. If they ask about their city, crops, or weather without specifying a location, reference {farmer_district or 'Maharashtra'}."
@@ -2938,7 +2943,7 @@ def diagnose_crop_disease(image_data: str, mime_type: str = "image/jpeg", lang: 
     prompt_lang = "Marathi" if lang == "mr" else "Hindi" if lang == "hi" else "English"
 
     # 1. Try Gemini Multimodal Vision with Multi-Model Fallback
-    api_key = (GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")).strip()
+    api_key = get_gemini_api_key()
     if api_key and clean_b64:
         vision_prompt = f"""You are an elite Agricultural Plant Pathologist and Agronomist specialized in Indian, Maharashtra, floriculture, and horticulture crops.
 Analyze this crop / plant / leaf / flower photo with high botanical precision.
@@ -2977,15 +2982,15 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
   "whatsapp_summary": "Concise WhatsApp shareable message in {prompt_lang}"
 }}"""
 
-        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+        models_to_try = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
         payload = {
             "contents": [
                 {
                     "role": "user",
                     "parts": [
                         {
-                            "inline_data": {
-                                "mime_type": mime_type or "image/jpeg",
+                            "inlineData": {
+                                "mimeType": mime_type or "image/jpeg",
                                 "data": clean_b64
                             }
                         },
@@ -2995,7 +3000,7 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
             ],
             "generationConfig": {
                 "temperature": 0.15,
-                "maxOutputTokens": 1000
+                "maxOutputTokens": 2048
             }
         }
 
@@ -3003,7 +3008,7 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
                 headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
-                res = requests.post(url, json=payload, headers=headers, timeout=14)
+                res = requests.post(url, json=payload, headers=headers, timeout=25)
                 if res.status_code == 200:
                     data = res.json()
                     raw_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
