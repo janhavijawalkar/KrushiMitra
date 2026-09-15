@@ -3123,20 +3123,31 @@ export function AppProvider({ children }) {
       registerUser(data.user);
       return { success: true, user: data.user };
     } catch (err) {
-      console.warn("Backend API offline, registering locally:", err);
-      const userObj = registerUser(registrationData);
-      login(userObj);
-      return { success: true, user: userObj };
+      console.error("Backend API connection error during registration:", err);
+      return {
+        success: false,
+        message:
+          language === "mr"
+            ? "सर्व्हरशी संपर्क होऊ शकला नाही. कृपया बॅकएंड सर्व्हर चालू असल्याची खात्री करा."
+            : language === "hi"
+            ? "सर्वर से संपर्क नहीं हो सका। कृपया जांचें कि बैकएंड सर्वर चल रहा है।"
+            : "Could not connect to KrushiMitra database server. Please ensure backend is running.",
+      };
     }
   };
 
-  // Google OAuth 2.0 Sign-In & Onboarding
-  const apiGoogleAuth = async (credential) => {
+  // Google OAuth 2.0 Sign-In & Onboarding (Cross-Device Compatible)
+  const apiGoogleAuth = async (credentialOrData) => {
     try {
+      const payload =
+        typeof credentialOrData === "string"
+          ? { credential: credentialOrData }
+          : credentialOrData;
+
       const response = await fetch(`${API_BASE}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (!response.ok || !data.success) {

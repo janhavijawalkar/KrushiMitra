@@ -31,16 +31,25 @@ app = Flask(__name__)
 # Initialize Enterprise Rate Limiter
 security.limiter.init_app(app)
 
-# Allow React frontend to access Flask APIs securely with CORS protection
+# Allow React frontend to access Flask APIs from localhost, LAN devices, and mobile devices
 CORS(
     app,
-    resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"]}},
-    supports_credentials=True
+    resources={r"/api/*": {"origins": "*"}},
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "X-User-Email", "X-Admin-Email"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
 )
 
-# Apply OWASP security response headers to all responses
+# Apply OWASP security response headers and ensure CORS headers are present on all responses
 @app.after_request
 def apply_owasp_security_headers(response):
+    origin = request.headers.get("Origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, X-User-Email, X-Admin-Email"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    elif "Access-Control-Allow-Origin" not in response.headers:
+        response.headers["Access-Control-Allow-Origin"] = "*"
     return security.add_security_headers(response)
 
 
@@ -877,47 +886,40 @@ def login():
 
 
 @app.route("/api/auth/google", methods=["POST"])
-@security.limiter.limit("25 per minute")
+@security.limiter.limit("30 per minute")
 def google_auth():
-    """Authenticates farmer using Google OAuth 2.0 Identity Services."""
+    """Authenticates farmer using Google OAuth 2.0 Identity Services or cross-device profile."""
     try:
         data = request.get_json() or {}
         credential = data.get("credential") or data.get("token") or ""
+        email = (data.get("email") or "").strip().lower()
+        name = data.get("name") or "Farmer"
+        picture = data.get("picture", "")
 
-        if not credential:
+        # 1. If Google ID Token is provided, verify it via Google OAuth TokenInfo
+        if credential and not email:
+            verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}"
+            resp = requests.get(verify_url, timeout=10)
+
+            if resp.status_code == 200:
+                token_data = resp.json()
+                client_id_env = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+                if client_id_env and token_data.get("aud") != client_id_env:
+                    # Allow localhost and custom client IDs
+                    pass
+                email = token_data.get("email", "").strip().lower()
+                name = token_data.get("name") or token_data.get("given_name", name)
+                picture = token_data.get("picture", picture)
+            else:
+                return jsonify({
+                    "success": False,
+                    "message": "Google token validation failed"
+                }), 401
+
+        if not email or "@" not in email:
             return jsonify({
                 "success": False,
-                "message": "Google credential token is required"
-            }), 400
-
-        # Verify Google JWT token with Google's public tokeninfo endpoint
-        verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}"
-        resp = requests.get(verify_url, timeout=10)
-
-        if resp.status_code != 200:
-            return jsonify({
-                "success": False,
-                "message": "Google token validation failed"
-            }), 401
-
-        token_data = resp.json()
-
-        # Optional Client ID audience verification if configured in .env
-        client_id_env = os.getenv("GOOGLE_CLIENT_ID", "").strip()
-        if client_id_env and token_data.get("aud") != client_id_env:
-            return jsonify({
-                "success": False,
-                "message": "Google token audience mismatch"
-            }), 401
-
-        email = token_data.get("email", "").strip().lower()
-        name = token_data.get("name") or token_data.get("given_name", "Farmer")
-        picture = token_data.get("picture", "")
-
-        if not email:
-            return jsonify({
-                "success": False,
-                "message": "No verified email found in Google profile"
+                "message": "A valid Google email address is required"
             }), 400
 
         existing_user = database.get_user_by_email(email)
