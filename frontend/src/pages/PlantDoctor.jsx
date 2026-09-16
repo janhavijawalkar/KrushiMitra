@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
   Camera,
   Upload,
@@ -769,7 +769,7 @@ const getFallbackPlantDiagnosis = (queryKey, lang = "mr") => {
 };
 
 export default function PlantDoctor({ nav }) {
-  const { language, t } = useApp();
+  const { language, t, tCrop } = useApp();
 
   const [selectedCrop, setSelectedCrop] = useState("auto"); // "auto" | "rose" | "tomato" | "cotton" | ...
   const [showCropSwitcher, setShowCropSwitcher] = useState(false);
@@ -780,6 +780,84 @@ export default function PlantDoctor({ nav }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [pumpSize, setPumpSize] = useState("15l"); // "15l" | "20l" | "200l"
   const [activeSampleId, setActiveSampleId] = useState(null);
+
+  // Dynamic language-sensitive display for diagnosed crop
+  const displayCropName = useMemo(() => {
+    if (!diagnosis) return "";
+    if (language === "en") {
+      const en = diagnosis.crop_detected;
+      if (en && !(/[\u0900-\u097F]/.test(en))) return en;
+      const raw = diagnosis.crop_detected_local || en || "Crop";
+      if (raw.includes("गुलाब")) return "Rose";
+      if (raw.includes("टोमॅटो") || raw.includes("टमाटर")) return "Tomato";
+      if (raw.includes("कापूस") || raw.includes("कपास")) return "Cotton";
+      if (raw.includes("सोयाबीन")) return "Soybean";
+      if (raw.includes("कांदा") || raw.includes("प्याज")) return "Onion";
+      if (raw.includes("मिरची") || raw.includes("मिर्च")) return "Chilli";
+      if (raw.includes("गहू") || raw.includes("गेहूं")) return "Wheat";
+      if (raw.includes("द्राक्ष") || raw.includes("अंगूर")) return "Grapes";
+      if (raw.includes("डाळिंब") || raw.includes("अनार")) return "Pomegranate";
+      if (raw.includes("ऊस") || raw.includes("गन्ना")) return "Sugarcane";
+      return tCrop ? tCrop(raw) : raw;
+    }
+    return diagnosis.crop_detected_local || (tCrop ? tCrop(diagnosis.crop_detected) : diagnosis.crop_detected) || "पीक";
+  }, [diagnosis, language, tCrop]);
+
+  // Dynamic language-sensitive display for diagnosed disease
+  const displayDiseaseName = useMemo(() => {
+    if (!diagnosis) return "";
+    if (language === "en") {
+      const en = diagnosis.disease_name;
+      if (en && !(/[\u0900-\u097F]/.test(en))) return en;
+      const local = diagnosis.disease_name_local || en || "";
+      if (local.includes("काळे ठिपके") || local.includes("ब्लॅक स्पॉट") || local.includes("black spot")) {
+        return "Rose Black Spot (Diplocarpon rosae)";
+      }
+      if (local.includes("भुरी") || local.includes("powdery")) {
+        return "Powdery Mildew (Podosphaera pannosa)";
+      }
+      if (local.includes("करपा") || local.includes("blight")) {
+        return "Early Blight (Alternaria solani)";
+      }
+      if (local.includes("गुलाबी बोंडअळी") || local.includes("bollworm")) {
+        return "Pink Bollworm (Pectinophora gossypiella)";
+      }
+      if (local.includes("पिवळा मोझॅक") || local.includes("mosaic")) {
+        return "Yellow Mosaic Virus (YMV)";
+      }
+      if (local.includes("जांभळा करपा") || local.includes("purple blotch")) {
+        return "Purple Blotch (Alternaria porri)";
+      }
+      if (local.includes("चुरडा") || local.includes("मुरडा") || local.includes("leaf curl")) {
+        return "Chilli Leaf Curl & Thrips";
+      }
+      if (local.includes("निरोगी") || local.includes("स्वस्थ") || local.includes("healthy")) {
+        return "Healthy Plant — No Disease Detected";
+      }
+      return en || local;
+    }
+    return diagnosis.disease_name_local || diagnosis.disease_name;
+  }, [diagnosis, language]);
+
+  // Dynamic remedies titles
+  const displayChemicalTitle = useMemo(() => {
+    if (!diagnosis?.chemical_remedy) return "Recommended Chemical Treatment";
+    const cr = diagnosis.chemical_remedy;
+    if (language === "en") {
+      return cr.technical_name || cr.title || "Recommended Fungicide";
+    }
+    return cr.title || cr.technical_name || "रासायनिक फवारणी";
+  }, [diagnosis, language]);
+
+  const displayOrganicTitle = useMemo(() => {
+    if (!diagnosis?.organic_remedy) return "Recommended Organic Remedy";
+    const or = diagnosis.organic_remedy;
+    if (language === "en") {
+      if (or.title && !(/[\u0900-\u097F]/.test(or.title))) return or.title;
+      return "Neem Oil 10,000 PPM / Bio-Agent Treatment";
+    }
+    return or.title || "सेंद्रिय उपाय";
+  }, [diagnosis, language]);
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -1399,7 +1477,7 @@ export default function PlantDoctor({ nav }) {
                     <div>
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          {diagnosis.crop_detected_local || diagnosis.crop_detected || "Crop"}
+                          {displayCropName}
                         </span>
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border border-green-200 dark:border-green-800">
                           {diagnosis.source?.includes("gemini")
@@ -1408,7 +1486,7 @@ export default function PlantDoctor({ nav }) {
                         </span>
                       </div>
                       <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-gray-100">
-                        {diagnosis.disease_name_local || diagnosis.disease_name}
+                        {displayDiseaseName}
                       </h2>
                     </div>
                   </div>
@@ -1611,7 +1689,7 @@ export default function PlantDoctor({ nav }) {
                     </div>
 
                     <div className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                      {diagnosis.chemical_remedy?.title || "Recommended Fungicide"}
+                      {displayChemicalTitle}
                     </div>
 
                     <div className="rounded-xl bg-white dark:bg-black/40 border border-amber-200/80 dark:border-amber-800/40 p-2.5">
@@ -1655,7 +1733,7 @@ export default function PlantDoctor({ nav }) {
                     </div>
 
                     <div className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                      {diagnosis.organic_remedy?.title || "Neem Formulation / Bio-agent"}
+                      {displayOrganicTitle}
                     </div>
 
                     <div className="rounded-xl bg-white dark:bg-black/40 border border-emerald-200/80 dark:border-emerald-800/40 p-2.5">
