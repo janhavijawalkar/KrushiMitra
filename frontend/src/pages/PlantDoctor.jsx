@@ -781,9 +781,19 @@ export default function PlantDoctor({ nav }) {
   const [pumpSize, setPumpSize] = useState("15l"); // "15l" | "20l" | "200l"
   const [activeSampleId, setActiveSampleId] = useState(null);
 
+  // Dynamic fallback lookup mapped to current language
+  const activeFallback = useMemo(() => {
+    if (!diagnosis) return null;
+    const str = `${diagnosis.disease_key || ""} ${diagnosis.disease_name || ""} ${diagnosis.disease_name_local || ""} ${diagnosis.crop_detected || ""} ${diagnosis.crop_detected_local || ""}`;
+    return getFallbackPlantDiagnosis(str, language);
+  }, [diagnosis, language]);
+
   // Dynamic language-sensitive display for diagnosed crop
   const displayCropName = useMemo(() => {
     if (!diagnosis) return "";
+    if (activeFallback?.crop_detected) {
+      return activeFallback.crop_detected;
+    }
     if (language === "en") {
       const en = diagnosis.crop_detected;
       if (en && !(/[\u0900-\u097F]/.test(en))) return en;
@@ -800,35 +810,51 @@ export default function PlantDoctor({ nav }) {
       if (raw.includes("ऊस") || raw.includes("गन्ना")) return "Sugarcane";
       return tCrop ? tCrop(raw) : raw;
     }
+    if (language === "hi") {
+      const raw = diagnosis.crop_detected || diagnosis.crop_detected_local || "";
+      if (raw.includes("Rose") || raw.includes("गुलाब")) return "गुलाब";
+      if (raw.includes("Tomato") || raw.includes("टोमॅटो") || raw.includes("टमाटर")) return "टमाटर";
+      if (raw.includes("Cotton") || raw.includes("कापूस") || raw.includes("कपास")) return "कपास";
+      if (raw.includes("Soybean") || raw.includes("सोयाबीन")) return "सोयाबीन";
+      if (raw.includes("Onion") || raw.includes("कांदा") || raw.includes("प्याज")) return "प्याज";
+      if (raw.includes("Chilli") || raw.includes("मिरची") || raw.includes("मिर्च")) return "मिर्च";
+      if (raw.includes("Wheat") || raw.includes("गहू") || raw.includes("गेहूं")) return "गेहूं";
+      if (raw.includes("Grape") || raw.includes("द्राक्ष") || raw.includes("अंगूर")) return "अंगूर";
+      if (raw.includes("Pomegranate") || raw.includes("डाळिंब") || raw.includes("अनार")) return "अनार";
+      if (raw.includes("Sugarcane") || raw.includes("ऊस") || raw.includes("गन्ना")) return "गन्ना";
+    }
     return diagnosis.crop_detected_local || (tCrop ? tCrop(diagnosis.crop_detected) : diagnosis.crop_detected) || "पीक";
-  }, [diagnosis, language, tCrop]);
+  }, [diagnosis, activeFallback, language, tCrop]);
 
   // Dynamic language-sensitive display for diagnosed disease
   const displayDiseaseName = useMemo(() => {
     if (!diagnosis) return "";
     if (language === "en") {
+      if (activeFallback?.disease_name && !(/[\u0900-\u097F]/.test(activeFallback.disease_name))) {
+        return activeFallback.disease_name;
+      }
       const en = diagnosis.disease_name;
       if (en && !(/[\u0900-\u097F]/.test(en))) return en;
       const local = diagnosis.disease_name_local || en || "";
-      if (local.includes("काळे ठिपके") || local.includes("ब्लॅक स्पॉट") || local.includes("black spot")) {
+      if (local.includes("काळे ठिपके") || local.includes("ब्लॅक स्पॉट") || local.includes("black spot") || local.includes("काला धब्बा")) {
         return "Rose Black Spot (Diplocarpon rosae)";
       }
-      if (local.includes("भुरी") || local.includes("powdery")) {
+      if (local.includes("भुरी") || local.includes("powdery") || local.includes("चूर्णिल")) {
         return "Powdery Mildew (Podosphaera pannosa)";
       }
-      if (local.includes("करपा") || local.includes("blight")) {
+      if (local.includes("करपा") || local.includes("blight") || local.includes("झुलसा")) {
         return "Early Blight (Alternaria solani)";
       }
-      if (local.includes("गुलाबी बोंडअळी") || local.includes("bollworm")) {
+      if (local.includes("गुलाबी बोंडअळी") || local.includes("bollworm") || local.includes("गुलाबी सुंडी")) {
         return "Pink Bollworm (Pectinophora gossypiella)";
       }
-      if (local.includes("पिवळा मोझॅक") || local.includes("mosaic")) {
+      if (local.includes("पिवळा मोझॅक") || local.includes("mosaic") || local.includes("पीला मोज़ेक")) {
         return "Yellow Mosaic Virus (YMV)";
       }
-      if (local.includes("जांभळा करपा") || local.includes("purple blotch")) {
+      if (local.includes("जांभळा करपा") || local.includes("purple blotch") || local.includes("बैंगनी धब्बा")) {
         return "Purple Blotch (Alternaria porri)";
       }
-      if (local.includes("चुरडा") || local.includes("मुरडा") || local.includes("leaf curl")) {
+      if (local.includes("चुरडा") || local.includes("मुरडा") || local.includes("leaf curl") || local.includes("मुर्राह")) {
         return "Chilli Leaf Curl & Thrips";
       }
       if (local.includes("निरोगी") || local.includes("स्वस्थ") || local.includes("healthy")) {
@@ -836,28 +862,67 @@ export default function PlantDoctor({ nav }) {
       }
       return en || local;
     }
+    if (activeFallback?.disease_name_local) {
+      return activeFallback.disease_name_local;
+    }
     return diagnosis.disease_name_local || diagnosis.disease_name;
-  }, [diagnosis, language]);
+  }, [diagnosis, activeFallback, language]);
 
-  // Dynamic remedies titles
+  // Dynamic symptoms list
+  const displaySymptoms = useMemo(() => {
+    if (!diagnosis) return [];
+    if (activeFallback?.symptoms && activeFallback.symptoms.length > 0) {
+      return activeFallback.symptoms;
+    }
+    return diagnosis.symptoms || [];
+  }, [diagnosis, activeFallback]);
+
+  // Dynamic remedies titles and instructions
   const displayChemicalTitle = useMemo(() => {
     if (!diagnosis?.chemical_remedy) return "Recommended Chemical Treatment";
+    if (activeFallback?.chemical_remedy?.title) {
+      return activeFallback.chemical_remedy.title;
+    }
     const cr = diagnosis.chemical_remedy;
     if (language === "en") {
       return cr.technical_name || cr.title || "Recommended Fungicide";
     }
     return cr.title || cr.technical_name || "रासायनिक फवारणी";
-  }, [diagnosis, language]);
+  }, [diagnosis, activeFallback, language]);
+
+  const displayChemicalInstructions = useMemo(() => {
+    if (activeFallback?.chemical_remedy?.instructions) {
+      return activeFallback.chemical_remedy.instructions;
+    }
+    return (
+      diagnosis?.chemical_remedy?.instructions ||
+      (language === "mr"
+        ? "नेहमी शांत हवेत सकाळी किंवा संध्याकाळी फवारणी करावी. तोंडावर मास्क, डोळ्यांवर गॉगल व हातमोजे वापरावेत."
+        : language === "hi"
+        ? "हमेशा शांत मौसम में सुबह या शाम को छिड़काव करें। चेहरे पर मास्क, चश्मा व दस्तानों का प्रयोग करें।"
+        : "Always spray in calm weather in the morning or late afternoon. Wear protective mask, eye goggles, and gloves.")
+    );
+  }, [diagnosis, activeFallback, language]);
 
   const displayOrganicTitle = useMemo(() => {
     if (!diagnosis?.organic_remedy) return "Recommended Organic Remedy";
+    if (activeFallback?.organic_remedy?.title) {
+      return activeFallback.organic_remedy.title;
+    }
     const or = diagnosis.organic_remedy;
     if (language === "en") {
       if (or.title && !(/[\u0900-\u097F]/.test(or.title))) return or.title;
       return "Neem Oil 10,000 PPM / Bio-Agent Treatment";
     }
     return or.title || "सेंद्रिय उपाय";
-  }, [diagnosis, language]);
+  }, [diagnosis, activeFallback, language]);
+
+  const displayOrganicInstructions = useMemo(() => {
+    if (activeFallback?.organic_remedy?.instructions) {
+      return activeFallback.organic_remedy.instructions;
+    }
+    return diagnosis?.organic_remedy?.instructions || "";
+  }, [diagnosis, activeFallback]);
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -1481,7 +1546,15 @@ export default function PlantDoctor({ nav }) {
                         </span>
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border border-green-200 dark:border-green-800">
                           {diagnosis.source?.includes("gemini")
-                            ? "✨ AI Multimodal Vision (Gemini)"
+                            ? language === "mr"
+                              ? "✨ एआय व्हिजन (Gemini)"
+                              : language === "hi"
+                              ? "✨ एआई विजन (Gemini)"
+                              : "✨ AI Multimodal Vision (Gemini)"
+                            : language === "mr"
+                            ? "🌿 कृषीमित्र पीक रोगतज्ज्ञ"
+                            : language === "hi"
+                            ? "🌿 कृषि-मित्र फसल रोग विशेषज्ञ"
                             : "🌿 KrushiMitra Agronomy Pathologist"}
                         </span>
                       </div>
@@ -1586,13 +1659,13 @@ export default function PlantDoctor({ nav }) {
                 )}
 
                 {/* SYMPTOMS LIST */}
-                {diagnosis.symptoms && diagnosis.symptoms.length > 0 && (
+                {displaySymptoms && displaySymptoms.length > 0 && (
                   <div className="mt-4">
                     <div className="text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">
                       🔍 {language === "mr" ? "दिसून आलेली लक्षणे (Symptoms):" : language === "hi" ? "पहचाने गए लक्षण (Symptoms):" : "Identified Visual Symptoms:"}
                     </div>
                     <ul className="grid grid-cols-1 gap-1.5 text-xs text-gray-600 dark:text-gray-300">
-                      {diagnosis.symptoms.map((sym, idx) => (
+                      {displaySymptoms.map((sym, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <span className="text-green-600 dark:text-green-400 mt-0.5">•</span>
                           <span>{sym}</span>
@@ -1751,7 +1824,7 @@ export default function PlantDoctor({ nav }) {
                     </div>
 
                     <div className="text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {diagnosis.organic_remedy?.instructions}
+                      {displayOrganicInstructions}
                     </div>
                   </div>
                 </div>
@@ -1767,12 +1840,7 @@ export default function PlantDoctor({ nav }) {
                       : "Application & Safety Precautions:"}
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {diagnosis.chemical_remedy?.instructions ||
-                      (language === "mr"
-                        ? "नेहमी शांत हवेत सकाळी किंवा संध्याकाळी फवारणी करावी. तोंडावर मास्क, डोळ्यांवर गॉगल व हातमोजे वापरावेत."
-                        : language === "hi"
-                        ? "हमेशा शांत मौसम में सुबह या शाम को छिड़काव करें। चेहरे पर मास्क, चश्मा व दस्तानों का प्रयोग करें।"
-                        : "Always spray in calm weather in the morning or late afternoon. Wear protective mask, eye goggles, and gloves.")}
+                    {displayChemicalInstructions}
                   </p>
                 </div>
               </div>

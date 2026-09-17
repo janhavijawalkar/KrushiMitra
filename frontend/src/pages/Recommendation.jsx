@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Sprout,
   Thermometer,
@@ -21,6 +21,7 @@ import VoiceMicButton from "../components/VoiceMicButton";
 import { parseSpokenSoilData, convertDevanagariDigits } from "../utils/voiceParser";
 import { buildApiUrl } from "../utils/apiConfig";
 import { openWhatsAppShare, formatRecommendationShareText } from "../utils/whatsappShare";
+import { getCropRecommendationReason } from "../utils/cropReasoning";
 
 export default function Recommendation({ nav }) {
   const { addRecommendation, language, t, tCrop } = useApp();
@@ -39,6 +40,11 @@ export default function Recommendation({ nav }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [voiceToast, setVoiceToast] = useState("");
+
+  const reasoning = useMemo(() => {
+    if (!result?.crop) return null;
+    return getCropRecommendationReason(result.crop, { ...form, ...result }, language);
+  }, [result, form, language]);
 
   const handleVoiceSoilAutoFill = (transcript) => {
     const extracted = parseSpokenSoilData(transcript);
@@ -664,6 +670,113 @@ export default function Recommendation({ nav }) {
               </button>
 
             </div>
+
+            {/* AGRONOMIC RECOMMENDATION REASONING CARD */}
+            {reasoning && (
+              <div className="mt-8 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-5 sm:p-6 text-white shadow-inner animate-fade-in">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-white/15">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 text-base shadow-xs">
+                    💡
+                  </span>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-extrabold tracking-tight">
+                      {language === "mr"
+                        ? "🌾 हे पीक का सुचवले आहे? (कृषी वैज्ञानिक विश्लेषण)"
+                        : language === "hi"
+                        ? "🌾 यह फसल क्यों अनुशंसित है? (कृषि वैज्ञानिक विश्लेषण)"
+                        : "🌾 Why this crop is recommended? (Agronomic Analysis)"}
+                    </h3>
+                    <p className="text-[11px] text-green-100/80">
+                      {language === "mr"
+                        ? "तुमच्या माती परीक्षण व हवामान घटकांनुसार वैयक्तिकृत विश्लेषण"
+                        : language === "hi"
+                        ? "आपके मृदा परीक्षण एवं मौसम मापदंडों के अनुसार व्यक्तिगत विश्लेषण"
+                        : "Personalized rationale based on your soil test and regional climate"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Summary Rationale */}
+                <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-green-50 font-medium bg-black/15 p-3.5 rounded-xl border border-white/10">
+                  {reasoning.summary}
+                </p>
+
+                {/* 3 Agronomic Pillars */}
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {/* Pillar 1: Nutrients */}
+                  <div className="rounded-xl bg-white/10 p-3.5 border border-white/15 backdrop-blur-xs">
+                    <div className="flex items-center gap-2 text-yellow-200 text-xs font-bold mb-1.5">
+                      <FlaskConical size={14} />
+                      <span>
+                        {language === "mr"
+                          ? "मातीतील N-P-K पोषण"
+                          : language === "hi"
+                          ? "मृदा पोषण (N-P-K)"
+                          : "Soil N-P-K Balance"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-green-50/90 font-normal">
+                      {reasoning.nutrientReason}
+                    </p>
+                  </div>
+
+                  {/* Pillar 2: Climate & Rainfall */}
+                  <div className="rounded-xl bg-white/10 p-3.5 border border-white/15 backdrop-blur-xs">
+                    <div className="flex items-center gap-2 text-cyan-200 text-xs font-bold mb-1.5">
+                      <CloudRain size={14} />
+                      <span>
+                        {language === "mr"
+                          ? "हवामान व पाऊस"
+                          : language === "hi"
+                          ? "मौसम एवं वर्षा"
+                          : "Climate & Rainfall"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-green-50/90 font-normal">
+                      {reasoning.climateReason}
+                    </p>
+                  </div>
+
+                  {/* Pillar 3: Soil pH */}
+                  <div className="rounded-xl bg-white/10 p-3.5 border border-white/15 backdrop-blur-xs">
+                    <div className="flex items-center gap-2 text-emerald-200 text-xs font-bold mb-1.5">
+                      <Leaf size={14} />
+                      <span>
+                        {language === "mr"
+                          ? "मातीचा सामू (pH)"
+                          : language === "hi"
+                          ? "मृदा पीएच (pH)"
+                          : "Soil pH Bioavailability"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-green-50/90 font-normal">
+                      {reasoning.phReason}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Metric Status Badges */}
+                {reasoning.keyMetrics && reasoning.keyMetrics.length > 0 && (
+                  <div className="mt-4 pt-3.5 border-t border-white/15 flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-green-200/80 mr-1">
+                      {language === "mr" ? "घटक स्थिती:" : language === "hi" ? "घटक स्थिति:" : "Status:"}
+                    </span>
+                    {reasoning.keyMetrics.map((metric, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-xs border border-white/20"
+                      >
+                        <span className="text-green-200">{metric.label}:</span>
+                        <span className="font-bold">{metric.value}</span>
+                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-400/30 text-emerald-100 border border-emerald-300/40">
+                          {metric.status}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
 

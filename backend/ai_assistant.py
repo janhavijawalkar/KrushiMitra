@@ -3021,6 +3021,47 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
                     if "crop_detected_local" not in parsed:
                         parsed["crop_detected_local"] = parsed.get("crop_detected", "")
 
+                    # Detect canonical disease key for full multilingual UI toggling
+                    combined_text = f"{parsed.get('crop_detected', '')} {parsed.get('crop_detected_local', '')} {parsed.get('disease_name', '')} {parsed.get('disease_name_local', '')}".lower()
+                    det_key = None
+                    if any(w in combined_text for w in ["rose", "गुलाब", "black spot", "काळे ठिपके", "काला धब्बा", "diplocarpon"]):
+                        if any(w in combined_text for w in ["powdery", "mildew", "भुरी", "सफेद"]):
+                            det_key = "rose_powdery_mildew"
+                        else:
+                            det_key = "rose_black_spot"
+                    elif any(w in combined_text for w in ["chilli", "मिरची", "मिर्च", "चुरडा", "मुरडा", "leaf curl", "thrips"]):
+                        det_key = "chilli_leaf_curl"
+                    elif any(w in combined_text for w in ["wheat", "गहू", "गेहूं", "तांबेरा", "rust"]):
+                        det_key = "wheat_rust"
+                    elif any(w in combined_text for w in ["grape", "द्राक्ष", "अंगूर", "डाउनी", "downy"]):
+                        det_key = "grape_downy_mildew"
+                    elif any(w in combined_text for w in ["pomegranate", "डाळिंब", "अनार", "तेल्या", "telya"]):
+                        det_key = "pomegranate_bacterial_blight"
+                    elif any(w in combined_text for w in ["cotton", "कापूस", "कपास", "बोंड", "bollworm"]):
+                        det_key = "cotton_pink_bollworm"
+                    elif any(w in combined_text for w in ["soybean", "सोयाबीन", "मोझॅक", "mosaic"]):
+                        det_key = "soybean_yellow_mosaic"
+                    elif any(w in combined_text for w in ["onion", "कांदा", "प्याज", "जांभळा", "purple blotch"]):
+                        det_key = "onion_purple_blotch"
+                    elif any(w in combined_text for w in ["tomato", "टोमॅटो", "टमाटर", "करपा", "blight"]):
+                        det_key = "tomato_early_blight"
+                    elif any(w in combined_text for w in ["healthy", "निरोगी", "स्वस्थ"]):
+                        det_key = "healthy_leaf"
+
+                    if det_key:
+                        parsed["disease_key"] = det_key
+                        catalog_entry = CROP_DISEASE_CATALOG.get(det_key)
+                        if catalog_entry:
+                            # Normalize English fields so English view has pristine English titles
+                            if not parsed.get("crop_detected") or re.search(r"[\u0900-\u097F]", str(parsed.get("crop_detected"))):
+                                parsed["crop_detected"] = catalog_entry["crop"]["en"]
+                            if not parsed.get("disease_name") or re.search(r"[\u0900-\u097F]", str(parsed.get("disease_name"))):
+                                parsed["disease_name"] = catalog_entry["disease"]["en"]
+                            if not parsed.get("crop_detected_local"):
+                                parsed["crop_detected_local"] = catalog_entry["crop"].get(lang, catalog_entry["crop"]["en"])
+                            if not parsed.get("disease_name_local"):
+                                parsed["disease_name_local"] = catalog_entry["disease"].get(lang, catalog_entry["disease"]["en"])
+
                     if lang in ["mr", "hi"]:
                         if "organic_remedy" in parsed and isinstance(parsed["organic_remedy"], dict):
                             for k in ["dosage_15l", "dosage_20l", "dosage_200l"]:
@@ -3115,7 +3156,8 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
 
     return {
         "success": True,
-        "crop_detected": crop_name,
+        "disease_key": selected_key,
+        "crop_detected": item["crop"]["en"],
         "crop_detected_local": crop_name,
         "condition": item.get("condition", "Diseased"),
         "disease_name": item["disease"]["en"],
