@@ -423,11 +423,98 @@ export default function Analytics({ nav }) {
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-page-enter">
+    <div className="space-y-6 pb-12 animate-page-enter print:space-y-4 print:pb-0 print:animate-none">
       {/* =========================================================
-          HERO & CONTROL TOOLBAR
+          PRINT-ONLY OFFICIAL DOSSIER HEADER
+          (Visible ONLY when printing or exporting to PDF)
       ========================================================= */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-6 text-white shadow-lg depth-2">
+      <div className="print-only mb-6 border-b-2 border-[#1B5E20] pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1B5E20] text-2xl text-white shadow-xs">
+              🌱
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black tracking-tight text-[#1B5E20]">
+                  KRUSHIMITRA • कृषीमित्र
+                </h1>
+                <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[9px] font-bold text-[#1B5E20] uppercase">
+                  Agri-Telemetry Dossier
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-gray-600">
+                {language === "mr"
+                  ? "स्मार्ट कृषी विश्लेषण व शेतजमीन उत्पादन क्षमता अहवाल • महाराष्ट्र शासन कृषी सहकार्य"
+                  : language === "hi"
+                  ? "स्मार्ट कृषि विश्लेषण एवं उत्पादन क्षमता रिपोर्ट • महाराष्ट्र शासन कृषि सहयोग"
+                  : "Smart Agricultural Telemetry & Farmland Productivity Dossier • Govt of Maharashtra Agro-Link"}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right text-xs">
+            <div className="font-mono text-xs font-black text-[#1B5E20]">
+              ID: KM-{selectedDistrict.toUpperCase().slice(0, 3)}-{new Date().getFullYear()}
+            </div>
+            <div className="text-[10px] font-medium text-gray-500">
+              {new Date().toLocaleDateString(
+                language === "mr" ? "mr-IN" : language === "hi" ? "hi-IN" : "en-IN",
+                {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* FARMER PROFILE DOSSIER SUMMARY */}
+        <div className="mt-4 grid grid-cols-4 gap-3 rounded-xl border border-gray-200 bg-gray-50/90 p-3 text-xs">
+          <div>
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+              {language === "mr" ? "शेतकऱ्याचे नाव" : language === "hi" ? "किसान का नाम" : "Farmer Name"}
+            </span>
+            <span className="font-extrabold text-gray-900">
+              {user?.name || "Ramesh Patil"}
+            </span>
+          </div>
+
+          <div>
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+              {language === "mr" ? "किसान ओळख क्रमांक" : language === "hi" ? "किसान आईडी" : "Kisan ID"}
+            </span>
+            <span className="font-mono font-bold text-[#1B5E20]">
+              {user?.kisan_id || user?.kisanId || "KM-MH-2024-8921"}
+            </span>
+          </div>
+
+          <div>
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+              {language === "mr" ? "जिल्हा / कृषी विभाग" : language === "hi" ? "जिला / कृषि प्रभाग" : "District / Zone"}
+            </span>
+            <span className="font-extrabold text-gray-900">
+              {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}, Maharashtra
+            </span>
+          </div>
+
+          <div>
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+              {language === "mr" ? "शेत क्षेत्र व व्याप्ती" : language === "hi" ? "खेत का क्षेत्रफल" : "Farm Area & Scope"}
+            </span>
+            <span className="font-extrabold text-gray-900">
+              {userFarmSize} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"} ({dataMode === "myFarm" ? "Farmer Farm" : "District Benchmark"})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================
+          HERO & CONTROL TOOLBAR (Hidden in Print Mode)
+      ========================================================= */}
+      <div className="no-print relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] p-6 text-white shadow-lg depth-2">
         <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
 
         <div className="relative z-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
@@ -531,9 +618,9 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           KEY PERFORMANCE INDICATORS (KPI CARDS)
       ========================================================= */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 print-kpi-grid">
         {/* KPI 1: YIELD PRODUCTIVITY */}
-        <div className="card card-interactive p-5 depth-1">
+        <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-500">{txt.kpiYieldTitle}</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-[#2E7D32]">
@@ -553,7 +640,7 @@ export default function Analytics({ nav }) {
         </div>
 
         {/* KPI 2: SOIL HEALTH */}
-        <div className="card card-interactive p-5 depth-1">
+        <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-500">{txt.kpiSoilTitle}</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
@@ -571,7 +658,7 @@ export default function Analytics({ nav }) {
         </div>
 
         {/* KPI 3: TOTAL ESTIMATED PRODUCTION */}
-        <div className="card card-interactive p-5 depth-1">
+        <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-500">{txt.kpiMoistureTitle}</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 text-teal-600">
@@ -589,7 +676,7 @@ export default function Analytics({ nav }) {
         </div>
 
         {/* KPI 4: TOP CROP */}
-        <div className="card card-interactive p-5 depth-1">
+        <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-500">{txt.kpiTopCropTitle}</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
@@ -607,9 +694,9 @@ export default function Analytics({ nav }) {
         </div>
       </div>
 
-      {/* CALLOUT BANNER FOR USERS WITH FEW RECORDS */}
+      {/* CALLOUT BANNER FOR USERS WITH FEW RECORDS (Hidden in Print) */}
       {userPredictions.length === 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs">
+        <div className="no-print flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
               <Sparkles size={20} />
@@ -657,9 +744,9 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           ROW 1: CROP DIVERSITY (DONUT) & SOIL NUTRIENTS (RADAR)
       ========================================================= */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 analytics-grid-row">
         {/* CHART 1: CROP DIVERSITY (DONUT / PIE) */}
-        <div className="card p-6 depth-1 space-y-4">
+        <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div>
               <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
@@ -719,7 +806,7 @@ export default function Analytics({ nav }) {
         </div>
 
         {/* CHART 2: SOIL NUTRIENT N-P-K & pH (RADAR CHART) */}
-        <div className="card p-6 depth-1 space-y-4">
+        <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div>
               <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
@@ -783,9 +870,9 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           ROW 2: SEASONAL YIELD GROWTH & CLIMATE TELEMETRY
       ========================================================= */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 analytics-grid-row">
         {/* CHART 3: SEASONAL YIELD GROWTH (AREA CHART) */}
-        <div className="card p-6 depth-1 space-y-4">
+        <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div>
               <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
@@ -846,7 +933,7 @@ export default function Analytics({ nav }) {
         </div>
 
         {/* CHART 4: AGRO-CLIMATE & MOISTURE CORRELATION (COMPOSED) */}
-        <div className="card p-6 depth-1 space-y-4">
+        <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div>
               <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
@@ -913,7 +1000,7 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           ROW 3: MAHARASHTRA DISTRICT AGRONOMY RANKING (BAR CHART)
       ========================================================= */}
-      <div className="card p-6 depth-1 space-y-4">
+      <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
         <div className="flex flex-col justify-between gap-2 border-b border-gray-100 pb-3 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
@@ -968,7 +1055,7 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           ROW 4: AGRONOMIC INSIGHTS & AI SUMMARY
       ========================================================= */}
-      <div className="rounded-3xl border border-[#DCE8D9] bg-gradient-to-br from-[#F4F9F1] to-[#EAF3E6] p-6 depth-1">
+      <div className="card print-card print-avoid-break rounded-3xl border border-[#DCE8D9] bg-gradient-to-br from-[#F4F9F1] to-[#EAF3E6] p-6 depth-1">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#2E7D32] shadow-sm">
             <Sparkles size={20} />
@@ -1029,6 +1116,18 @@ export default function Analytics({ nav }) {
                 : "Alternating Soybean with Gram (chana) in the Rabi season fixes atmospheric nitrogen and reduces fertilizer costs."}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* =========================================================
+          PRINT-ONLY OFFICIAL DOSSIER FOOTER
+          (Visible ONLY when printing or exporting to PDF)
+      ========================================================= */}
+      <div className="print-only mt-8 border-t border-gray-200 pt-4 text-center text-[10px] text-gray-500">
+        <div className="flex items-center justify-between">
+          <span>🌱 KrushiMitra AI Agriculture Platform • Smart Telemetry Dossier</span>
+          <span>Certified Agronomic Report • For Official Farm Reference</span>
+          <span>Krushi Bhavan, Pune, Maharashtra</span>
         </div>
       </div>
     </div>

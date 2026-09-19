@@ -67,7 +67,7 @@ export default function UpdateNotification() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 max-w-md animate-bounce-short">
+    <div className="no-print fixed bottom-5 right-5 z-50 max-w-md animate-bounce-short">
       <div className="flex items-center gap-3 rounded-2xl border border-emerald-300 bg-white p-4 shadow-2xl ring-2 ring-emerald-500/20">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] text-white shadow-sm">
           <Sparkles size={18} />

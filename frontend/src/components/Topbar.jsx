@@ -140,7 +140,7 @@ export default function Topbar({ title, nav, setMobileOpen }) {
   );
 
   return (
-    <header className="sticky top-0 z-40 flex h-[78px] shrink-0 items-center justify-between gap-3 sm:gap-4 border-b border-[#E1EAE0] dark:border-[#22402A] bg-white/95 dark:bg-[#132318]/95 px-3 sm:px-7 shadow-[0_2px_15px_rgba(30,70,35,0.035)] backdrop-blur-xl transition-colors duration-200">
+    <header className="no-print sticky top-0 z-40 flex h-[78px] shrink-0 items-center justify-between gap-3 sm:gap-4 border-b border-[#E1EAE0] dark:border-[#22402A] bg-white/95 dark:bg-[#132318]/95 px-3 sm:px-7 shadow-[0_2px_15px_rgba(30,70,35,0.035)] backdrop-blur-xl transition-colors duration-200">
       {/* MOBILE HAMBURGER & PAGE TITLE */}
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-fit">
         {setMobileOpen && (

@@ -1398,3 +1398,225 @@ textarea:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================================
+   KRUSHIMITRA PRINT & PDF REPORT GENERATION STYLES
+   ========================================================= */
+
+/* Elements hidden on screen, visible only when printing / exporting to PDF */
+.print-only {
+  display: none !important;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 12mm 10mm 12mm 10mm;
+}
+
+@media print {
+  /* 1. Global Reset for Clean Print Output */
+  *,
+  *::before,
+  *::after {
+    text-shadow: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #17291a !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 2. Hide Screen-Only Chrome, Navigation, Floating Icons, Chatbots */
+  .no-print,
+  aside,
+  header,
+  nav,
+  .mobile-bottom-nav,
+  .chatbot-widget,
+  [aria-label="Mobile Navigation"],
+  [aria-label="Network status banner"],
+  button:not(.allow-print),
+  input,
+  select,
+  textarea,
+  .fixed,
+  .sticky {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    position: static !important;
+  }
+
+  /* 3. Show Print-Only Header and Footer */
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    position: static !important;
+  }
+
+  /* 4. Reset Layout Containers & Margins */
+  .min-h-screen {
+    min-height: auto !important;
+  }
+
+  main {
+    min-height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Remove sidebar desktop padding */
+  .lg\:pl-\[260px\],
+  .lg\:pl-\[78px\],
+  [class*="lg:pl-"] {
+    padding-left: 0 !important;
+  }
+
+  /* 5. Force Clean White Mode for Dark Mode */
+  .dark,
+  [data-theme="dark"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #17291a !important;
+  }
+
+  .dark body,
+  .dark main,
+  .dark div,
+  .dark section {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #17291a !important;
+  }
+
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6,
+  .dark p,
+  .dark span,
+  .dark div,
+  .dark .text-white,
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-gray-700 {
+    color: #17291a !important;
+  }
+
+  .dark .text-gray-400,
+  .dark .text-gray-500,
+  .dark .text-gray-600 {
+    color: #4b5563 !important;
+  }
+
+  .dark .text-\[\#2E7D32\],
+  .dark .text-\[\#1B5E20\],
+  .dark .text-green-800,
+  .dark .text-green-700,
+  .dark .text-green-600 {
+    color: #1b5e20 !important;
+  }
+
+  /* 6. Avoid Page Breaks Inside Charts & Cards */
+  .card,
+  .print-card,
+  .print-avoid-break,
+  .recharts-responsive-container,
+  .recharts-wrapper,
+  svg.recharts-surface {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+  }
+
+  .card {
+    background: #ffffff !important;
+    border: 1px solid #d4e2d3 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    margin-bottom: 12pt !important;
+    padding: 12pt !important;
+  }
+
+  /* 7. Grid Handling for Print */
+  .print-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8pt !important;
+    margin-bottom: 12pt !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .analytics-grid-row {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12pt !important;
+    margin-bottom: 12pt !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .analytics-grid-row > * {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Chart Height & Responsive Container in Print */
+  .recharts-responsive-container {
+    height: 250px !important;
+    min-height: 250px !important;
+    max-height: 250px !important;
+    width: 100% !important;
+  }
+
+  .recharts-wrapper {
+    width: 100% !important;
+  }
+
+  svg.recharts-surface {
+    overflow: visible !important;
+  }
+
+  /* Ensure color adjustments on charts & badges */
+  .bg-gradient-to-br,
+  .bg-gradient-to-r,
+  .bg-gradient-to-b,
+  .bg-emerald-50,
+  .bg-blue-50,
+  .bg-teal-50,
+  .bg-rose-50,
+  .bg-amber-50 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

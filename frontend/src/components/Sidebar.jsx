@@ -124,6 +124,7 @@ export default function Sidebar({
   return (
     <aside
       className={`
+        no-print
         fixed left-0 top-0 z-[60] flex h-screen flex-col
         border-r border-[#DCE8D9] dark:border-[#24402A]
         bg-[#EAF3E6]/95 dark:bg-[#132318]/95 backdrop-blur-xl

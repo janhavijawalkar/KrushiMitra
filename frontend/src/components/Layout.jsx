@@ -54,26 +54,28 @@ export default function Layout({
   }, [page]);
 
   return (
-    <div className="min-h-screen bg-[#F6F8F4] dark:bg-[#0D1710] text-[#17291A] dark:text-[#F8FAFC] transition-colors duration-200">
+    <div className="min-h-screen bg-[#F6F8F4] dark:bg-[#0D1710] text-[#17291A] dark:text-[#F8FAFC] transition-colors duration-200 print:bg-white print:text-[#17291A]">
 
       {/* MOBILE BACKDROP OVERLAY */}
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden animate-fade-in"
+          className="no-print fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden animate-fade-in"
           aria-hidden="true"
         />
       )}
 
       {/* SIDEBAR (Desktop fixed + Mobile slide-over drawer) */}
-      <Sidebar
-        page={page}
-        setPage={nav}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-      />
+      <div className="no-print">
+        <Sidebar
+          page={page}
+          setPage={nav}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          mobileOpen={mobileOpen}
+          setMobileOpen={setMobileOpen}
+        />
+      </div>
 
       {/* MAIN CONTENT WRAPPER */}
       <div
@@ -83,15 +85,18 @@ export default function Layout({
           duration-300
           ease-out
           pl-0
+          print:!pl-0
           ${collapsed ? "lg:pl-[78px]" : "lg:pl-[260px]"}
         `}
       >
-        <OfflineBanner />
-        <Topbar
-          title={title}
-          nav={nav}
-          setMobileOpen={setMobileOpen}
-        />
+        <div className="no-print">
+          <OfflineBanner />
+          <Topbar
+            title={title}
+            nav={nav}
+            setMobileOpen={setMobileOpen}
+          />
+        </div>
 
         <main
           className="
@@ -104,6 +109,10 @@ export default function Layout({
             lg:px-8
             lg:pb-8
             xl:px-10
+            print:!p-0
+            print:!m-0
+            print:!min-h-0
+            print:!overflow-visible
           "
         >
           <div
@@ -113,6 +122,8 @@ export default function Layout({
               w-full
               max-w-[1600px]
               animate-page-enter
+              print:!max-w-none
+              print:!animate-none
             "
           >
             {children}
@@ -121,16 +132,22 @@ export default function Layout({
       </div>
 
       {/* DYNAMIC MOBILE BOTTOM NAVIGATION (Phone Website & Phone App) */}
-      <MobileBottomNav page={page} setPage={nav} />
+      <div className="no-print">
+        <MobileBottomNav page={page} setPage={nav} />
+      </div>
 
       {/* KRUSHIMITRA MULTILINGUAL VOICE CHATBOT */}
-      <VoiceChatbot nav={nav} openInstallModal={() => setShowInstallModal(true)} />
+      <div className="no-print">
+        <VoiceChatbot nav={nav} openInstallModal={() => setShowInstallModal(true)} />
+      </div>
 
       {/* KRUSHIMITRA PWA / APK INSTALL MODAL */}
-      <InstallModal
-        isOpen={showInstallModal}
-        onClose={() => setShowInstallModal(false)}
-      />
+      <div className="no-print">
+        <InstallModal
+          isOpen={showInstallModal}
+          onClose={() => setShowInstallModal(false)}
+        />
+      </div>
     </div>
   );
 }

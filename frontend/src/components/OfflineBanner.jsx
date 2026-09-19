@@ -15,7 +15,7 @@ export default function OfflineBanner() {
   return (
     <aside
       aria-label="Network status banner"
-      className="w-full text-xs font-semibold shadow-xs transition-all duration-300"
+      className="no-print w-full text-xs font-semibold shadow-xs transition-all duration-300"
     >
       {/* 1. BACK ONLINE ALERT */}
       {isOnline && wasOffline && (
