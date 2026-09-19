@@ -419,7 +419,11 @@ export default function Analytics({ nav }) {
   }, [tDistrict, selectedDistrict]);
 
   const handlePrint = () => {
-    window.print();
+    // Force Recharts and browser layout engine to stabilize SVG dimensions before print dialog opens
+    window.dispatchEvent(new Event("resize"));
+    setTimeout(() => {
+      window.print();
+    }, 150);
   };
 
   return (
@@ -761,7 +765,7 @@ export default function Analytics({ nav }) {
           </div>
 
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={cropDiversityData}
@@ -771,6 +775,7 @@ export default function Analytics({ nav }) {
                   outerRadius={95}
                   paddingAngle={4}
                   dataKey="value"
+                  isAnimationActive={false}
                   label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                   labelLine={false}
                 >
@@ -821,12 +826,12 @@ export default function Analytics({ nav }) {
           </div>
 
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={soilRadarData}>
                 <PolarGrid stroke="#DCE8D9" />
                 <PolarAngleAxis
                   dataKey="nutrient"
-                  tick={{ fill: "#4B5563", fontSize: 11, fontWeight: "bold" }}
+                  tick={{ fill: "#334155", fontSize: 11, fontWeight: "bold" }}
                 />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 9 }} />
                 <Radar
@@ -836,6 +841,7 @@ export default function Analytics({ nav }) {
                   fill="#2E7D32"
                   fillOpacity={0.45}
                   strokeWidth={2}
+                  isAnimationActive={false}
                 />
                 <Radar
                   name={txt.idealBaselineLegend}
@@ -845,6 +851,7 @@ export default function Analytics({ nav }) {
                   fillOpacity={0.12}
                   strokeWidth={1.5}
                   strokeDasharray="4 4"
+                  isAnimationActive={false}
                 />
                 <Tooltip
                   formatter={(value) => [`${value} / 100 Index`, ""]}
@@ -887,7 +894,7 @@ export default function Analytics({ nav }) {
           </div>
 
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={seasonalYieldData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="yieldColor" x1="0" y1="0" x2="0" y2="1">
@@ -895,9 +902,9 @@ export default function Analytics({ nav }) {
                     <stop offset="95%" stopColor="#2E7D32" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                <XAxis dataKey="season" tick={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }} />
-                <YAxis unit=" t" tick={{ fontSize: 11, fill: "#64748B" }} domain={[2.5, 6.5]} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" />
+                <XAxis dataKey="season" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} />
+                <YAxis unit=" t" tick={{ fontSize: 11, fill: "#334155" }} domain={[2.5, 6.5]} />
                 <Tooltip
                   formatter={(val) => [`${val} t/ha`, ""]}
                   contentStyle={{
@@ -917,6 +924,7 @@ export default function Analytics({ nav }) {
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#yieldColor)"
+                  isAnimationActive={false}
                 />
                 <Area
                   type="monotone"
@@ -926,6 +934,7 @@ export default function Analytics({ nav }) {
                   strokeWidth={2}
                   strokeDasharray="4 4"
                   fill="transparent"
+                  isAnimationActive={false}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -948,12 +957,12 @@ export default function Analytics({ nav }) {
           </div>
 
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={climateData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }} />
-                <YAxis yAxisId="left" unit="°" tick={{ fontSize: 11, fill: "#64748B" }} domain={[15, 45]} />
-                <YAxis yAxisId="right" orientation="right" unit="mm" tick={{ fontSize: 11, fill: "#64748B" }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} />
+                <YAxis yAxisId="left" unit="°" tick={{ fontSize: 11, fill: "#334155" }} domain={[15, 45]} />
+                <YAxis yAxisId="right" orientation="right" unit="mm" tick={{ fontSize: 11, fill: "#334155" }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#FFFFFF",
@@ -971,6 +980,7 @@ export default function Analytics({ nav }) {
                   fill="#93C5FD"
                   radius={[6, 6, 0, 0]}
                   barSize={24}
+                  isAnimationActive={false}
                 />
                 <Line
                   yAxisId="left"
@@ -980,6 +990,7 @@ export default function Analytics({ nav }) {
                   stroke="#EF4444"
                   strokeWidth={2.5}
                   dot={{ r: 4, fill: "#EF4444" }}
+                  isAnimationActive={false}
                 />
                 <Line
                   yAxisId="left"
@@ -990,6 +1001,7 @@ export default function Analytics({ nav }) {
                   strokeWidth={2}
                   strokeDasharray="3 3"
                   dot={{ r: 3, fill: "#10B981" }}
+                  isAnimationActive={false}
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -1015,15 +1027,15 @@ export default function Analytics({ nav }) {
         </div>
 
         <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart
               data={districtRankingData}
               layout="horizontal"
               margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-              <XAxis dataKey="districtLabel" tick={{ fontSize: 11, fill: "#475569", fontWeight: 600 }} />
-              <YAxis unit=" t" tick={{ fontSize: 11, fill: "#64748B" }} domain={[0, 7]} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" />
+              <XAxis dataKey="districtLabel" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} />
+              <YAxis unit=" t" tick={{ fontSize: 11, fill: "#334155" }} domain={[0, 7]} />
               <Tooltip
                 formatter={(value, name, item) => [
                   `${value} t/ha (${item.payload.topCrop})`,
@@ -1037,7 +1049,7 @@ export default function Analytics({ nav }) {
                   fontWeight: "bold",
                 }}
               />
-              <Bar dataKey="yield" radius={[8, 8, 0, 0]} barSize={34}>
+              <Bar dataKey="yield" radius={[8, 8, 0, 0]} barSize={34} isAnimationActive={false}>
                 {districtRankingData.map((entry, idx) => (
                   <Cell
                     key={`bar-${idx}`}

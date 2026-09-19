@@ -1410,7 +1410,7 @@ textarea:focus-visible {
 
 @page {
   size: A4 portrait;
-  margin: 12mm 10mm 12mm 10mm;
+  margin: 0; /* Hides browser default URL (localhost:5173), title, date, and page number headers/footers */
 }
 
 @media print {
@@ -1420,8 +1420,6 @@ textarea:focus-visible {
   *::after {
     text-shadow: none !important;
     box-shadow: none !important;
-    animation: none !important;
-    transition: none !important;
   }
 
   html,
@@ -1434,7 +1432,7 @@ textarea:focus-visible {
     width: 100% !important;
     min-width: 0 !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 10mm 12mm 12mm 12mm !important; /* Replaces page margins with clean content padding */
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1593,18 +1591,63 @@ textarea:focus-visible {
 
   /* Chart Height & Responsive Container in Print */
   .recharts-responsive-container {
-    height: 250px !important;
-    min-height: 250px !important;
-    max-height: 250px !important;
     width: 100% !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    display: block !important;
+    overflow: visible !important;
   }
 
   .recharts-wrapper {
     width: 100% !important;
+    height: 280px !important;
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
   }
 
   svg.recharts-surface {
+    width: 100% !important;
+    height: 280px !important;
+    display: block !important;
     overflow: visible !important;
+  }
+
+  /* Ensure all SVG paths, curves, lines, rects, text, and dots inside Recharts are fully visible */
+  .recharts-surface path,
+  .recharts-surface rect,
+  .recharts-surface circle,
+  .recharts-surface line,
+  .recharts-surface text,
+  .recharts-curve,
+  .recharts-bar-rectangle,
+  .recharts-pie-sector,
+  .recharts-radar-polygon,
+  .recharts-area-area,
+  .recharts-area-curve {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Preserve Cartesian & Polar grid lines visibility in print */
+  .recharts-cartesian-grid line,
+  .recharts-polar-grid line,
+  .recharts-polar-grid circle,
+  .recharts-polar-grid polygon {
+    stroke: #cbd5e1 !important;
+    stroke-opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Make sure axes labels and numbers are crisp in print */
+  .recharts-cartesian-axis text,
+  .recharts-polar-angle-axis text,
+  .recharts-polar-radius-axis text {
+    fill: #334155 !important;
+    font-size: 9pt !important;
+    font-weight: 600 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   /* Ensure color adjustments on charts & badges */
