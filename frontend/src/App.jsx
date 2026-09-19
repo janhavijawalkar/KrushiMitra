@@ -44,7 +44,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (user && (page === "login" || page === "register" || page === "forgot" || page === "reset-password")) {
+    if (user && (page === "login" || page === "register" || page === "forgot")) {
       setPage("dashboard");
     }
 
@@ -59,6 +59,11 @@ export default function App() {
   };
 
   const renderContent = () => {
+    /* ================= RESET PASSWORD (ALWAYS ACCESSIBLE VIA LINK) ================= */
+    if (page === "reset-password") {
+      return <ResetPassword nav={navigate} token={pageParams.token} />;
+    }
+
     /* ================= LANDING FOR LOGGED IN USERS ================= */
     if (page === "landing") {
       return <Landing nav={navigate} />;
@@ -74,16 +79,13 @@ export default function App() {
         return <ForgotPassword nav={navigate} />;
       }
 
-      if (page === "reset-password") {
-        return <ResetPassword nav={navigate} token={pageParams.token} />;
-      }
-
       if (page === "login") {
         return <Login nav={navigate} />;
       }
 
       return <Landing nav={navigate} />;
     }
+
 
     /* ================= ACCOUNT & SYSTEM PAGES ================= */
     if (page === "profile") {

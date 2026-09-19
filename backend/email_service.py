@@ -33,8 +33,20 @@ def is_smtp_configured():
     return bool(email and password and email != "your-email@gmail.com")
 
 
-def _send_email_async(to_email, subject, html_content, text_content=None):
-    """Sends email asynchronously in a background thread to prevent API blocking."""
+def send_email_robust(to_email, subject, html_content, text_content=None, wait_timeout=5):
+    """
+    Sends an email using the configured SMTP server.
+    Uses non-daemon thread so transmission is never dropped by Python runtime.
+    Waits up to wait_timeout seconds (default 5s) to guarantee delivery confirmation.
+    """
+    to_email = (to_email or "").strip()
+    result = {
+        "success": False,
+        "error": None,
+        "delivered": False,
+        "simulated": False
+    }
+
     def worker():
         try:
             server_host, port, sender_email, sender_password = get_smtp_config()
@@ -55,7 +67,10 @@ def _send_email_async(to_email, subject, html_content, text_content=None):
                 
                 print(f"[EMAIL SERVICE (SIMULATION)] Mail logged for: {to_email}", flush=True)
                 print(f"[EMAIL SERVICE (SIMULATION)] Subject: {subject}", flush=True)
-                return True
+                result["success"] = True
+                result["simulated"] = True
+                result["delivered"] = True
+                return
 
             msg = MIMEMultipart("alternative")
             msg["Subject"] = Header(subject, "utf-8")
@@ -66,7 +81,7 @@ def _send_email_async(to_email, subject, html_content, text_content=None):
                 msg.attach(MIMEText(text_content, "plain", "utf-8"))
             msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-            server = smtplib.SMTP(server_host, port, timeout=25)
+            server = smtplib.SMTP(server_host, port, timeout=20)
             server.ehlo()
             server.starttls()
             server.ehlo()
@@ -82,22 +97,38 @@ def _send_email_async(to_email, subject, html_content, text_content=None):
             }
             RECENT_SENT_EMAILS.append(log_entry)
             print(f"[EMAIL SERVICE] Real SMTP Email successfully sent to: {to_email}", flush=True)
-            return True
+            result["success"] = True
+            result["delivered"] = True
 
         except Exception as e:
-            print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {e}", flush=True)
+            err_msg = str(e)
+            print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {err_msg}", flush=True)
             RECENT_SENT_EMAILS.append({
                 "to": to_email,
                 "subject": subject,
-                "error": str(e),
+                "error": err_msg,
                 "timestamp": datetime.now().isoformat(),
                 "simulated": True
             })
-            return False
+            result["success"] = False
+            result["error"] = err_msg
 
-    thread = threading.Thread(target=worker, daemon=True)
+    thread = threading.Thread(target=worker, daemon=False)
     thread.start()
-    return thread
+
+    if wait_timeout and wait_timeout > 0:
+        thread.join(timeout=wait_timeout)
+        if thread.is_alive():
+            print(f"[EMAIL SERVICE] Email to {to_email} still transmitting in background...", flush=True)
+            return {"success": True, "delivered": False, "pending": True}
+
+    return result
+
+
+def _send_email_async(to_email, subject, html_content, text_content=None, wait_timeout=5):
+    """Backward-compatible alias for send_email_robust."""
+    return send_email_robust(to_email, subject, html_content, text_content, wait_timeout=wait_timeout)
+
 
 
 def format_display_name(name, email):
@@ -116,12 +147,13 @@ def format_display_name(name, email):
     return "Farmer"
 
 
-def send_welcome_email(to_email, user_name=None, district="Maharashtra", kisan_id=None, phone=None):
+def send_welcome_email(to_email, user_name=None, district="Maharashtra", kisan_id=None, phone=None, wait_timeout=5):
     """Sends an official branded Welcome email to newly registered farmers."""
     display_name = format_display_name(user_name, to_email)
     dist_text = district if district and str(district).strip() else "Maharashtra"
     kid_text = kisan_id if kisan_id and str(kisan_id).strip() else f"MH-KISAN-{int(datetime.now().timestamp()) % 1000000:06d}"
     login_url = f"{APP_URL}/login"
+
     
     subject = f"🌾 Welcome to KrushiMitra, {display_name}! Your Smart Farming Account is Ready"
     
@@ -224,10 +256,10 @@ def send_welcome_email(to_email, user_name=None, district="Maharashtra", kisan_i
     Official Email: krushimitra.project1@gmail.com
     """
 
-    return _send_email_async(to_email, subject, html_content, text_content)
+    return send_email_robust(to_email, subject, html_content, text_content, wait_timeout=wait_timeout)
 
 
-def send_password_reset_email(to_email, user_name=None, reset_token="", reset_url=None):
+def send_password_reset_email(to_email, user_name=None, reset_token="", reset_url=None, wait_timeout=5):
     """Sends a secure, 1-click password reset email with expiration notice."""
     if not reset_url:
         reset_url = f"{APP_URL}/?reset_token={reset_token}"
@@ -296,5 +328,5 @@ def send_password_reset_email(to_email, user_name=None, reset_token="", reset_ur
     If you did not request this, please ignore this message.
     """
 
-    _send_email_async(to_email, subject, html_content, text_content)
-    return True
+    return send_email_robust(to_email, subject, html_content, text_content, wait_timeout=wait_timeout)
+

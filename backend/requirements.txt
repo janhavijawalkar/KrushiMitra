@@ -10,3 +10,4 @@ pymysql
 cryptography
 pyjwt
 flask-limiter
+opencv-python-headless

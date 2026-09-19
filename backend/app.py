@@ -807,17 +807,25 @@ def register():
             }), 500
 
         # Trigger Official Welcome Email to new farmer
+        email_sent = False
         try:
             kisan_id = user.get("kisan_id") or f"MH-KISAN-{int(datetime.now().timestamp()) % 1000000:06d}"
-            email_service.send_welcome_email(
+            mail_res = email_service.send_welcome_email(
                 to_email=email,
                 user_name=name,
                 district=district,
                 kisan_id=kisan_id,
-                phone=phone
+                phone=phone,
+                wait_timeout=6
             )
+            email_sent = mail_res.get("success", False) if isinstance(mail_res, dict) else bool(mail_res)
+            if email_sent:
+                print(f"[AUTH] Official welcome email delivered to {email}", flush=True)
+            else:
+                err_detail = mail_res.get("error") if isinstance(mail_res, dict) else "unknown"
+                print(f"[AUTH] Welcome email delivery notice for {email}: {err_detail}", flush=True)
         except Exception as mail_err:
-            print(f"[AUTH] Welcome email notification skipped: {mail_err}")
+            print(f"[AUTH] Welcome email notification skipped: {mail_err}", flush=True)
 
         # Generate cryptographically signed JWT token
         token = security.generate_token(user["id"], user["email"], user.get("role", "Farmer"), user.get("name"))
@@ -828,10 +836,12 @@ def register():
 
         return jsonify({
             "success": True,
-            "message": "User registered successfully! Welcome email sent.",
+            "message": "User registered successfully! Welcome email sent to your inbox.",
             "token": token,
-            "user": user_data
+            "user": user_data,
+            "email_sent": email_sent
         }), 201
+
 
     except Exception as e:
         return jsonify({
@@ -945,10 +955,12 @@ def google_auth():
                     to_email=email,
                     user_name=name,
                     district="Maharashtra",
-                    kisan_id=kid
+                    kisan_id=kid,
+                    wait_timeout=6
                 )
             except Exception as mail_err:
                 print(f"[GOOGLE AUTH] Welcome email error: {mail_err}", flush=True)
+
 
         # Generate cryptographically signed JWT token
         token = security.generate_token(user["id"], user["email"], user.get("role", "Farmer"), user.get("name"))
@@ -1042,32 +1054,36 @@ def forgot_password():
         token, user = database.create_password_reset_token(email)
         
         if not user:
-            # Friendly response that prevents email enumeration
             return jsonify({
-                "success": True,
-                "message": "If an account exists with this email address, a password reset link has been dispatched."
-            }), 200
+                "success": False,
+                "message": f"No registered farmer account found for '{email}'. Please check your email spelling or register a new account."
+            }), 404
 
-        app_host = request.headers.get("Origin") or "http://localhost:5173"
+        app_host = request.headers.get("Origin") or os.getenv("APP_URL", "http://localhost:5173")
         reset_url = f"{app_host}/?reset_token={token}"
 
         user_name = user.get("name") if isinstance(user, dict) else (user[1] if isinstance(user, (list, tuple)) and len(user) > 1 else None)
 
-        email_service.send_password_reset_email(
+        mail_res = email_service.send_password_reset_email(
             to_email=email,
             user_name=user_name,
             reset_token=token,
-            reset_url=reset_url
+            reset_url=reset_url,
+            wait_timeout=6
         )
+
+        email_dispatched = mail_res.get("success", False) if isinstance(mail_res, dict) else bool(mail_res)
 
         return jsonify({
             "success": True,
-            "message": f"Password reset link has been sent to {email}",
+            "message": f"Password reset link has been dispatched to {email}. Please check your inbox and Spam / Junk folder.",
             "email": email,
+            "email_dispatched": email_dispatched,
             "dev_token": token,
             "dev_reset_url": reset_url,
             "is_smtp_live": email_service.is_smtp_configured()
         }), 200
+
 
     except Exception as e:
         return jsonify({

@@ -640,11 +640,15 @@ def authenticate_user(email, password):
     return None
 
 def get_user_by_email(email):
+    if not email or not str(email).strip():
+        return None
+    clean_email = str(email).strip().lower()
     return execute_query(
-        "SELECT * FROM users WHERE email = ?",
-        (email.strip().lower(),),
+        "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(?)",
+        (clean_email,),
         fetch_mode="one"
     )
+
 
 def get_user_by_id(user_id):
     return execute_query(
