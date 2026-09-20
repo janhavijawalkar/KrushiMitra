@@ -475,7 +475,7 @@ export default function Profile() {
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#1B5E20] py-2 px-3 text-xs font-bold transition duration-200 cursor-pointer disabled:opacity-60"
                 >
                   <Mail size={14} />
-                  <span>{sendingEmail ? "Sending Email via SMTP..." : (language === "mr" ? "किसान आयडी ईमेल पुन्हा पाठवा" : language === "hi" ? "किसान आईडी ईमेल दोबारा भेजें" : "Resend Kisan ID & Welcome Email")}</span>
+                  <span>{sendingEmail ? (language === "mr" ? "ईमेल पाठवत आहे..." : language === "hi" ? "ईमेल भेजा जा रहा है..." : "Sending Email...") : (language === "mr" ? "किसान आयडी ईमेल पुन्हा पाठवा" : language === "hi" ? "किसान आईडी ईमेल दोबारा भेजें" : "Resend Kisan ID & Welcome Email")}</span>
                 </button>
                 {emailToast && (
                   <p className={`mt-2 text-[11px] font-medium text-center ${emailToast.includes("Failed") ? "text-red-600" : "text-emerald-700 font-bold"}`}>

@@ -167,7 +167,7 @@ export default function ForgotPassword({ nav }) {
               </div>
 
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                {language === "mr" ? "पासवर्ड रीसेट लिंक पाठवली आहे!" : language === "hi" ? "पासवर्ड रीसेट लिंक भेजी गई!" : "Password Reset Link Dispatched!"}
+                {language === "mr" ? "पासवर्ड रीसेट लिंक पाठवली आहे!" : language === "hi" ? "पासवर्ड रीसेट लिंक भेजी गई!" : "Password Reset Link Sent!"}
               </h2>
 
               <p className="mt-2 text-xs text-gray-600 dark:text-gray-300 leading-relaxed max-w-sm mx-auto">
@@ -187,18 +187,8 @@ export default function ForgotPassword({ nav }) {
                 </ul>
               </div>
 
-              {/* SMTP LIVE CONFIRMATION or DEV HELPER */}
-              {devInfo?.isSmtpLive ? (
-                <div className="my-4 rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 p-4 text-center text-xs text-emerald-800 dark:text-emerald-300 animate-pop">
-                  <p className="font-bold flex items-center justify-center gap-1.5 text-[#1B5E20] dark:text-[#4ADE80] text-sm">
-                    <Mail size={16} />
-                    <span>{language === "mr" ? "ईमेल यशस्वीरित्या पाठवला" : language === "hi" ? "ईमेल सफलतापूर्वक भेजा गया" : "Real Email Dispatched via SMTP"}</span>
-                  </p>
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                    {language === "mr" ? "पासवर्ड रीसेट ईमेल आपल्या इनबॉक्समध्ये प्राप्त झाला आहे." : language === "hi" ? "पासवर्ड रीसेट ईमेल आपके इनबॉक्स में प्राप्त हो गया है।" : "A password reset email has been delivered to your inbox."}
-                  </p>
-                </div>
-              ) : devInfo?.token ? (
+              {/* DEV PREVIEW HELPER (ONLY WHEN SMTP IS NOT CONFIGURED) */}
+              {!devInfo?.isSmtpLive && devInfo?.token ? (
                 <div className="my-4 rounded-xl border border-dashed border-emerald-400 bg-[#F4F9F2] dark:bg-[#112015] p-3.5 text-left text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-[#1B5E20] dark:text-[#4ADE80]">

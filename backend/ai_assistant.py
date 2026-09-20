@@ -2940,6 +2940,25 @@ def diagnose_crop_disease(image_data: str, mime_type: str = "image/jpeg", lang: 
     if "," in clean_b64:
         clean_b64 = clean_b64.split(",", 1)[1]
 
+    # Ultra-fast server-side downsampling for oversized images (>250KB) to ensure rapid AI diagnosis
+    if clean_b64 and len(clean_b64) > 300_000:
+        try:
+            raw_bytes = base64.b64decode(clean_b64)
+            nparr = np.frombuffer(raw_bytes, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if img is not None:
+                h, w = img.shape[:2]
+                max_dim = 1024
+                if max(h, w) > max_dim:
+                    scale = max_dim / float(max(h, w))
+                    new_w, new_h = int(w * scale), int(h * scale)
+                    img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                _, enc_buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 82])
+                clean_b64 = base64.b64encode(enc_buf).decode("utf-8")
+                mime_type = "image/jpeg"
+        except Exception as e:
+            print(f"[Diagnose Crop Disease - Fast Downsample Notice]: {e}")
+
     prompt_lang = "Marathi" if lang == "mr" else "Hindi" if lang == "hi" else "English"
 
     # 1. Try Gemini Multimodal Vision with Multi-Model Fallback
@@ -3010,8 +3029,8 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
                 }
             ],
             "generationConfig": {
-                "temperature": 0.15,
-                "maxOutputTokens": 2048
+                "temperature": 0.1,
+                "maxOutputTokens": 800
             }
         }
 
@@ -3019,7 +3038,7 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
                 headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
-                res = requests.post(url, json=payload, headers=headers, timeout=25)
+                res = requests.post(url, json=payload, headers=headers, timeout=10)
                 if res.status_code == 200:
                     data = res.json()
                     raw_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
