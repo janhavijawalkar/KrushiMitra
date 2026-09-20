@@ -1118,14 +1118,12 @@ export default function Analytics({ nav }) {
       </div>
 
       {/* =========================================================
-          PRINT-ONLY OFFICIAL DOSSIER FOOTER
+          PRINT-ONLY FOOTER
           (Visible ONLY when printing or exporting to PDF)
       ========================================================= */}
       <div className="print-only print-footer mt-8 border-t border-gray-200 pt-4 text-center text-[10px] text-gray-500 print:mt-2 print:pt-2">
-        <div className="flex items-center justify-between">
-          <span>🌱 KrushiMitra AI Agriculture Platform • Smart Telemetry Dossier</span>
-          <span>Certified Agronomic Report • For Official Farm Reference</span>
-          <span>Krushi Bhavan, Pune, Maharashtra</span>
+        <div className="flex items-center justify-center">
+          <span>🌱 KrushiMitra AI Agriculture Platform</span>
         </div>
       </div>
     </div>
