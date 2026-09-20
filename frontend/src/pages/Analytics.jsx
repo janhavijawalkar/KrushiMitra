@@ -442,7 +442,7 @@ export default function Analytics({ nav }) {
     window.dispatchEvent(new Event("resize"));
     setTimeout(() => {
       window.print();
-    }, 150);
+    }, 250);
   };
 
   return (
