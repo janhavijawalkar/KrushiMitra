@@ -136,6 +136,8 @@ export const formatPredictionShareText = ({
   areaUnit = "Acres",
   predictedYield = "--",
   totalProduction = "--",
+  reasonSummary = "",
+  advisory = "",
   lang = "mr",
 }) => {
   if (lang === "mr") {
@@ -144,8 +146,8 @@ export const formatPredictionShareText = ({
 🌾 *पीक:* ${crop} | *जिल्हा:* ${district}
 🗓️ *हंगाम:* ${season} | *क्षेत्र:* ${area} ${areaUnit}
 📈 *अंदाजित उत्पादकता:* *${predictedYield} टन/हेक्टर*
-💰 *एकूण अंदाजित उत्पादन:* *~${totalProduction} क्विंटल*
-
+💰 *एकूण अंदाजित उत्पादन:* *~${totalProduction} टन*
+${reasonSummary ? `\n💡 *उत्पादन कारण (विश्लेषण):*\n${reasonSummary}\n` : ""}${advisory ? `\n🌱 *शेतकरी कृषी सल्ला:*\n${advisory}\n` : ""}
 🌱 *कृषीमित्र — शेतकऱ्यांचा डिजिटल मित्र*`;
   }
 
@@ -155,8 +157,8 @@ export const formatPredictionShareText = ({
 🌾 *फसल:* ${crop} | *जिला:* ${district}
 🗓️ *मौसम:* ${season} | *रकबा:* ${area} ${areaUnit}
 📈 *अनुमानित पैदावार:* *${predictedYield} टन/हेक्टेयर*
-💰 *कुल अनुमानित उत्पादन:* *~${totalProduction} क्विंटल*
-
+💰 *कुल अनुमानित उत्पादन:* *~${totalProduction} टन*
+${reasonSummary ? `\n💡 *पैदावार कारण (विश्लेषण):*\n${reasonSummary}\n` : ""}${advisory ? `\n🌱 *किसान कृषि सलाह:*\n${advisory}\n` : ""}
 🌱 *कृषि-मित्र — किसानों का डिजिटल साथी*`;
   }
 
@@ -165,8 +167,8 @@ export const formatPredictionShareText = ({
 🌾 *Crop:* ${crop} | *District:* ${district}
 🗓️ *Season:* ${season} | *Farmland Area:* ${area} ${areaUnit}
 📈 *Predicted Yield:* *${predictedYield} tonnes/hectare*
-💰 *Estimated Production:* *~${totalProduction} quintals*
-
+💰 *Estimated Production:* *~${totalProduction} Tonnes*
+${reasonSummary ? `\n💡 *Agronomic Rationale (Why this yield):*\n${reasonSummary}\n` : ""}${advisory ? `\n🌱 *Farm Advisory:*\n${advisory}\n` : ""}
 🌱 *KrushiMitra — Farmer's Digital Companion*`;
 };
 

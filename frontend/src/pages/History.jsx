@@ -11,6 +11,7 @@ import {
   Calendar,
   Thermometer,
   Droplets,
+  Lightbulb,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -19,6 +20,7 @@ import {
   generateYieldReportPDF,
   generateRecommendationReportPDF,
 } from "../utils/pdfGenerator";
+import { getYieldPredictionReason } from "../utils/yieldReasoning";
 
 function formatHistoryDate(dateStr) {
   if (!dateStr) return "—";
@@ -820,6 +822,34 @@ export default function History({ nav }) {
                       <span className="font-bold text-gray-700 mt-0.5 block">{formatHistoryDate(viewRecord.createdAt)}</span>
                     </div>
                   </div>
+
+                  {/* AGRONOMIC INSIGHT CARD */}
+                  {(() => {
+                    const reason = getYieldPredictionReason(viewRecord, language);
+                    if (!reason) return null;
+                    return (
+                      <div className="mt-3.5 rounded-2xl border border-green-200 bg-[#F4F9F2] dark:bg-[#15261a] p-4 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 font-bold text-[#1B5E20] dark:text-emerald-300">
+                            <Lightbulb size={14} className="text-amber-500" />
+                            <span>
+                              {language === "mr"
+                                ? "कृषी वैज्ञानिक विश्लेषण (कारण)"
+                                : language === "hi"
+                                ? "कृषि वैज्ञानिक विश्लेषण (कारण)"
+                                : "Agronomic Rationale"}
+                            </span>
+                          </div>
+                          <span className="rounded-md bg-green-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-extrabold text-[#1B5E20] dark:text-emerald-300 border border-green-200 dark:border-emerald-800">
+                            {reason.statusLabel}
+                          </span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 font-medium">
+                          {reason.statusHeadline}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </>
               ) : (
                 <>
