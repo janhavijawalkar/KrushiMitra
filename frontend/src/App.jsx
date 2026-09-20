@@ -155,10 +155,10 @@ export default function App() {
       <Layout page={page} nav={navigate}>
         {page === "dashboard" && <Dashboard nav={navigate} />}
         {page === "weather" && <Weather nav={navigate} />}
-        {page === "recommendation" && <Recommendation nav={navigate} />}
-        {page === "prediction" && <Prediction nav={navigate} />}
-        {page === "reports" && <Reports nav={navigate} />}
-        {page === "analytics" && <Analytics nav={navigate} />}
+        {page === "recommendation" && <Recommendation nav={navigate} pageParams={pageParams} />}
+        {page === "prediction" && <Prediction nav={navigate} pageParams={pageParams} />}
+        {page === "reports" && <Reports nav={navigate} pageParams={pageParams} />}
+        {page === "analytics" && <Analytics nav={navigate} pageParams={pageParams} />}
         {page === "history" && <History nav={navigate} />}
         {page === "plant-doctor" && <PlantDoctor nav={navigate} />}
         {page === "schemes" && <Schemes nav={navigate} />}

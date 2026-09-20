@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sprout,
   MapPin,
@@ -28,7 +28,7 @@ import {
 import { buildApiUrl } from "../utils/apiConfig";
 import { openWhatsAppShare, formatPredictionShareText } from "../utils/whatsappShare";
 
-export default function Prediction({ nav }) {
+export default function Prediction({ nav, pageParams }) {
   const {
     t,
     tCrop,
@@ -39,14 +39,28 @@ export default function Prediction({ nav }) {
   } = useApp();
 
   const [form, setForm] = useState({
-    district: "",
-    crop: "",
+    district: pageParams?.district || "",
+    crop: pageParams?.crop || "",
     year: "2026",
-    season: "",
-    area: "",
-    rainfall: "",
-    temperature: "",
+    season: pageParams?.season || "",
+    area: pageParams?.area || "",
+    rainfall: pageParams?.rainfall || "",
+    temperature: pageParams?.temperature || "",
   });
+
+  useEffect(() => {
+    if (pageParams && Object.keys(pageParams).length > 0) {
+      setForm((prev) => ({
+        ...prev,
+        district: pageParams.district || prev.district,
+        crop: pageParams.crop || prev.crop,
+        season: pageParams.season || prev.season,
+        area: pageParams.area || prev.area,
+        rainfall: pageParams.rainfall || prev.rainfall,
+        temperature: pageParams.temperature || prev.temperature,
+      }));
+    }
+  }, [pageParams]);
 
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);

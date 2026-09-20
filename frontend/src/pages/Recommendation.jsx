@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Loader2,
   Share2,
+  TrendingUp,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -637,7 +638,53 @@ export default function Recommendation({ nav }) {
 
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+
+              {/* 1-Click Bridge to Crop Yield Prediction for Maharashtra's major field crops */}
+              {(() => {
+                const YIELD_PREDICTION_CROPS = {
+                  cotton: "Cotton",
+                  soybean: "Soybean",
+                  sugarcane: "Sugarcane",
+                  wheat: "Wheat",
+                  rice: "Rice",
+                  chickpea: "Gram",
+                  gram: "Gram",
+                  pigeonpeas: "Tur",
+                  tur: "Tur",
+                };
+                const cropKey = (result.crop || "").toLowerCase().trim();
+                const mappedCrop = YIELD_PREDICTION_CROPS[cropKey];
+
+                if (mappedCrop) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        nav &&
+                        nav("prediction", {
+                          crop: mappedCrop,
+                          rainfall: form.rainfall || "",
+                          temperature: form.temperature || "",
+                        })
+                      }
+                      className="btn-shimmer flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-gray-950 px-5 py-3 text-xs font-black shadow-lg transition hover:-translate-y-0.5 active:scale-95 cursor-pointer border border-amber-200"
+                    >
+                      <TrendingUp size={15} className="text-gray-900" />
+                      <span>
+                        {language === "mr"
+                          ? `📈 ${tCrop ? tCrop(result.crop) : result.crop}चे हेक्टरी उत्पादन (Yield) मोजा`
+                          : language === "hi"
+                          ? `📈 ${tCrop ? tCrop(result.crop) : result.crop} का उत्पादन (Yield) मापें`
+                          : `📈 Predict ${tCrop ? tCrop(result.crop) : result.crop} Harvest Yield`}
+                      </span>
+                      <ArrowRight size={14} />
+                    </button>
+                  );
+                }
+
+                return null;
+              })()}
 
               <button
                 onClick={resetForm}
@@ -670,6 +717,44 @@ export default function Recommendation({ nav }) {
               </button>
 
             </div>
+
+            {/* Non-field / Orchard Crop Clarification Badge */}
+            {(() => {
+              const YIELD_PREDICTION_CROPS = {
+                cotton: "Cotton",
+                soybean: "Soybean",
+                sugarcane: "Sugarcane",
+                wheat: "Wheat",
+                rice: "Rice",
+                chickpea: "Gram",
+                gram: "Gram",
+                pigeonpeas: "Tur",
+                tur: "Tur",
+              };
+              const cropKey = (result.crop || "").toLowerCase().trim();
+              if (!YIELD_PREDICTION_CROPS[cropKey]) {
+                return (
+                  <div className="mt-4 flex items-start gap-2.5 rounded-2xl bg-black/25 backdrop-blur-md p-3 text-xs text-green-100 border border-white/15">
+                    <span className="text-base">ℹ️</span>
+                    <div>
+                      <strong className="font-bold text-white">
+                        {language === "mr"
+                          ? "फळबाग व बहुवार्षिक पीक (Perennial Orchard):"
+                          : language === "hi"
+                          ? "फल एवं बागवानी फसल (Perennial Orchard):"
+                          : "Perennial Orchard & Horticulture Crop:"}
+                      </strong>{" "}
+                      {language === "mr"
+                        ? "या पिकाचे उत्पादन झाडाचे वय, छाटणी व मशागतीवर अवलंबून असते. महाराष्ट्र शासनाचे सांख्यिकी मॉडेल ७ प्रमुख वार्षिक अन्नधान्य व नगदी पिकांच्या (कापूस, सोयाबीन, ऊस, गहू, भात, हरभरा, तूर) हेक्टरी उत्पादनासाठी विशेष तयार केलेले आहे."
+                        : language === "hi"
+                        ? "इस फसल की उपज वृक्ष की आयु, छंटाई एवं छत्र प्रबंधन पर निर्भर है। महाराष्ट्र राज्य सांख्यिकी मॉडल 7 प्रमुख वार्षिक नकदी व खाद्यान्न फसलों (कपास, सोयाबीन, गन्ना, गेहूं, धान, चना, अरहर) के उपज अनुमान हेतु विशेष रूप से प्रशिक्षित है।"
+                        : "Yield for orchard/fruit crops depends on tree maturity, pruning, and canopy management. The state econometric regression engine specifically calibrates metric yield (t/ha) for Maharashtra's 7 primary annual staple and commercial cash crops."}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
             {/* AGRONOMIC RECOMMENDATION REASONING CARD */}
             {reasoning && (
