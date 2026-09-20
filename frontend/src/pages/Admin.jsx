@@ -46,9 +46,11 @@ import {
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
+import { getAdminText } from "../utils/adminTranslations";
 
 export default function Admin({ nav }) {
   const {
+    language,
     user,
     usersList,
     apiFetchAdminUsers,
@@ -73,6 +75,8 @@ export default function Admin({ nav }) {
     tDistrict,
     tCrop,
   } = useApp();
+
+  const at = (key, params = {}) => getAdminText(key, language, params);
 
   const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'broadcasts', 'users', 'tickets', 'database'
   const [search, setSearch] = useState("");
@@ -188,7 +192,7 @@ export default function Admin({ nav }) {
   const handleCreateBroadcast = async (e) => {
     e.preventDefault();
     if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
-      showToast("Alert headline and advisory message are required!");
+      showToast(at("toastAlertHeadlineRequired"));
       return;
     }
 
@@ -196,7 +200,7 @@ export default function Admin({ nav }) {
     try {
       const res = await apiCreateBroadcast(broadcastForm);
       if (res.success) {
-        showToast(`📢 ${res.message || "Advisory broadcast successfully dispatched!"}`);
+        showToast(at("toastBroadcastDispatched"));
         setBroadcastForm({
           title: "",
           message: "",
@@ -212,26 +216,26 @@ export default function Admin({ nav }) {
           if (b) setBroadcastsList(b);
         }
       } else {
-        showToast(res.message || "Failed to dispatch broadcast.");
+        showToast(res.message || at("toastBroadcastFailed"));
       }
     } catch (err) {
-      showToast("Broadcast submission error.");
+      showToast(at("toastBroadcastFailed"));
     } finally {
       setIsBroadcasting(false);
     }
   };
 
   const handleDeleteBroadcast = async (broadcastId, title) => {
-    if (confirm(`Are you sure you want to permanently delete broadcast "${title}"?`)) {
+    if (confirm(at("confirmDeleteBroadcastMsg"))) {
       const res = await apiDeleteBroadcast(broadcastId);
       if (res.success) {
-        showToast(`Broadcast "${title}" has been deleted.`);
+        showToast(at("toastBroadcastDeleted"));
         if (apiFetchAdminBroadcasts) {
           const b = await apiFetchAdminBroadcasts();
           if (b) setBroadcastsList(b);
         }
       } else {
-        showToast(res.message || "Failed to delete broadcast.");
+        showToast(res.message || at("toastBroadcastFailed"));
       }
     }
   };
@@ -296,16 +300,16 @@ export default function Admin({ nav }) {
     if (apiUpdateUserRole) {
       await apiUpdateUserRole(userId, newRole);
     }
-    showToast(`User role updated to ${newRole} in database!`);
+    showToast(at("toastRoleUpdated", { role: newRole }));
     loadData();
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (confirm(`Are you sure you want to permanently delete user "${userName}" from the database?`)) {
+    if (confirm(at("confirmDeleteUserMsg"))) {
       if (apiDeleteUser) {
         await apiDeleteUser(userId);
       }
-      showToast(`User "${userName}" has been deleted.`);
+      showToast(at("toastUserDeleted", { name: userName }));
       loadData();
     }
   };
@@ -315,14 +319,14 @@ export default function Admin({ nav }) {
     setNewUserError("");
 
     if (!newUserForm.name || !newUserForm.email) {
-      setNewUserError("Name and email are required.");
+      setNewUserError(at("toastAlertHeadlineRequired"));
       return;
     }
 
     if (apiCreateAdminUser) {
       const res = await apiCreateAdminUser(newUserForm);
       if (res.success) {
-        showToast(`User "${newUserForm.name}" successfully created!`);
+        showToast(at("toastUserCreated", { name: newUserForm.name }));
         setShowAddUserModal(false);
         setNewUserForm({
           name: "",
@@ -351,7 +355,7 @@ export default function Admin({ nav }) {
     if (apiAdminUpdateUser) {
       const res = await apiAdminUpdateUser(editUserDetail.id, editUserDetail);
       if (res.success) {
-        showToast(`User "${editUserDetail.name}" profile updated in database!`);
+        showToast(at("toastUserUpdated", { name: editUserDetail.name }));
         setEditUserDetail(null);
         loadData();
       } else {
@@ -363,7 +367,8 @@ export default function Admin({ nav }) {
   const handleTicketStatus = async (ticketId, newStatus) => {
     if (apiUpdateTicketStatus) {
       await apiUpdateTicketStatus(ticketId, newStatus);
-      showToast(`Ticket status updated to ${newStatus}`);
+      const localizedStatus = newStatus === "Resolved" ? at("statusResolved") : newStatus === "Under Review" ? at("underReview") : at("statusSubmitted");
+      showToast(`${at("status")}: ${localizedStatus}`);
       if (apiFetchAdminTickets) {
         const tickets = await apiFetchAdminTickets();
         if (tickets) setTicketsList(tickets);
@@ -377,7 +382,7 @@ export default function Admin({ nav }) {
 
     if (apiAdminReplyTicket) {
       await apiAdminReplyTicket(replyTicketModal.ticket_id, adminReplyText, replyStatus);
-      showToast(`Official reply sent and recorded for ${replyTicketModal.ticket_id}!`);
+      showToast(at("toastReplySent"));
       setReplyTicketModal(null);
       setAdminReplyText("");
       if (apiFetchAdminTickets) {
@@ -388,10 +393,10 @@ export default function Admin({ nav }) {
   };
 
   const handleDeleteTicket = async (ticketId) => {
-    if (confirm(`Are you sure you want to delete inquiry "${ticketId}"?`)) {
+    if (confirm(at("confirmDeleteTicketMsg"))) {
       if (apiAdminDeleteTicket) {
         await apiAdminDeleteTicket(ticketId);
-        showToast(`Inquiry ${ticketId} deleted.`);
+        showToast(at("toastTicketDeleted"));
         if (apiFetchAdminTickets) {
           const tickets = await apiFetchAdminTickets();
           if (tickets) setTicketsList(tickets);
@@ -413,11 +418,11 @@ export default function Admin({ nav }) {
           a.download = `KrushiMitra_Master_Backup_${new Date().toISOString().slice(0, 10)}.json`;
           a.click();
           URL.revokeObjectURL(url);
-          showToast("Master database backup JSON downloaded successfully!");
+          showToast(at("toastBackupDownloaded"));
         }
       }
     } catch (err) {
-      showToast("Failed to export database backup.");
+      showToast(at("toastBackupFailed"));
     }
     setIsExporting(false);
   };
@@ -447,7 +452,7 @@ export default function Admin({ nav }) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast("Farmer directory exported to CSV format!");
+    showToast(at("toastCsvExported"));
   };
 
   const handleOptimizeDb = async () => {
@@ -455,11 +460,11 @@ export default function Admin({ nav }) {
     try {
       if (apiOptimizeDatabase) {
         const res = await apiOptimizeDatabase();
-        showToast(res.message || "Database integrity verified and optimized.");
+        showToast(res.message || at("toastDbOptimized"));
         loadData();
       }
     } catch (err) {
-      showToast("Optimization ping failed.");
+      showToast(at("toastBroadcastFailed"));
     }
     setIsOptimizing(false);
   };
@@ -479,14 +484,14 @@ export default function Admin({ nav }) {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold text-[#172B18]">
-              {t("adminPanel") || "System Administration & Command Center"}
+              {at("adminTitle")}
             </h1>
             <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-bold text-[#1B5E20]">
-              <ShieldCheck size={14} /> Master Administrator
+              <ShieldCheck size={14} /> {at("adminBadge")}
             </span>
           </div>
           <p className="mt-1 text-xs sm:text-sm text-gray-500">
-            Real-time platform operations, registered farmer registry, crop analytics, feedback helpdesk, and database control.
+            {at("adminSubtitle")}
           </p>
         </div>
 
@@ -499,7 +504,7 @@ export default function Admin({ nav }) {
             className="key-cap btn-glow inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-700 disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw size={14} className={isRefreshing ? "animate-spin text-[#2E7D32]" : "text-gray-500"} />
-            <span>{isRefreshing ? "Syncing Platform..." : "Sync DB"}</span>
+            <span>{isRefreshing ? at("syncing") : at("syncDb")}</span>
           </button>
 
           <button
@@ -509,7 +514,7 @@ export default function Admin({ nav }) {
             className="btn-shimmer btn-glow inline-flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
           >
             <Download size={14} />
-            <span>{isExporting ? "Exporting..." : "Export DB Backup"}</span>
+            <span>{isExporting ? at("exporting") : at("exportDbBackup")}</span>
           </button>
         </div>
       </div>
@@ -525,18 +530,18 @@ export default function Admin({ nav }) {
       {/* NAVIGATION TABS */}
       <div className="flex border-b border-[#DCE8D9] overflow-x-auto gap-2">
         {[
-          { id: "overview", label: "Operations & Telemetry", icon: Activity },
+          { id: "overview", label: at("tabOverview"), icon: Activity },
           {
             id: "broadcasts",
-            label: `Advisory & Emergency Broadcast (${broadcastsList.length})`,
+            label: `${at("tabBroadcasts")} (${broadcastsList.length})`,
             icon: Megaphone,
             badge: broadcastsList.filter((b) => b.severity === "Critical").length > 0
-              ? `${broadcastsList.filter((b) => b.severity === "Critical").length} Critical`
+              ? `${broadcastsList.filter((b) => b.severity === "Critical").length} ${at("criticalBadge")}`
               : null,
           },
-          { id: "users", label: `Farmer & User Registry (${(usersList || []).length})`, icon: Users },
-          { id: "tickets", label: `Farmer Queries & Feedback (${ticketsList.length})`, icon: MessageSquare, badge: pendingTickets > 0 ? `${pendingTickets} Open` : null },
-          { id: "database", label: "Database & System Logs", icon: Database },
+          { id: "users", label: `${at("tabUsers")} (${(usersList || []).length})`, icon: Users },
+          { id: "tickets", label: `${at("tabTickets")} (${ticketsList.length})`, icon: MessageSquare, badge: pendingTickets > 0 ? `${pendingTickets} ${at("openBadge")}` : null },
+          { id: "database", label: at("tabDatabase"), icon: Database },
         ].map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -570,37 +575,37 @@ export default function Admin({ nav }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               icon={Users}
-              title="Registered Users"
+              title={at("registeredUsers")}
               value={(usersList || []).length}
-              subtitle={`${totalFarmers} Farmers • ${totalAdmins} Admins`}
-              status="Live DB"
+              subtitle={`${totalFarmers} ${at("farmers")} • ${totalAdmins} ${at("admins")}`}
+              status={at("liveDb")}
               statusColor="green"
             />
 
             <MetricCard
               icon={TrendingUp}
-              title="Yield Predictions Run"
+              title={at("yieldPredictionsRun")}
               value={dbStats?.total_predictions ?? predictionHistory.length ?? 0}
-              subtitle="Random Forest Regressor"
-              status="Active"
+              subtitle={at("rfModel")}
+              status={at("active")}
               statusColor="green"
             />
 
             <MetricCard
               icon={Sprout}
-              title="Soil Advisories Generated"
+              title={at("soilAdvisoriesGenerated")}
               value={dbStats?.total_recommendations ?? recommendationHistory.length ?? 0}
-              subtitle="22-Class Crop Classifier"
-              status="Calibrated"
+              subtitle={at("cropClassifier")}
+              status={at("calibrated")}
               statusColor="green"
             />
 
             <MetricCard
               icon={MessageSquare}
-              title="User Queries & Feedback"
+              title={at("userQueriesFeedback")}
               value={ticketsList.length}
-              subtitle={`${resolvedTickets} Resolved • ${pendingTickets} Pending`}
-              status="Helpdesk Active"
+              subtitle={`${resolvedTickets} ${at("resolved")} • ${pendingTickets} ${at("pending")}`}
+              status={at("helpdeskActive")}
               statusColor="green"
             />
           </div>
@@ -616,9 +621,9 @@ export default function Admin({ nav }) {
                   <Users size={22} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-800">Farmer & User Directory</h3>
+                  <h3 className="text-sm font-bold text-gray-800">{at("farmerDirectoryTitle")}</h3>
                   <p className="text-[11px] text-gray-500 mt-0.5">
-                    View real registered farmers, acreage, districts, and manage access.
+                    {at("farmerDirectoryDesc")}
                   </p>
                 </div>
               </div>
@@ -633,9 +638,9 @@ export default function Admin({ nav }) {
                   <MessageSquare size={22} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-800">Farmer Queries & Support</h3>
+                  <h3 className="text-sm font-bold text-gray-800">{at("farmerQueriesTitle")}</h3>
                   <p className="text-[11px] text-gray-500 mt-0.5">
-                    Inspect user inquiries, ratings, and write official agronomist replies.
+                    {at("farmerQueriesDesc")}
                   </p>
                 </div>
               </div>
@@ -650,9 +655,9 @@ export default function Admin({ nav }) {
                   <Database size={22} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-800">Database & System Logs</h3>
+                  <h3 className="text-sm font-bold text-gray-800">{at("databaseLogsTitle")}</h3>
                   <p className="text-[11px] text-gray-500 mt-0.5">
-                    Inspect database health, record counts, and download master backups.
+                    {at("databaseLogsDesc")}
                   </p>
                 </div>
               </div>
@@ -672,7 +677,7 @@ export default function Admin({ nav }) {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Total Bulletins
+                  {at("totalBulletins")}
                 </p>
                 <h3 className="text-xl font-extrabold text-[#172B18] dark:text-white">
                   {broadcastsList.length}
@@ -686,7 +691,7 @@ export default function Admin({ nav }) {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">
-                  Critical Emergencies
+                  {at("criticalEmergencies")}
                 </p>
                 <h3 className="text-xl font-extrabold text-red-700 dark:text-red-400">
                   {broadcastsList.filter((b) => b.severity === "Critical").length}
@@ -700,7 +705,7 @@ export default function Admin({ nav }) {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                  Caution Warnings
+                  {at("cautionWarnings")}
                 </p>
                 <h3 className="text-xl font-extrabold text-amber-700 dark:text-amber-400">
                   {broadcastsList.filter((b) => b.severity === "Warning").length}
@@ -714,10 +719,10 @@ export default function Admin({ nav }) {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                  Registered Audience
+                  {at("registeredAudience")}
                 </p>
                 <h3 className="text-xl font-extrabold text-blue-700 dark:text-blue-400">
-                  {(usersList || []).filter((u) => u.role === "Farmer").length} Farmers
+                  {(usersList || []).filter((u) => u.role === "Farmer").length} {at("farmers")}
                 </h3>
               </div>
             </div>
@@ -734,15 +739,15 @@ export default function Admin({ nav }) {
                   </div>
                   <div>
                     <h2 className="text-sm font-black tracking-wide">
-                      Broadcast Advisory Console
+                      {at("broadcastConsole")}
                     </h2>
                     <p className="text-[10px] text-emerald-100 font-medium">
-                      Real-time alert dispatch to farmer dashboards & mobile apps
+                      {at("broadcastSubtitle")}
                     </p>
                   </div>
                 </div>
                 <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-xs">
-                  MySQL Live
+                  {at("liveDbTag")}
                 </span>
               </div>
 
@@ -750,62 +755,110 @@ export default function Admin({ nav }) {
               <div className="p-4 bg-[#F7FAF6] dark:bg-[#183321]/40 border-b border-gray-100 dark:border-gray-800">
                 <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
                   <Sparkles size={12} className="text-[#2E7D32]" />
-                  <span>Quick Simulation Templates (SIH / Demos):</span>
+                  <span>{at("quickSimTemplatesTitle")}</span>
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
                     onClick={() => {
                       setBroadcastForm({
-                        title: "Unseasonal Thunderstorm & Hailstorm Warning for Nashik & Ahmednagar",
-                        message: "Severe unseasonal thunderstorm with gusty winds (40-50 km/h) and scattered hailstorms expected over the next 48 hours across North Maharashtra. Farmers are strongly advised to secure harvested onion stocks, delay grape canopy spraying, and clear drainage lines in orchards.",
+                        title: language === "mr"
+                          ? "नाशिक व अहमदनगर जिल्ह्यांसाठी अवकाळी वादळी पाऊस व गारपीट इशारा"
+                          : language === "hi"
+                          ? "नासिक और अहमदनगर जिलों के लिए बेमौसम आंधी और ओलावृष्टि चेतावनी"
+                          : "Unseasonal Thunderstorm & Hailstorm Warning for Nashik & Ahmednagar",
+                        message: language === "mr"
+                          ? "उत्तर महाराष्ट्रात पुढील ४८ तासांत वादळी वाऱ्यासह (४०-५० किमी/तास) मुसळधार पाऊस व गारपिटीची शक्यता आहे. शेतकऱ्यांनी काढलेला कांदा झाकून ठेवावा आणि बागांमधील पाण्याचा निचरा करावा."
+                          : language === "hi"
+                          ? "उत्तर महाराष्ट्र में अगले 48 घंटों में तेज हवाओं (40-50 किमी/घंटा) के साथ भारी बारिश और ओलावृष्टि की संभावना है। किसान निकाले गए प्याज को ढककर रखें और बगीचों में जल निकासी सुनिश्चित करें।"
+                          : "Severe unseasonal thunderstorm with gusty winds (40-50 km/h) and scattered hailstorms expected over the next 48 hours across North Maharashtra. Farmers are strongly advised to secure harvested onion stocks, delay grape canopy spraying, and clear drainage lines in orchards.",
                         severity: "Critical",
                         category: "Weather Alert",
                         district: "Nashik",
                         crop: "Onion, Grapes",
-                        action_recommendation: "Shift harvested crops to covered godowns; inspect orchard drainage.",
-                        created_by: "District Agriculture Emergency Cell, Nashik",
+                        action_recommendation: language === "mr"
+                          ? "काढलेले पीक तात्काळ सुरक्षित गोदामात हलवा; फळबागांमधील पाण्याचा निचरा करा."
+                          : language === "hi"
+                          ? "कटी हुई फसलों को तुरंत सुरक्षित गोदाम में रखें; बगीचे की जल निकासी साफ करें।"
+                          : "Shift harvested crops to covered godowns; inspect orchard drainage.",
+                        created_by: language === "mr"
+                          ? "जिल्हा कृषी आपत्ती निवारण कक्ष, नाशिक"
+                          : language === "hi"
+                          ? "जिला कृषि आपातकालीन प्रकोष्ठ, नासिक"
+                          : "District Agriculture Emergency Cell, Nashik",
                       });
                     }}
                     className="rounded-lg bg-white dark:bg-[#1E3A28] border border-red-200 dark:border-red-900 px-2.5 py-1 text-[11px] font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 cursor-pointer transition shadow-2xs"
                   >
-                    🌧️ Nashik Hailstorm (Critical)
+                    {at("btnTplNashik")}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setBroadcastForm({
-                        title: "Fall Armyworm Vigilance Advisory for Kharif Maize & Sugarcane",
-                        message: "Incidence of early-stage Fall Armyworm (Spodoptera frugiperda) infestation observed in Western Maharashtra zones. Scouting should be undertaken every 4-5 days.",
+                        title: language === "mr"
+                          ? "खरीप मका व उसावरील लष्करी अळी (Fall Armyworm) बाबत सतर्कता सल्ला"
+                          : language === "hi"
+                          ? "खरीफ मक्का और गन्ने पर फॉल आर्मीवर्म के प्रकोप पर सतर्कता चेतावनी"
+                          : "Fall Armyworm Vigilance Advisory for Kharif Maize & Sugarcane",
+                        message: language === "mr"
+                          ? "पश्चिम महाराष्ट्रात मका व ऊस पिकावर लष्करी अळीचा प्रादुर्भाव दिसून येत आहे. शेतकऱ्यांनी दर ४-५ दिवसांनी शेताची पाहणी करावी."
+                          : language === "hi"
+                          ? "पश्चिम महाराष्ट्र में मक्का और गन्ने पर फॉल आर्मीवर्म का प्रकोप देखा गया है। किसान हर 4-5 दिनों में खेत का निरीक्षण करें।"
+                          : "Incidence of early-stage Fall Armyworm (Spodoptera frugiperda) infestation observed in Western Maharashtra zones. Scouting should be undertaken every 4-5 days.",
                         severity: "Warning",
                         category: "Pest & Disease",
                         district: "Pune",
                         crop: "Sugarcane, Maize",
-                        action_recommendation: "Install pheromone traps @ 5 per acre & apply Azadirachtin 1500 ppm @ 5ml/L.",
-                        created_by: "Krushi Vigyan Kendra (KVK) Pune",
+                        action_recommendation: language === "mr"
+                          ? "प्रति एकर ५ कामगंध सापळे लावा आणि अझाडिरॅक्टिन १५०० पीपीएम ५ मिली/लिटर फवारा."
+                          : language === "hi"
+                          ? "प्रति एकड़ 5 फेरोमोन ट्रैप लगाएं और एज़ाडिराक्टिन 1500 पीपीएम 5 मिली/लीटर का छिड़काव करें।"
+                          : "Install pheromone traps @ 5 per acre & apply Azadirachtin 1500 ppm @ 5ml/L.",
+                        created_by: language === "mr"
+                          ? "कृषी विज्ञान केंद्र (KVK), पुणे"
+                          : language === "hi"
+                          ? "कृषि विज्ञान केंद्र (KVK), पुणे"
+                          : "Krushi Vigyan Kendra (KVK) Pune",
                       });
                     }}
                     className="rounded-lg bg-white dark:bg-[#1E3A28] border border-amber-200 dark:border-amber-900 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-50 cursor-pointer transition shadow-2xs"
                   >
-                    🐛 Pune Armyworm (Warning)
+                    {at("btnTplPune")}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setBroadcastForm({
-                        title: "Statewide Rabi Sowing & Micro-Irrigation 80% Subsidy Open",
-                        message: "Maharashtra Agriculture Department announces open portal registration for 80% Drip & Sprinkler Irrigation Subsidies under the PMKSY / MahaDBT framework for all registered farmers.",
+                        title: language === "mr"
+                          ? "रब्बी पेरणी व सूक्ष्म सिंचनासाठी ८०% शासकीय अनुदान योजना सुरू"
+                          : language === "hi"
+                          ? "रबी बुवाई और सूक्ष्म सिंचाई के लिए 80% सरकारी सब्सिडी योजना खुली"
+                          : "Statewide Rabi Sowing & Micro-Irrigation 80% Subsidy Open",
+                        message: language === "mr"
+                          ? "महाराष्ट्र कृषी विभागामार्फत महाडीबीटी (MahaDBT) पोर्टलवर ८०% ठिबक व तुषार सिंचन अनुदानासाठी अर्ज सुरू झाले आहेत."
+                          : language === "hi"
+                          ? "महाराष्ट्र कृषि विभाग द्वारा महाडीबीटी (MahaDBT) पोर्टल पर 80% ड्रिप और स्प्रिंकलर सिंचाई सब्सिडी के लिए ऑनलाइन आवेदन खुले हैं।"
+                          : "Maharashtra Agriculture Department announces open portal registration for 80% Drip & Sprinkler Irrigation Subsidies under the PMKSY / MahaDBT framework for all registered farmers.",
                         severity: "Advisory",
                         category: "Government Scheme",
                         district: "All",
                         crop: "All",
-                        action_recommendation: "Apply online on MahaDBT portal with updated 7/12 land extract.",
-                        created_by: "Maharashtra State Agricultural Department",
+                        action_recommendation: language === "mr"
+                          ? "अद्ययावत ७/१२ उताऱ्यासह महाडीबीटी पोर्टलवर ऑनलाइन अर्ज करा."
+                          : language === "hi"
+                          ? "अद्यतन 7/12 खतौनी के साथ महाडीबीटी पोर्टल पर ऑनलाइन आवेदन करें।"
+                          : "Apply online on MahaDBT portal with updated 7/12 land extract.",
+                        created_by: language === "mr"
+                          ? "महाराष्ट्र राज्य कृषी विभाग"
+                          : language === "hi"
+                          ? "महाराष्ट्र राज्य कृषि विभाग"
+                          : "Maharashtra State Agricultural Department",
                       });
                     }}
                     className="rounded-lg bg-white dark:bg-[#1E3A28] border border-emerald-200 dark:border-emerald-900 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 cursor-pointer transition shadow-2xs"
                   >
-                    🏛️ Statewide Subsidy (Advisory)
+                    {at("btnTplSubsidy")}
                   </button>
                 </div>
               </div>
@@ -815,13 +868,13 @@ export default function Admin({ nav }) {
                 {/* SEVERITY SELECTOR */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                    Severity Level (Urgency):
+                    {at("severity")}:
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "Critical", label: "🔴 Critical", desc: "Emergency Alert", color: "border-red-400 bg-red-50 text-red-800 dark:bg-red-950/50 dark:text-red-300" },
-                      { id: "Warning", label: "🟡 Warning", desc: "High Caution", color: "border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
-                      { id: "Advisory", label: "🟢 Advisory", desc: "General Notice", color: "border-emerald-400 bg-emerald-50 text-[#1B5E20] dark:bg-emerald-950/50 dark:text-emerald-300" },
+                      { id: "Critical", label: at("severityCritical"), desc: language === "mr" ? "आणीबाणी इशारा" : language === "hi" ? "आपातकालीन" : "Emergency Alert", color: "border-red-400 bg-red-50 text-red-800 dark:bg-red-950/50 dark:text-red-300" },
+                      { id: "Warning", label: at("severityWarning"), desc: language === "mr" ? "सावधगिरी सूचना" : language === "hi" ? "सावधानी सूचना" : "High Caution", color: "border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
+                      { id: "Advisory", label: at("severityAdvisory"), desc: language === "mr" ? "सामान्य सल्ला" : language === "hi" ? "सामान्य सलाह" : "General Notice", color: "border-emerald-400 bg-emerald-50 text-[#1B5E20] dark:bg-emerald-950/50 dark:text-emerald-300" },
                     ].map((sev) => {
                       const selected = broadcastForm.severity === sev.id;
                       return (
@@ -846,14 +899,14 @@ export default function Admin({ nav }) {
                 {/* TITLE */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                    Alert Headline / Subject <span className="text-red-500">*</span>:
+                    {at("alertHeadlineLabel")} <span className="text-red-500">*</span>:
                   </label>
                   <input
                     type="text"
                     required
                     value={broadcastForm.title}
                     onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
-                    placeholder="e.g. Unseasonal Hailstorm Alert in Nashik & Ahmednagar"
+                    placeholder={at("enterTitlePlaceholder")}
                     className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-emerald-400/20"
                   />
                 </div>
@@ -862,17 +915,17 @@ export default function Admin({ nav }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                      Target District <span className="text-red-500">*</span>:
+                      {at("targetDistrictLabel")} <span className="text-red-500">*</span>:
                     </label>
                     <select
                       value={broadcastForm.district}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, district: e.target.value })}
                       className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                     >
-                      <option value="All">🌐 All 36 Districts (Statewide)</option>
+                      <option value="All">{at("statewideAll36")}</option>
                       {districts.map((d) => (
                         <option key={d} value={d}>
-                          📍 {d} District
+                          📍 {tDistrict ? tDistrict(d) : d} {at("district")}
                         </option>
                       ))}
                     </select>
@@ -880,18 +933,18 @@ export default function Admin({ nav }) {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                      Advisory Category:
+                      {at("advisoryCategoryLabel")}
                     </label>
                     <select
                       value={broadcastForm.category}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, category: e.target.value })}
                       className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                     >
-                      <option value="Weather Alert">🌧️ Weather Alert</option>
-                      <option value="Pest & Disease">🐛 Pest & Disease Outbreak</option>
-                      <option value="Government Scheme">🏛️ Government Scheme / Subsidy</option>
-                      <option value="Market & MSP">📈 Market Rate & MSP</option>
-                      <option value="Fertilizer & Sowing">🌱 Fertilizer & Sowing Advisory</option>
+                      <option value="Weather Alert">🌧️ {at("catWeather")}</option>
+                      <option value="Pest & Disease">🐛 {at("catPest")}</option>
+                      <option value="Government Scheme">🏛️ {at("catScheme")}</option>
+                      <option value="Market & MSP">📈 {at("catMarket")}</option>
+                      <option value="Fertilizer & Sowing">🌱 {at("catFertilizer")}</option>
                     </select>
                   </div>
                 </div>
@@ -900,26 +953,26 @@ export default function Admin({ nav }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                      Target Crop(s):
+                      {at("targetCropsLabel")}
                     </label>
                     <input
                       type="text"
                       value={broadcastForm.crop}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, crop: e.target.value })}
-                      placeholder="e.g. All, Soybean, Grapes, Cotton"
+                      placeholder={language === "mr" ? "उदा. सर्व पिके, सोयाबीन, द्राक्षे, कापूस" : language === "hi" ? "उदा. सभी, सोयाबीन, अंगूर, कपास" : "e.g. All, Soybean, Grapes, Cotton"}
                       className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                      Issued By / Department:
+                      {at("issuedByLabel")}
                     </label>
                     <input
                       type="text"
                       value={broadcastForm.created_by}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, created_by: e.target.value })}
-                      placeholder="e.g. District Agriculture Emergency Cell"
+                      placeholder={language === "mr" ? "उदा. जिल्हा कृषी आपत्ती निवारण कक्ष" : language === "hi" ? "उदा. जिला कृषि आपातकालीन प्रकोष्ठ" : "e.g. District Agriculture Emergency Cell"}
                       className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                     />
                   </div>
@@ -928,14 +981,14 @@ export default function Admin({ nav }) {
                 {/* ADVISORY MESSAGE */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                    Detailed Advisory Instructions <span className="text-red-500">*</span>:
+                    {at("detailedInstructionsLabel")} <span className="text-red-500">*</span>:
                   </label>
                   <textarea
                     rows={3}
                     required
                     value={broadcastForm.message}
                     onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
-                    placeholder="Describe the condition, risk factors, and precautions farmers must follow..."
+                    placeholder={at("enterMessagePlaceholder")}
                     className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] p-3 text-xs text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                   />
                 </div>
@@ -943,13 +996,13 @@ export default function Admin({ nav }) {
                 {/* ACTIONABLE RECOMMENDATION */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                    Direct Action Step for Farmers (Actionable Remedy):
+                    {at("directActionRemedyLabel")}
                   </label>
                   <input
                     type="text"
                     value={broadcastForm.action_recommendation}
                     onChange={(e) => setBroadcastForm({ ...broadcastForm, action_recommendation: e.target.value })}
-                    placeholder="e.g. Spray Neem oil (5ml/L) or transfer produce to covered godowns within 48 hours."
+                    placeholder={at("enterRemedyPlaceholder")}
                     className="w-full rounded-xl border border-[#DCE7DA] bg-white dark:bg-[#183321] px-3.5 py-2 text-xs font-semibold text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                   />
                 </div>
@@ -958,11 +1011,11 @@ export default function Admin({ nav }) {
                 <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-900/60 p-3 text-xs text-blue-800 dark:text-blue-200">
                   <Radio size={16} className="shrink-0 text-blue-600 animate-pulse" />
                   <span>
-                    🎯 Audience Target:{" "}
+                    {at("audienceTargetBanner")}{" "}
                     <strong>
                       {broadcastForm.district === "All"
-                        ? `All 36 Districts (~${(usersList || []).filter((u) => u.role === "Farmer").length} registered farmers)`
-                        : `${broadcastForm.district} District (~${(usersList || []).filter((u) => u.role === "Farmer" && (u.district || "").toLowerCase() === broadcastForm.district.toLowerCase()).length} registered farmers)`}
+                        ? `${at("statewideAll36")} (~${(usersList || []).filter((u) => u.role === "Farmer").length} ${at("farmers")})`
+                        : `${tDistrict ? tDistrict(broadcastForm.district) : broadcastForm.district} ${at("district")} (~${(usersList || []).filter((u) => u.role === "Farmer" && (u.district || "").toLowerCase() === broadcastForm.district.toLowerCase()).length} ${at("farmers")})`}
                     </strong>
                   </span>
                 </div>
@@ -974,7 +1027,7 @@ export default function Admin({ nav }) {
                   className="btn-shimmer btn-glow flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] py-3 text-xs font-black text-white shadow-md transition hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   <Send size={15} />
-                  <span>{isBroadcasting ? "Transmitting Alert to MySQL..." : "Broadcast Alert to Farmers Now 🚀"}</span>
+                  <span>{isBroadcasting ? at("transmittingBtn") : at("broadcastNowBtn")}</span>
                 </button>
               </form>
             </div>
@@ -986,10 +1039,10 @@ export default function Admin({ nav }) {
                   <div>
                     <h2 className="text-sm font-black text-gray-800 dark:text-white flex items-center gap-2">
                       <Megaphone size={17} className="text-[#2E7D32]" />
-                      <span>Active Broadcast Advisories & Alert Log ({broadcastsList.length})</span>
+                      <span>{at("activeBroadcasts")} ({broadcastsList.length})</span>
                     </h2>
                     <p className="text-[11px] text-gray-400 mt-0.5">
-                      Live transmission log stored in MySQL database. Alerts appear instantly on farmer dashboards.
+                      {at("broadcastSubtitle")}
                     </p>
                   </div>
                 </div>
@@ -1002,7 +1055,7 @@ export default function Admin({ nav }) {
                       type="text"
                       value={broadcastSearch}
                       onChange={(e) => setBroadcastSearch(e.target.value)}
-                      placeholder="Search alerts or districts..."
+                      placeholder={at("searchAlerts")}
                       className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] pl-8 pr-3 py-1.5 text-xs text-gray-800 dark:text-white outline-none focus:border-[#2E7D32]"
                     />
                   </div>
@@ -1012,10 +1065,10 @@ export default function Admin({ nav }) {
                     onChange={(e) => setBroadcastSeverityFilter(e.target.value)}
                     className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none"
                   >
-                    <option value="all">All Severities</option>
-                    <option value="critical">🔴 Critical Only</option>
-                    <option value="warning">🟡 Warning Only</option>
-                    <option value="advisory">🟢 Advisory Only</option>
+                    <option value="all">{at("allSeverities")}</option>
+                    <option value="critical">{at("critOnly")}</option>
+                    <option value="warning">{at("warnOnly")}</option>
+                    <option value="advisory">{at("advOnly")}</option>
                   </select>
 
                   <select
@@ -1023,11 +1076,11 @@ export default function Admin({ nav }) {
                     onChange={(e) => setBroadcastDistrictFilter(e.target.value)}
                     className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#183321] px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none"
                   >
-                    <option value="all">All Target Districts</option>
-                    <option value="all">🌐 All (Statewide)</option>
+                    <option value="all">{at("allDistricts")}</option>
+                    <option value="all">{at("statewideAll36")}</option>
                     {districts.map((d) => (
                       <option key={d} value={d}>
-                        📍 {d}
+                        📍 {tDistrict ? tDistrict(d) : d}
                       </option>
                     ))}
                   </select>
@@ -1039,8 +1092,8 @@ export default function Admin({ nav }) {
                 {broadcastsList.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
                     <Megaphone size={36} className="mx-auto text-gray-300 mb-2" />
-                    <p className="text-xs font-bold">No broadcast advisories found.</p>
-                    <p className="text-[11px]">Compose an advisory using the form on the left.</p>
+                    <p className="text-xs font-bold">{at("noBroadcastsFound")}</p>
+                    <p className="text-[11px]">{at("noBroadcastsSub")}</p>
                   </div>
                 ) : (
                   broadcastsList
@@ -1092,7 +1145,11 @@ export default function Admin({ nav }) {
                                       : "bg-[#1B5E20] text-white"
                                   }`}
                                 >
-                                  {item.severity}
+                                  {isCritical
+                                    ? (language === "mr" ? "🔴 Critical आणीबाणी" : language === "hi" ? "🔴 Critical आपातकाल" : "Critical")
+                                    : isWarning
+                                    ? (language === "mr" ? "🟡 Warning सतर्कता" : language === "hi" ? "🟡 Warning चेतावनी" : "Warning")
+                                    : (language === "mr" ? "🟢 Advisory सल्ला" : language === "hi" ? "🟢 Advisory सलाह" : "Advisory")}
                                 </span>
 
                                 <span className="rounded-full bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-[10px] font-bold text-gray-700 dark:text-gray-300">
@@ -1101,13 +1158,13 @@ export default function Admin({ nav }) {
 
                                 <span className="rounded-full bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 text-[10px] font-bold text-blue-800 dark:text-blue-200 flex items-center gap-1">
                                   <MapPin size={10} />
-                                  <span>{item.district === "All" ? "All Maharashtra" : `${item.district} District`}</span>
+                                  <span>{item.district === "All" ? at("allMaharashtra") : `${tDistrict ? tDistrict(item.district) : item.district} ${at("district")}`}</span>
                                 </span>
 
                                 {item.crop && item.crop !== "All" && (
                                   <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200 flex items-center gap-1">
                                     <Wheat size={10} />
-                                    <span>{item.crop}</span>
+                                    <span>{tCrop ? tCrop(item.crop) : item.crop}</span>
                                   </span>
                                 )}
 
@@ -1131,7 +1188,7 @@ export default function Admin({ nav }) {
                                 <div className="rounded-xl bg-white dark:bg-[#132318] p-2.5 border border-gray-100 dark:border-gray-800 text-[11px] font-semibold text-gray-700 dark:text-emerald-200 flex items-start gap-1.5 shadow-2xs">
                                   <CheckCircle2 size={13} className="shrink-0 text-[#2E7D32] mt-0.5" />
                                   <span>
-                                    <strong>Actionable Advice:</strong> {item.action_recommendation}
+                                    <strong>{at("actionableHeader")}</strong> {item.action_recommendation}
                                   </span>
                                 </div>
                               )}
@@ -1143,11 +1200,11 @@ export default function Admin({ nav }) {
                                   <span>{item.created_at || "Recent"}</span>
                                 </span>
                                 <span>•</span>
-                                <span>Issued by: {item.created_by}</span>
+                                <span>{at("issuedBy")} {item.created_by}</span>
                                 <span>•</span>
                                 <span className="text-[#2E7D32] font-bold flex items-center gap-1">
                                   <Radio size={10} />
-                                  <span>Reaches ~{item.estimated_reach || 13} farmers</span>
+                                  <span>{at("reachesFarmers", { count: item.estimated_reach || 13 })}</span>
                                 </span>
                               </div>
                             </div>
@@ -1158,7 +1215,7 @@ export default function Admin({ nav }) {
                                 type="button"
                                 onClick={() => handleDeleteBroadcast(item.broadcast_id || item.id, item.title)}
                                 className="flex h-8 w-8 items-center justify-center rounded-xl bg-white dark:bg-[#1E3A28] border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition shadow-2xs cursor-pointer"
-                                title="Delete / Archive Alert"
+                                title={at("deleteBroadcast")}
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -1183,10 +1240,10 @@ export default function Admin({ nav }) {
                 <div>
                   <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <Users size={17} className="text-[#2E7D32]" />
-                    <span>Registered Farmers & User Directory (Full System Record)</span>
+                    <span>{at("userDirectory")}</span>
                   </h2>
                   <p className="text-[11px] text-gray-400 mt-0.5">
-                    Inspect farmer identities, Kisan IDs, registered cities, contact numbers, acreage, and manage account permissions.
+                    {at("userDirectoryDesc")}
                   </p>
                 </div>
 
@@ -1197,7 +1254,7 @@ export default function Admin({ nav }) {
                       type="text"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search name, ID, email, city, phone..."
+                      placeholder={at("searchUsersPlaceholder")}
                       className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] pl-8 pr-3 py-1.5 text-xs outline-none focus:border-[#2E7D32] focus:bg-white"
                     />
                   </div>
@@ -1207,19 +1264,19 @@ export default function Admin({ nav }) {
                     onChange={(e) => setRoleFilter(e.target.value)}
                     className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
                   >
-                    <option value="all">All Roles</option>
-                    <option value="Farmer">Farmers</option>
-                    <option value="Admin">Admins</option>
+                    <option value="all">{at("allRoles")}</option>
+                    <option value="Farmer">{at("farmersOnly")}</option>
+                    <option value="Admin">{at("adminsOnly")}</option>
                   </select>
 
                   <button
                     type="button"
                     onClick={handleExportUsersCSV}
                     className="key-cap btn-glow flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 cursor-pointer"
-                    title="Export Farmer Directory to CSV"
+                    title={at("exportCsv")}
                   >
                     <FileSpreadsheet size={14} className="text-[#2E7D32]" />
-                    <span>Export CSV</span>
+                    <span>{at("exportCsv")}</span>
                   </button>
 
                   <button
@@ -1228,7 +1285,7 @@ export default function Admin({ nav }) {
                     className="btn-shimmer btn-glow flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                   >
                     <Plus size={14} />
-                    <span>Add New User</span>
+                    <span>{at("addNewUser")}</span>
                   </button>
                 </div>
               </div>
@@ -1239,14 +1296,14 @@ export default function Admin({ nav }) {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="bg-[#F8FAF7] text-[10px] uppercase tracking-wide text-gray-400 border-b border-[#E2EAE0]">
-                    <th className="px-4 py-3.5">User / Kisan ID</th>
-                    <th className="px-4 py-3.5">Farmer & Contact</th>
-                    <th className="px-4 py-3.5">City / District</th>
-                    <th className="px-4 py-3.5">Farm Acreage & Soil</th>
-                    <th className="px-4 py-3.5">Primary Crops</th>
-                    <th className="px-4 py-3.5">Role</th>
-                    <th className="px-4 py-3.5">Status</th>
-                    <th className="px-4 py-3.5 text-right">Admin Actions</th>
+                    <th className="px-4 py-3.5">{at("thKisanId")}</th>
+                    <th className="px-4 py-3.5">{at("thFarmerContact")}</th>
+                    <th className="px-4 py-3.5">{at("thCityDistrict")}</th>
+                    <th className="px-4 py-3.5">{at("thFarmAcreage")}</th>
+                    <th className="px-4 py-3.5">{at("thPrimaryCrops")}</th>
+                    <th className="px-4 py-3.5">{at("thRole")}</th>
+                    <th className="px-4 py-3.5">{at("thStatus")}</th>
+                    <th className="px-4 py-3.5 text-right">{at("thActions")}</th>
                   </tr>
                 </thead>
 
@@ -1254,7 +1311,7 @@ export default function Admin({ nav }) {
                   {filteredUsers.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-8 text-center text-gray-400 text-xs">
-                        No users matching search criteria.
+                        {at("noUsersFound")}
                       </td>
                     </tr>
                   ) : (
@@ -1312,11 +1369,13 @@ export default function Admin({ nav }) {
                           {/* FARM SIZE & SOIL */}
                           <td className="px-4 py-3.5 text-gray-600">
                             {isAdminUser ? (
-                              <span className="text-[11px] text-gray-400 italic">Central Operations Desk</span>
+                              <span className="text-[11px] text-gray-400 italic">
+                                {language === "mr" ? "मध्यवर्ती संचालन केंद्र" : language === "hi" ? "केंद्रीय संचालन डेस्क" : "Central Operations Desk"}
+                              </span>
                             ) : (
                               <div>
                                 <p className="font-bold text-gray-800">
-                                  {u.farm_size || u.farmSize ? `${u.farm_size || u.farmSize} ${u.farm_unit || u.farmUnit || "Acres"}` : "—"}
+                                  {u.farm_size || u.farmSize ? `${u.farm_size || u.farmSize} ${at("acres")}` : "—"}
                                 </p>
                                 <p className="text-[10px] text-gray-400 truncate max-w-[150px]">
                                   {u.soil_type || u.soilType || "—"}
@@ -1345,7 +1404,7 @@ export default function Admin({ nav }) {
                                   : "bg-[#E5F7EA] text-[#2E7D32] border border-[#CDE5D1]"
                               }`}
                             >
-                              {isAdminUser ? "🛡️ Admin" : "🌾 Farmer"}
+                              {isAdminUser ? `🛡️ ${at("admins")}` : `🌾 ${at("farmers")}`}
                             </span>
                           </td>
 
@@ -1353,7 +1412,7 @@ export default function Admin({ nav }) {
                           <td className="px-4 py-3.5">
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              {u.status || "Active"}
+                              {u.status || at("activeStatus")}
                             </span>
                           </td>
 
@@ -1364,7 +1423,7 @@ export default function Admin({ nav }) {
                                 type="button"
                                 onClick={() => setViewUserDetail(u)}
                                 className="key-cap p-1.5 text-gray-600 hover:text-[#2E7D32] transition cursor-pointer"
-                                title="View Full Farmer Dossier"
+                                title={at("viewUserDossierTitle")}
                               >
                                 <Eye size={14} />
                               </button>
@@ -1373,7 +1432,7 @@ export default function Admin({ nav }) {
                                 type="button"
                                 onClick={() => setEditUserDetail({ ...u })}
                                 className="key-cap p-1.5 text-gray-600 hover:text-blue-600 transition cursor-pointer"
-                                title="Edit Farmer Details"
+                                title={at("editUser")}
                               >
                                 <Edit3 size={14} />
                               </button>
@@ -1382,9 +1441,9 @@ export default function Admin({ nav }) {
                                 type="button"
                                 onClick={() => handleRoleToggle(u.id, u.role)}
                                 className="key-cap px-2.5 py-1 text-[11px] font-bold text-gray-700 hover:bg-[#F0F8ED] hover:text-[#2E7D32] transition cursor-pointer"
-                                title="Toggle Role"
+                                title={isAdminUser ? at("makeFarmer") : at("makeAdmin")}
                               >
-                                {isAdminUser ? "Demote" : "Make Admin"}
+                                {isAdminUser ? at("makeFarmer") : at("makeAdmin")}
                               </button>
 
                               {u.email !== "admin@krushimitra.in" && (
@@ -1392,7 +1451,7 @@ export default function Admin({ nav }) {
                                   type="button"
                                   onClick={() => handleDeleteUser(u.id, u.name)}
                                   className="key-cap p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
-                                  title="Delete User"
+                                  title={at("deleteUser")}
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -1410,7 +1469,7 @@ export default function Admin({ nav }) {
         </div>
       )}
 
-      {/* TAB 3: FARMER QUERIES, SUPPORT & FEEDBACK DESK */}
+      {/* TAB 4: FARMER QUERIES, SUPPORT & FEEDBACK DESK */}
       {activeTab === "tickets" && (
         <div className="space-y-4 animate-zoom-fade">
           <div className="card overflow-hidden depth-1">
@@ -1419,10 +1478,10 @@ export default function Admin({ nav }) {
                 <div>
                   <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <MessageSquare size={17} className="text-[#2E7D32]" />
-                    <span>Farmer Inquiries, Advice Queries & Feedback Desk</span>
+                    <span>{at("helpdeskTitle")}</span>
                   </h2>
                   <p className="text-[11px] text-gray-400 mt-0.5">
-                    Review incoming support inquiries, feedback ratings, questions regarding soil/fertilizers, and provide official agronomist responses.
+                    {at("helpdeskDesc")}
                   </p>
                 </div>
 
@@ -1432,10 +1491,10 @@ export default function Admin({ nav }) {
                     onClick={loadData}
                     disabled={isRefreshing}
                     className="key-cap flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 hover:text-[#2E7D32] transition cursor-pointer"
-                    title="Refresh Data from Server"
+                    title={at("syncDb")}
                   >
                     <RefreshCw size={13} className={isRefreshing ? "animate-spin text-[#2E7D32]" : ""} />
-                    <span>Refresh</span>
+                    <span>{isRefreshing ? at("syncing") : (language === "mr" ? "रिफ्रेश करा" : language === "hi" ? "रिफ्रेश करें" : "Refresh")}</span>
                   </button>
                 </div>
               </div>
@@ -1451,7 +1510,7 @@ export default function Admin({ nav }) {
                       : "bg-[#F4F7F2] text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  All Inquiries ({ticketsList.length})
+                  {at("allInquiriesPill", { count: ticketsList.length })}
                 </button>
 
                 <button
@@ -1464,7 +1523,7 @@ export default function Admin({ nav }) {
                   }`}
                 >
                   <Star size={12} className="fill-current" />
-                  <span>Feedback & Ratings ({feedbackTickets})</span>
+                  <span>{at("feedbackRatingsPill", { count: feedbackTickets })}</span>
                 </button>
 
                 <button
@@ -1477,7 +1536,7 @@ export default function Admin({ nav }) {
                   }`}
                 >
                   <span>🌾</span>
-                  <span>Agronomy Questions ({queryTickets})</span>
+                  <span>{at("agronomyQuestionsPill", { count: queryTickets })}</span>
                 </button>
 
                 <button
@@ -1489,7 +1548,7 @@ export default function Admin({ nav }) {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  ⏳ Pending ({pendingTickets})
+                  ⏳ {at("pendingPill", { count: pendingTickets })}
                 </button>
 
                 <button
@@ -1501,7 +1560,7 @@ export default function Admin({ nav }) {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  ✅ Resolved ({resolvedTickets})
+                  ✅ {at("resolvedPill", { count: resolvedTickets })}
                 </button>
               </div>
 
@@ -1513,7 +1572,7 @@ export default function Admin({ nav }) {
                     type="text"
                     value={ticketSearch}
                     onChange={(e) => setTicketSearch(e.target.value)}
-                    placeholder="Search query, subject, farmer name, district..."
+                    placeholder={at("searchTickets")}
                     className="w-full rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] pl-8 pr-3 py-1.5 text-xs outline-none focus:border-[#2E7D32] focus:bg-white"
                   />
                 </div>
@@ -1523,10 +1582,10 @@ export default function Admin({ nav }) {
                   onChange={(e) => setTicketStatusFilter(e.target.value)}
                   className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="Submitted">Submitted / Open</option>
-                  <option value="Under Review">Under Review</option>
-                  <option value="Resolved">Resolved</option>
+                  <option value="all">{at("allStatuses")}</option>
+                  <option value="Submitted">{at("statusSubmitted")}</option>
+                  <option value="Under Review">{at("underReview")}</option>
+                  <option value="Resolved">{at("statusResolved")}</option>
                 </select>
 
                 <select
@@ -1534,14 +1593,14 @@ export default function Admin({ nav }) {
                   onChange={(e) => setTicketCategoryFilter(e.target.value)}
                   className="rounded-xl border border-[#DCE8D9] bg-[#F8FAF7] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
                 >
-                  <option value="all">All Categories</option>
-                  <option value="Feedback">App Feedback & Rating</option>
-                  <option value="Prediction">Crop Yield Prediction</option>
-                  <option value="Recommendation">Crop Recommendation</option>
-                  <option value="Soil">Soil & Fertilizer</option>
-                  <option value="Weather">Weather & Climate Service</option>
-                  <option value="PDF">PDF Reports</option>
-                  <option value="General">General Inquiry</option>
+                  <option value="all">{at("allCategories")}</option>
+                  <option value="Feedback">{at("catFeedback")}</option>
+                  <option value="Prediction">{at("yieldPredictionsRun")}</option>
+                  <option value="Recommendation">{at("catCropAdvisory")}</option>
+                  <option value="Soil">{at("catFertilizerSoil")}</option>
+                  <option value="Weather">{at("catWeather")}</option>
+                  <option value="PDF">{language === "mr" ? "PDF अहवाल" : language === "hi" ? "PDF रिपोर्ट्स" : "PDF Reports"}</option>
+                  <option value="General">{at("catGeneral")}</option>
                 </select>
               </div>
             </div>
@@ -1550,7 +1609,7 @@ export default function Admin({ nav }) {
             <div className="divide-y divide-[#EEF2EC]">
               {filteredTickets.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-xs">
-                  No farmer inquiries or feedback matching current filter.
+                  {at("noTicketsFound")}
                 </div>
               ) : (
                 filteredTickets.map((ticket) => {
@@ -1573,7 +1632,7 @@ export default function Admin({ nav }) {
                                 : "bg-[#E5F7EA] text-[#2E7D32] border-[#CDE5D1]"
                             }`}
                           >
-                            {isFeedback ? "⭐ " + (ticket.category || "App Feedback") : "🌾 " + (ticket.category || "General Query")}
+                            {isFeedback ? at("feedbackStarCategory") : at("queryCropCategory")}
                           </span>
 
                           {ticket.rating && (
@@ -1584,7 +1643,7 @@ export default function Admin({ nav }) {
                                 ))}
                               </div>
                               <span className="text-[10px] text-amber-800 font-extrabold">
-                                {ticket.rating}/5 Stars
+                                {at("starsLabel", { rating: ticket.rating })}
                               </span>
                             </div>
                           )}
@@ -1598,7 +1657,7 @@ export default function Admin({ nav }) {
                                 : "bg-amber-100 text-amber-800 border border-amber-200"
                             }`}
                           >
-                            {isResolved ? "✅ Resolved" : isUnderReview ? "🔍 Under Review" : "⏳ Submitted"}
+                            {isResolved ? `✅ ${at("statusResolved")}` : isUnderReview ? `🔍 ${at("underReview")}` : `⏳ ${at("statusSubmitted")}`}
                           </span>
                         </div>
 
@@ -1611,7 +1670,7 @@ export default function Admin({ nav }) {
                       {/* QUERY SUBJECT & MESSAGE */}
                       <div className="space-y-1">
                         <h4 className="text-sm font-extrabold text-gray-800">
-                          {ticket.subject || "Farmer Inquiry"}
+                          {ticket.subject || at("queriesSupport")}
                         </h4>
                         <p className="text-xs text-gray-600 leading-relaxed bg-[#F8FAF7] p-3 rounded-xl border border-[#E2EAE0]">
                           "{ticket.message}"
@@ -1622,13 +1681,13 @@ export default function Admin({ nav }) {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                           <span className="font-bold text-gray-800 flex items-center gap-1">
-                            👤 {ticket.name || ticket.user_name || "Farmer"}
+                            👤 {ticket.name || ticket.user_name || at("anonymous")}
                           </span>
                           <span>•</span>
                           <span className="text-gray-500">{ticket.user_email}</span>
                           <span>•</span>
                           <span className="text-[#2E7D32] font-semibold flex items-center gap-1">
-                            <MapPin size={11} /> {ticket.district && ticket.district.trim() ? (tDistrict ? tDistrict(ticket.district) : ticket.district) : "Maharashtra"}
+                            <MapPin size={11} /> {ticket.district && ticket.district.trim() ? (tDistrict ? tDistrict(ticket.district) : ticket.district) : (language === "mr" ? "महाराष्ट्र" : language === "hi" ? "महाराष्ट्र" : "Maharashtra")}
                           </span>
                         </div>
 
@@ -1644,7 +1703,7 @@ export default function Admin({ nav }) {
                             className="btn-shimmer btn-glow flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                           >
                             <MessageSquare size={13} />
-                            <span>{ticket.admin_reply ? "Edit Reply" : "Reply to Farmer"}</span>
+                            <span>{ticket.admin_reply ? at("editReply") : at("replyToFarmer")}</span>
                           </button>
 
                           {ticket.status !== "Resolved" ? (
@@ -1654,7 +1713,7 @@ export default function Admin({ nav }) {
                               className="key-cap px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 cursor-pointer"
                             >
                               <Check size={13} className="inline mr-1" />
-                              <span>Resolve</span>
+                              <span>{at("resolveBtn")}</span>
                             </button>
                           ) : (
                             <button
@@ -1662,7 +1721,7 @@ export default function Admin({ nav }) {
                               onClick={() => handleTicketStatus(ticket.ticket_id, "Submitted")}
                               className="key-cap px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-amber-600 cursor-pointer"
                             >
-                              Reopen
+                              {at("reopenBtn")}
                             </button>
                           )}
 
@@ -1670,7 +1729,7 @@ export default function Admin({ nav }) {
                             type="button"
                             onClick={() => handleDeleteTicket(ticket.ticket_id)}
                             className="key-cap p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
-                            title="Delete Inquiry"
+                            title={at("deleteTicket")}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1682,7 +1741,7 @@ export default function Admin({ nav }) {
                         <div className="rounded-xl border border-emerald-200 bg-[#EAF7EC] p-3 text-xs text-[#1B5E20] space-y-1">
                           <p className="font-bold flex items-center gap-1.5">
                             <ShieldCheck size={14} className="text-[#2E7D32]" />
-                            <span>Official Administrator Response:</span>
+                            <span>{at("officialAdminResponse")}</span>
                           </p>
                           <p className="pl-5 leading-relaxed">{ticket.admin_reply}</p>
                         </div>
@@ -1696,7 +1755,7 @@ export default function Admin({ nav }) {
         </div>
       )}
 
-      {/* TAB 4: DATABASE & INFRASTRUCTURE */}
+      {/* TAB 5: DATABASE & INFRASTRUCTURE */}
       {activeTab === "database" && (
         <div className="space-y-6 animate-zoom-fade">
           <div className="grid gap-4 lg:grid-cols-2">
@@ -1708,24 +1767,26 @@ export default function Admin({ nav }) {
                     <Database size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-gray-800">Database Engine Overview</h3>
+                    <h3 className="text-sm font-bold text-gray-800">{at("dbEngineOverview")}</h3>
                     <p className="text-[10px] text-gray-400">{dbStats?.db_file || "MySQL 127.0.0.1:3306/krushimitra"}</p>
                   </div>
                 </div>
                 <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5">
-                  {dbStats?.db_status || "Active & Healthy"}
+                  {dbStats?.db_status || at("healthy")}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">Active Tables:</span>
-                  <p className="font-extrabold text-gray-800 mt-0.5">5 Tables (Users, Preds, Recs, Tickets, Resets)</p>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("activeTables")}</span>
+                  <p className="font-extrabold text-gray-800 mt-0.5">
+                    {language === "mr" ? "५ मुख्य टेबल्स (वापरकर्ते, अंदाज, शिफारसी, तक्रारी)" : language === "hi" ? "५ मुख्य तालिकाएँ (उपयोगकर्ता, अनुमान, सिफारिशें, शिकायतें)" : "5 Tables (Users, Preds, Recs, Tickets, Resets)"}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">Total Records:</span>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("totalRecordsCount")}</span>
                   <p className="font-extrabold text-[#2E7D32] mt-0.5">
-                    {(dbStats?.total_users || (usersList || []).length) + (dbStats?.total_predictions || predictionHistory.length) + (dbStats?.total_recommendations || recommendationHistory.length) + ticketsList.length} Entries
+                    {(dbStats?.total_users || (usersList || []).length) + (dbStats?.total_predictions || predictionHistory.length) + (dbStats?.total_recommendations || recommendationHistory.length) + ticketsList.length} {at("entries")}
                   </p>
                 </div>
               </div>
@@ -1738,7 +1799,7 @@ export default function Admin({ nav }) {
                   className="btn-shimmer btn-glow flex items-center gap-2 rounded-xl bg-[#2E7D32] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                 >
                   <RefreshCw size={13} className={isOptimizing ? "animate-spin" : ""} />
-                  <span>{isOptimizing ? "Optimizing..." : "Optimize DB Tables"}</span>
+                  <span>{isOptimizing ? at("optimizing") : at("optimizeDbTablesBtn")}</span>
                 </button>
 
                 <button
@@ -1748,7 +1809,7 @@ export default function Admin({ nav }) {
                   className="key-cap btn-glow flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-700 cursor-pointer"
                 >
                   <Download size={13} />
-                  <span>Export JSON Dump</span>
+                  <span>{at("exportJsonDumpBtn")}</span>
                 </button>
               </div>
             </div>
@@ -1761,34 +1822,34 @@ export default function Admin({ nav }) {
                     <Database size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-gray-800">Live Database Tables</h3>
-                    <p className="text-[10px] text-gray-400">MySQL Schema Telemetry</p>
+                    <h3 className="text-sm font-bold text-gray-800">{at("liveDbTables")}</h3>
+                    <p className="text-[10px] text-gray-400">{at("schemaTelemetry")}</p>
                   </div>
                 </div>
                 <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5">
-                  Live Counts
+                  {at("liveCountsBadge")}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
                   <span className="font-semibold text-gray-700">users</span>
-                  <span className="font-extrabold text-[#2E7D32]">{dbStats?.total_users ?? (usersList || []).length} Records</span>
+                  <span className="font-extrabold text-[#2E7D32]">{dbStats?.total_users ?? (usersList || []).length} {at("records")}</span>
                 </div>
 
                 <div className="flex items-center justify-between rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
                   <span className="font-semibold text-gray-700">support_tickets</span>
-                  <span className="font-extrabold text-[#2E7D32]">{ticketsList.length} Records</span>
+                  <span className="font-extrabold text-[#2E7D32]">{ticketsList.length} {at("records")}</span>
                 </div>
 
                 <div className="flex items-center justify-between rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
                   <span className="font-semibold text-gray-700">prediction_history</span>
-                  <span className="font-extrabold text-[#2E7D32]">{dbStats?.total_predictions ?? predictionHistory.length} Records</span>
+                  <span className="font-extrabold text-[#2E7D32]">{dbStats?.total_predictions ?? predictionHistory.length} {at("records")}</span>
                 </div>
 
                 <div className="flex items-center justify-between rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
                   <span className="font-semibold text-gray-700">recommendation_history</span>
-                  <span className="font-extrabold text-[#2E7D32]">{dbStats?.total_recommendations ?? recommendationHistory.length} Records</span>
+                  <span className="font-extrabold text-[#2E7D32]">{dbStats?.total_recommendations ?? recommendationHistory.length} {at("records")}</span>
                 </div>
               </div>
             </div>
@@ -1805,7 +1866,7 @@ export default function Admin({ nav }) {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
                 <Plus size={18} className="text-[#2E7D32]" />
-                <span>Create New User / Farmer Account</span>
+                <span>{at("addUserTitle")}</span>
               </h3>
               <button
                 onClick={() => setShowAddUserModal(false)}
@@ -1823,7 +1884,7 @@ export default function Admin({ nav }) {
 
             <form onSubmit={handleCreateUser} className="mt-4 space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Full Name *</label>
+                <label className="block font-semibold text-gray-700 mb-1">{at("nameLabel")} *</label>
                 <input
                   type="text"
                   required
@@ -1835,7 +1896,7 @@ export default function Admin({ nav }) {
               </div>
 
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Email Address *</label>
+                <label className="block font-semibold text-gray-700 mb-1">{at("emailLabel")} *</label>
                 <input
                   type="email"
                   required
@@ -1848,26 +1909,26 @@ export default function Admin({ nav }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Role</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("roleLabel")}</label>
                   <select
                     value={newUserForm.role}
                     onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
                     className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
                   >
-                    <option value="Farmer">Farmer</option>
-                    <option value="Admin">Administrator</option>
+                    <option value="Farmer">{at("farmers")}</option>
+                    <option value="Admin">{at("admins")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">City / District</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("districtLabel")}</label>
                   <select
                     value={newUserForm.district}
                     onChange={(e) => setNewUserForm({ ...newUserForm, district: e.target.value })}
                     className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
                   >
                     {districts.map((d) => (
-                      <option key={d} value={d}>{d}</option>
+                      <option key={d} value={d}>{tDistrict ? tDistrict(d) : d}</option>
                     ))}
                   </select>
                 </div>
@@ -1875,7 +1936,7 @@ export default function Admin({ nav }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Phone Number</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("phoneLabel")}</label>
                   <input
                     type="text"
                     value={newUserForm.phone}
@@ -1886,7 +1947,7 @@ export default function Admin({ nav }) {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Initial Password</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("passwordLabel")}</label>
                   <input
                     type="password"
                     value={newUserForm.password}
@@ -1899,7 +1960,7 @@ export default function Admin({ nav }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Farm Acreage</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("thFarmAcreage")}</label>
                   <input
                     type="text"
                     value={newUserForm.farm_size}
@@ -1910,7 +1971,7 @@ export default function Admin({ nav }) {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Primary Crops</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("thPrimaryCrops")}</label>
                   <input
                     type="text"
                     value={newUserForm.primary_crops}
@@ -1927,13 +1988,13 @@ export default function Admin({ nav }) {
                   onClick={() => setShowAddUserModal(false)}
                   className="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
                 >
-                  Cancel
+                  {at("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn-shimmer btn-glow rounded-xl bg-[#2E7D32] px-5 py-2 font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                 >
-                  Create User
+                  {at("addNewUser")}
                 </button>
               </div>
             </form>
@@ -1950,7 +2011,7 @@ export default function Admin({ nav }) {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
                 <Edit3 size={18} className="text-[#2E7D32]" />
-                <span>Edit Farmer / User Profile (#{editUserDetail.id})</span>
+                <span>{at("editUserTitle")} (#{editUserDetail.id})</span>
               </h3>
               <button
                 onClick={() => setEditUserDetail(null)}
@@ -1963,7 +2024,7 @@ export default function Admin({ nav }) {
             <form onSubmit={handleSaveEditUser} className="mt-4 space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Full Name</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("nameLabel")}</label>
                   <input
                     type="text"
                     required
@@ -1974,7 +2035,7 @@ export default function Admin({ nav }) {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Email Address</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("emailLabel")}</label>
                   <input
                     type="email"
                     required
@@ -1987,7 +2048,7 @@ export default function Admin({ nav }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Phone Number</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("phoneLabel")}</label>
                   <input
                     type="text"
                     value={editUserDetail.phone || ""}
@@ -1997,14 +2058,14 @@ export default function Admin({ nav }) {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">City / District</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("districtLabel")}</label>
                   <select
                     value={editUserDetail.district || "Pune"}
                     onChange={(e) => setEditUserDetail({ ...editUserDetail, district: e.target.value })}
                     className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
                   >
                     {districts.map((d) => (
-                      <option key={d} value={d}>{d}</option>
+                      <option key={d} value={d}>{tDistrict ? tDistrict(d) : d}</option>
                     ))}
                   </select>
                 </div>
@@ -2012,19 +2073,19 @@ export default function Admin({ nav }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Assigned Role</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("roleLabel")}</label>
                   <select
                     value={editUserDetail.role || "Farmer"}
                     onChange={(e) => setEditUserDetail({ ...editUserDetail, role: e.target.value })}
                     className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-3 py-2 text-xs outline-none focus:border-[#2E7D32]"
                   >
-                    <option value="Farmer">Farmer</option>
-                    <option value="Admin">Administrator</option>
+                    <option value="Farmer">{at("farmers")}</option>
+                    <option value="Admin">{at("admins")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Kisan Card ID</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("kisanCardId")}</label>
                   <input
                     type="text"
                     value={editUserDetail.kisan_id || editUserDetail.kisanId || ""}
@@ -2036,7 +2097,7 @@ export default function Admin({ nav }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Farm Acreage</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("thFarmAcreage")}</label>
                   <input
                     type="text"
                     value={editUserDetail.farm_size || editUserDetail.farmSize || ""}
@@ -2046,7 +2107,7 @@ export default function Admin({ nav }) {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Primary Crops</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("thPrimaryCrops")}</label>
                   <input
                     type="text"
                     value={editUserDetail.primary_crops || editUserDetail.primaryCrops || ""}
@@ -2062,13 +2123,13 @@ export default function Admin({ nav }) {
                   onClick={() => setEditUserDetail(null)}
                   className="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
                 >
-                  Cancel
+                  {at("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn-shimmer btn-glow rounded-xl bg-[#2E7D32] px-5 py-2 font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                 >
-                  Save Changes
+                  {at("save")}
                 </button>
               </div>
             </form>
@@ -2103,52 +2164,54 @@ export default function Admin({ nav }) {
             <div className="mt-4 space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">User ID & Role:</span>
-                  <p className="font-extrabold text-[#2E7D32] mt-0.5">#{viewUserDetail.id} • {viewUserDetail.role}</p>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("userIdRole")}</span>
+                  <p className="font-extrabold text-[#2E7D32] mt-0.5">#{viewUserDetail.id} • {viewUserDetail.role === "Admin" ? at("admins") : at("farmers")}</p>
                 </div>
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">Kisan Card / PM-Kisan ID:</span>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("kisanCardId")}</span>
                   <p className="font-extrabold text-gray-800 mt-0.5">{viewUserDetail.kisan_id || viewUserDetail.kisanId || "—"}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">Contact Phone:</span>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("contactPhone")}</span>
                   <p className="font-bold text-gray-800 mt-0.5">{viewUserDetail.phone && viewUserDetail.phone.trim() ? viewUserDetail.phone : "—"}</p>
                 </div>
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">City / District:</span>
-                  <p className="font-bold text-gray-800 mt-0.5">{viewUserDetail.district && viewUserDetail.district.trim() ? viewUserDetail.district : "—"}</p>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("thCityDistrict")}</span>
+                  <p className="font-bold text-gray-800 mt-0.5">
+                    {viewUserDetail.district && viewUserDetail.district.trim() ? (tDistrict ? tDistrict(viewUserDetail.district) : viewUserDetail.district) : "—"}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">Farm Acreage & Unit:</span>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("farmAcreageUnit")}</span>
                   <p className="font-bold text-gray-800 mt-0.5">
-                    {viewUserDetail.farm_size || viewUserDetail.farmSize ? `${viewUserDetail.farm_size || viewUserDetail.farmSize} ${viewUserDetail.farm_unit || viewUserDetail.farmUnit || "Acres"}` : "—"}
+                    {viewUserDetail.farm_size || viewUserDetail.farmSize ? `${viewUserDetail.farm_size || viewUserDetail.farmSize} ${at("acres")}` : "—"}
                   </p>
                 </div>
                 <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                  <span className="text-gray-400 text-[10px] font-semibold">Primary Crops:</span>
+                  <span className="text-gray-400 text-[10px] font-semibold">{at("thPrimaryCrops")}</span>
                   <p className="font-bold text-gray-800 mt-0.5 truncate">{viewUserDetail.primary_crops || viewUserDetail.primaryCrops || "—"}</p>
                 </div>
               </div>
 
               <div className="rounded-xl bg-[#F8FAF7] p-3 border border-[#E2EAE0]">
-                <span className="text-gray-400 text-[10px] font-semibold">Soil Type & Irrigation:</span>
+                <span className="text-gray-400 text-[10px] font-semibold">{at("soilTypeIrrigation")}</span>
                 <p className="font-semibold text-gray-700 mt-0.5">
                   {viewUserDetail.soil_type || viewUserDetail.soilType ? (viewUserDetail.soil_type || viewUserDetail.soilType) : "—"} {viewUserDetail.irrigation_type || viewUserDetail.irrigationType ? `• ${viewUserDetail.irrigation_type || viewUserDetail.irrigationType}` : ""}
                 </p>
               </div>
 
               <div className="rounded-2xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] p-4 text-white">
-                <p className="text-[11px] text-green-100 font-medium">Activity Records for {viewUserDetail.name}</p>
+                <p className="text-[11px] text-green-100 font-medium">{at("activityRecordsFor", { name: viewUserDetail.name })}</p>
                 <div className="mt-2 flex justify-between text-xs font-semibold">
-                  <span>Predictions: <strong>{predictionHistory.filter(p => p.user_email?.toLowerCase() === viewUserDetail.email?.toLowerCase()).length}</strong></span>
-                  <span>Soil Advisories: <strong>{recommendationHistory.filter(r => r.user_email?.toLowerCase() === viewUserDetail.email?.toLowerCase()).length}</strong></span>
-                  <span>Member Since: <strong>{viewUserDetail.member_since || viewUserDetail.memberSince || "—"}</strong></span>
+                  <span>{at("predictionsCount")} <strong>{predictionHistory.filter(p => p.user_email?.toLowerCase() === viewUserDetail.email?.toLowerCase()).length}</strong></span>
+                  <span>{at("soilAdvisoriesCount")} <strong>{recommendationHistory.filter(r => r.user_email?.toLowerCase() === viewUserDetail.email?.toLowerCase()).length}</strong></span>
+                  <span>{at("memberSince")} <strong>{viewUserDetail.member_since || viewUserDetail.memberSince || "—"}</strong></span>
                 </div>
               </div>
             </div>
@@ -2162,14 +2225,14 @@ export default function Admin({ nav }) {
                 }}
                 className="key-cap px-4 py-2 text-xs font-bold text-gray-700 cursor-pointer"
               >
-                Edit User Profile
+                {at("editUserProfileBtn")}
               </button>
               <button
                 type="button"
                 onClick={() => setViewUserDetail(null)}
                 className="btn-shimmer btn-glow rounded-xl bg-[#2E7D32] px-5 py-2 text-xs font-bold text-white cursor-pointer"
               >
-                Close
+                {at("close")}
               </button>
             </div>
           </div>
@@ -2186,7 +2249,7 @@ export default function Admin({ nav }) {
               <div className="flex items-center gap-2">
                 <MessageSquare size={18} className="text-[#2E7D32]" />
                 <h3 className="text-base font-extrabold text-gray-800">
-                  Reply to Farmer Inquiry ({replyTicketModal.ticket_id})
+                  {at("replyModalTitle")} ({replyTicketModal.ticket_id})
                 </h3>
               </div>
               <button
@@ -2199,7 +2262,9 @@ export default function Admin({ nav }) {
 
             <div className="mt-4 rounded-xl bg-[#F8FAF7] p-3.5 text-xs border border-[#E2EAE0] space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2 font-bold text-gray-700">
-                <span>From: {replyTicketModal.name || "Farmer"} ({replyTicketModal.district && replyTicketModal.district.trim() ? (tDistrict ? tDistrict(replyTicketModal.district) : replyTicketModal.district) : "Maharashtra"})</span>
+                <span>
+                  {at("fromFarmer", { name: replyTicketModal.name || at("anonymous") })} ({replyTicketModal.district && replyTicketModal.district.trim() ? (tDistrict ? tDistrict(replyTicketModal.district) : replyTicketModal.district) : (language === "mr" ? "महाराष्ट्र" : language === "hi" ? "महाराष्ट्र" : "Maharashtra")})
+                </span>
                 <div className="flex items-center gap-2">
                   {replyTicketModal.rating && (
                     <div className="flex items-center gap-0.5 text-amber-500 font-extrabold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
@@ -2210,7 +2275,7 @@ export default function Admin({ nav }) {
                     </div>
                   )}
                   <span className="text-[#2E7D32] bg-[#E5F7EA] px-2 py-0.5 rounded-full border border-[#CDE5D1] text-[10px] font-bold">
-                    {replyTicketModal.category || "Inquiry"}
+                    {replyTicketModal.category || at("catGeneral")}
                   </span>
                 </div>
               </div>
@@ -2223,29 +2288,29 @@ export default function Admin({ nav }) {
             <form onSubmit={handleSendReply} className="mt-4 space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-gray-700 mb-1">
-                  Official Agronomist / Administrator Response *
+                  {at("officialReply")} *
                 </label>
                 <textarea
                   rows={4}
                   required
                   value={adminReplyText}
                   onChange={(e) => setAdminReplyText(e.target.value)}
-                  placeholder="Type your official advisory or resolution note to the farmer..."
+                  placeholder={at("replyPlaceholder")}
                   className="w-full rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] p-3 text-xs outline-none focus:border-[#2E7D32]"
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Update Inquiry Status</label>
+                  <label className="block font-semibold text-gray-700 mb-1">{at("thStatus")}</label>
                   <select
                     value={replyStatus}
                     onChange={(e) => setReplyStatus(e.target.value)}
                     className="rounded-xl border border-[#DCE8D9] bg-[#FBFDFB] px-3 py-1.5 text-xs font-bold text-gray-700 outline-none focus:border-[#2E7D32]"
                   >
-                    <option value="Resolved">Mark as Resolved</option>
-                    <option value="Under Review">Keep Under Review</option>
-                    <option value="Submitted">Keep Open</option>
+                    <option value="Resolved">{at("statusResolved")}</option>
+                    <option value="Under Review">{at("underReview")}</option>
+                    <option value="Submitted">{at("statusSubmitted")}</option>
                   </select>
                 </div>
 
@@ -2255,14 +2320,14 @@ export default function Admin({ nav }) {
                     onClick={() => setReplyTicketModal(null)}
                     className="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
                   >
-                    Cancel
+                    {at("cancel")}
                   </button>
                   <button
                     type="submit"
                     className="btn-shimmer btn-glow flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-5 py-2 font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                   >
                     <Send size={13} />
-                    <span>Send & Save Response</span>
+                    <span>{at("sendReplyBtn")}</span>
                   </button>
                 </div>
               </div>
