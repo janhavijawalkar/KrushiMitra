@@ -177,7 +177,6 @@ export const formatPlantDoctorShareText = ({
   crop = "Tomato",
   disease = "Early Blight",
   condition = "Diseased",
-  confidence = 92,
   dosage15l = "30 gm Mancozeb 75% WP",
   organic15l = "50 ml Neem Oil 10,000 PPM",
   safety = "Wear protective mask and gloves while spraying.",
@@ -215,7 +214,7 @@ export const formatPlantDoctorShareText = ({
     return `🌿 *कृषीमित्र एआय पीक डॉक्टर — रोग निदान व फवारणी सल्ला*
 ━━━━━━━━━━━━━━━━━━━━
 🌾 *पीक:* ${crop}
-⚠️ *आढळलेला रोग:* *${disease}* (अचूकता: ${confidence}%)
+⚠️ *आढळलेला रोग:* *${disease}*
 
 💧 *१५ लिटर नॅपसॅक पंपाचे अचूक प्रमाण:*
  • 🧪 *रासायनिक फवारणी:* ${dosage15l}
@@ -231,7 +230,7 @@ ${safety}
     return `🌿 *कृषि-मित्र एआई फसल डॉक्टर — रोग पहचान एवं स्प्रे खुराक*
 ━━━━━━━━━━━━━━━━━━━━
 🌾 *फसल:* ${crop}
-⚠️ *पहचाना गया रोग:* *${disease}* (सटीकता: ${confidence}%)
+⚠️ *पहचाना गया रोग:* *${disease}*
 
 💧 *१५ लीटर स्प्रे पंप की सटीक खुराक:*
  • 🧪 *रासायनिक छिड़काव:* ${dosage15l}
@@ -246,7 +245,7 @@ ${safety}
   return `🌿 *KrushiMitra AI Plant Doctor — Diagnosis & Spray Guide*
 ━━━━━━━━━━━━━━━━━━━━
 🌾 *Crop:* ${crop}
-⚠️ *Condition Detected:* *${disease}* (${confidence}% Confidence)
+⚠️ *Condition Detected:* *${disease}*
 
 💧 *Exact Spray Pump Dosage (per 15L Knapsack Pump):*
  • 🧪 *Chemical Spray:* ${dosage15l}

@@ -1133,7 +1133,6 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
       crop: diagnosis.crop_detected_local || diagnosis.crop_detected,
       disease: diagnosis.disease_name_local || diagnosis.disease_name,
       condition: diagnosis.condition,
-      confidence: diagnosis.confidence || 92,
       dosage15l: `${chem15} ${pumpLabel}`,
       organic15l: `${org15} ${pumpLabel}`,
       safety:
@@ -1736,13 +1735,6 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
                               : "मध्यम"
                           } तीव्रता`
                         : `${diagnosis.severity || "Moderate"} Severity`}
-                    </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300 dark:bg-green-950 dark:text-green-300">
-                      {language === "mr"
-                        ? `${diagnosis.confidence || 92}% अचूकता`
-                        : language === "hi"
-                        ? `${diagnosis.confidence || 92}% सटीकता`
-                        : `${diagnosis.confidence || 92}% Confidence`}
                     </span>
                   </div>
                 </div>
