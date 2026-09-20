@@ -677,13 +677,13 @@ const getFallbackPlantDiagnosis = (queryKey, lang = "mr") => {
     },
   };
 
-  let key = queryKey || "tomato_early_blight";
+  let key = queryKey || "cotton_pink_bollworm";
   if (typeof key === "string") {
     const lk = key.toLowerCase();
-    if (lk.includes("tomato") || lk.includes("टोमॅटो") || lk.includes("टमाटर")) {
-      key = "tomato_early_blight";
-    } else if (lk.includes("cotton") || lk.includes("कापूस") || lk.includes("कपास")) {
+    if (lk.includes("cotton") || lk.includes("कापूस") || lk.includes("कपास") || lk.includes("bollworm")) {
       key = "cotton_pink_bollworm";
+    } else if (lk.includes("tomato") || lk.includes("टोमॅटो") || lk.includes("टमाटर")) {
+      key = "tomato_early_blight";
     } else if (lk.includes("rose") || lk.includes("गुलाब")) {
       key = "rose_black_spot";
     } else if (lk.includes("soybean") || lk.includes("सोयाबीन")) {
@@ -694,7 +694,7 @@ const getFallbackPlantDiagnosis = (queryKey, lang = "mr") => {
       key = "healthy_leaf";
     }
   }
-  return catalog[key] || catalog.tomato_early_blight || catalog.rose_black_spot;
+  return catalog[key] || catalog.cotton_pink_bollworm || catalog.tomato_early_blight;
 };
 
 export default function PlantDoctor({ nav }) {
@@ -723,147 +723,162 @@ export default function PlantDoctor({ nav }) {
     return () => clearInterval(timer);
   }, [analyzing]);
 
-  // Dynamic fallback lookup mapped to current language
+  // Dynamic fallback lookup mapped to current language for auxiliary dosage references
   const activeFallback = useMemo(() => {
     if (!diagnosis) return null;
     const str = `${diagnosis.disease_key || ""} ${diagnosis.disease_name || ""} ${diagnosis.disease_name_local || ""} ${diagnosis.crop_detected || ""} ${diagnosis.crop_detected_local || ""}`;
     return getFallbackPlantDiagnosis(str, language);
   }, [diagnosis, language]);
 
-  // Dynamic language-sensitive display for diagnosed crop
+  // Dynamic language-sensitive display for diagnosed crop (Prioritizes true AI vision detection)
   const displayCropName = useMemo(() => {
     if (!diagnosis) return "";
-    if (activeFallback?.crop_detected) {
-      return activeFallback.crop_detected;
-    }
-    if (language === "en") {
-      const en = diagnosis.crop_detected;
-      if (en && !(/[\u0900-\u097F]/.test(en))) return en;
-      const raw = diagnosis.crop_detected_local || en || "Crop";
-      if (raw.includes("गुलाब")) return "Rose";
-      if (raw.includes("टोमॅटो") || raw.includes("टमाटर")) return "Tomato";
-      if (raw.includes("कापूस") || raw.includes("कपास")) return "Cotton";
-      if (raw.includes("सोयाबीन")) return "Soybean";
-      if (raw.includes("कांदा") || raw.includes("प्याज")) return "Onion";
-      if (raw.includes("मिरची") || raw.includes("मिर्च")) return "Chilli";
-      if (raw.includes("गहू") || raw.includes("गेहूं")) return "Wheat";
-      if (raw.includes("द्राक्ष") || raw.includes("अंगूर")) return "Grapes";
-      if (raw.includes("डाळिंब") || raw.includes("अनार")) return "Pomegranate";
-      if (raw.includes("ऊस") || raw.includes("गन्ना")) return "Sugarcane";
-      return tCrop ? tCrop(raw) : raw;
-    }
-    if (language === "hi") {
-      const raw = diagnosis.crop_detected || diagnosis.crop_detected_local || "";
-      if (raw.includes("Rose") || raw.includes("गुलाब")) return "गुलाब";
-      if (raw.includes("Tomato") || raw.includes("टोमॅटो") || raw.includes("टमाटर")) return "टमाटर";
-      if (raw.includes("Cotton") || raw.includes("कापूस") || raw.includes("कपास")) return "कपास";
-      if (raw.includes("Soybean") || raw.includes("सोयाबीन")) return "सोयाबीन";
-      if (raw.includes("Onion") || raw.includes("कांदा") || raw.includes("प्याज")) return "प्याज";
-      if (raw.includes("Chilli") || raw.includes("मिरची") || raw.includes("मिर्च")) return "मिर्च";
-      if (raw.includes("Wheat") || raw.includes("गहू") || raw.includes("गेहूं")) return "गेहूं";
-      if (raw.includes("Grape") || raw.includes("द्राक्ष") || raw.includes("अंगूर")) return "अंगूर";
-      if (raw.includes("Pomegranate") || raw.includes("डाळिंब") || raw.includes("अनार")) return "अनार";
-      if (raw.includes("Sugarcane") || raw.includes("ऊस") || raw.includes("गन्ना")) return "गन्ना";
-    }
-    return diagnosis.crop_detected_local || (tCrop ? tCrop(diagnosis.crop_detected) : diagnosis.crop_detected) || "पीक";
-  }, [diagnosis, activeFallback, language, tCrop]);
+    const rawLocal = (diagnosis.crop_detected_local || "").trim();
+    const rawEn = (diagnosis.crop_detected || "").trim();
+    const detKey = (diagnosis.disease_key || "").toLowerCase();
+    const combined = `${rawLocal} ${rawEn} ${detKey}`.toLowerCase();
 
-  // Dynamic language-sensitive display for diagnosed disease
+    if (language === "mr") {
+      if (combined.includes("cotton") || combined.includes("कापूस") || combined.includes("कपास") || detKey.includes("cotton")) return "कापूस";
+      if (combined.includes("tomato") || combined.includes("टोमॅटो") || combined.includes("टमाटर") || detKey.includes("tomato")) return "टोमॅटो";
+      if (combined.includes("rose") || combined.includes("गुलाब") || detKey.includes("rose")) return "गुलाब";
+      if (combined.includes("soybean") || combined.includes("सोयाबीन") || detKey.includes("soybean")) return "सोयाबीन";
+      if (combined.includes("onion") || combined.includes("कांदा") || combined.includes("प्याज") || detKey.includes("onion")) return "कांदा";
+      if (combined.includes("chilli") || combined.includes("मिरची") || combined.includes("मिर्च") || detKey.includes("chilli")) return "मिरची";
+      if (combined.includes("wheat") || combined.includes("गहू") || combined.includes("गेहूं") || detKey.includes("wheat")) return "गहू";
+      if (combined.includes("grape") || combined.includes("द्राक्ष") || combined.includes("अंगूर") || detKey.includes("grape")) return "द्राक्षे";
+      if (combined.includes("pomegranate") || combined.includes("डाळिंब") || combined.includes("अनार") || detKey.includes("pomegranate")) return "डाळिंब";
+      if (combined.includes("sugarcane") || combined.includes("ऊस") || combined.includes("गन्ना") || detKey.includes("sugarcane")) return "ऊस";
+      return rawLocal || rawEn || (tCrop ? tCrop(rawEn) : rawEn) || "पीक";
+    }
+
+    if (language === "hi") {
+      if (combined.includes("cotton") || combined.includes("कापूस") || combined.includes("कपास") || detKey.includes("cotton")) return "कपास";
+      if (combined.includes("tomato") || combined.includes("टोमॅटो") || combined.includes("टमाटर") || detKey.includes("tomato")) return "टमाटर";
+      if (combined.includes("rose") || combined.includes("गुलाब") || detKey.includes("rose")) return "गुलाब";
+      if (combined.includes("soybean") || combined.includes("सोयाबीन") || detKey.includes("soybean")) return "सोयाबीन";
+      if (combined.includes("onion") || combined.includes("कांदा") || combined.includes("प्याज") || detKey.includes("onion")) return "प्याज";
+      if (combined.includes("chilli") || combined.includes("मिरची") || combined.includes("मिर्च") || detKey.includes("chilli")) return "मिर्च";
+      if (combined.includes("wheat") || combined.includes("गहू") || combined.includes("गेहूं") || detKey.includes("wheat")) return "गेहूं";
+      if (combined.includes("grape") || combined.includes("द्राक्ष") || combined.includes("अंगूर") || detKey.includes("grape")) return "अंगूर";
+      if (combined.includes("pomegranate") || combined.includes("डाळिंब") || combined.includes("अनार") || detKey.includes("pomegranate")) return "अनार";
+      if (combined.includes("sugarcane") || combined.includes("ऊस") || combined.includes("गन्ना") || detKey.includes("sugarcane")) return "गन्ना";
+      return rawLocal || rawEn || "फसल";
+    }
+
+    // English
+    if (combined.includes("cotton") || combined.includes("कापूस") || combined.includes("कपास") || detKey.includes("cotton")) return "Cotton";
+    if (combined.includes("tomato") || combined.includes("टोमॅटो") || combined.includes("टमाटर") || detKey.includes("tomato")) return "Tomato";
+    if (combined.includes("rose") || combined.includes("गुलाब") || detKey.includes("rose")) return "Rose";
+    if (combined.includes("soybean") || combined.includes("सोयाबीन") || detKey.includes("soybean")) return "Soybean";
+    if (combined.includes("onion") || combined.includes("कांदा") || combined.includes("प्याज") || detKey.includes("onion")) return "Onion";
+    if (combined.includes("chilli") || combined.includes("मिरची") || combined.includes("मिर्च") || detKey.includes("chilli")) return "Chilli";
+    if (combined.includes("wheat") || combined.includes("गहू") || combined.includes("गेहूं") || detKey.includes("wheat")) return "Wheat";
+    if (combined.includes("grape") || combined.includes("द्राक्ष") || combined.includes("अंगूर") || detKey.includes("grape")) return "Grapes";
+    if (combined.includes("pomegranate") || combined.includes("डाळिंब") || combined.includes("अनार") || detKey.includes("pomegranate")) return "Pomegranate";
+    if (combined.includes("sugarcane") || combined.includes("ऊस") || combined.includes("गन्ना") || detKey.includes("sugarcane")) return "Sugarcane";
+    return rawEn || rawLocal || "Crop";
+  }, [diagnosis, language, tCrop]);
+
+  // Dynamic language-sensitive display for diagnosed disease (Prioritizes true AI vision detection)
   const displayDiseaseName = useMemo(() => {
     if (!diagnosis) return "";
-    if (language === "en") {
-      if (activeFallback?.disease_name && !(/[\u0900-\u097F]/.test(activeFallback.disease_name))) {
-        return activeFallback.disease_name;
-      }
-      const en = diagnosis.disease_name;
-      if (en && !(/[\u0900-\u097F]/.test(en))) return en;
-      const local = diagnosis.disease_name_local || en || "";
-      if (local.includes("काळे ठिपके") || local.includes("ब्लॅक स्पॉट") || local.includes("black spot") || local.includes("काला धब्बा")) {
-        return "Rose Black Spot (Diplocarpon rosae)";
-      }
-      if (local.includes("भुरी") || local.includes("powdery") || local.includes("चूर्णिल")) {
-        return "Powdery Mildew (Podosphaera pannosa)";
-      }
-      if (local.includes("करपा") || local.includes("blight") || local.includes("झुलसा")) {
-        return "Early Blight (Alternaria solani)";
-      }
-      if (local.includes("गुलाबी बोंडअळी") || local.includes("bollworm") || local.includes("गुलाबी सुंडी")) {
-        return "Pink Bollworm (Pectinophora gossypiella)";
-      }
-      if (local.includes("पिवळा मोझॅक") || local.includes("mosaic") || local.includes("पीला मोज़ेक")) {
-        return "Yellow Mosaic Virus (YMV)";
-      }
-      if (local.includes("जांभळा करपा") || local.includes("purple blotch") || local.includes("बैंगनी धब्बा")) {
-        return "Purple Blotch (Alternaria porri)";
-      }
-      if (local.includes("चुरडा") || local.includes("मुरडा") || local.includes("leaf curl") || local.includes("मुर्राह")) {
-        return "Chilli Leaf Curl & Thrips";
-      }
-      if (local.includes("निरोगी") || local.includes("स्वस्थ") || local.includes("healthy")) {
-        return "Healthy Plant — No Disease Detected";
-      }
-      return en || local;
-    }
-    if (activeFallback?.disease_name_local) {
-      return activeFallback.disease_name_local;
-    }
-    return diagnosis.disease_name_local || diagnosis.disease_name;
-  }, [diagnosis, activeFallback, language]);
+    const en = (diagnosis.disease_name || "").trim();
+    const local = (diagnosis.disease_name_local || "").trim();
+    const detKey = (diagnosis.disease_key || "").toLowerCase();
 
-  // Dynamic symptoms list
+    if (language === "en") {
+      if (en && !(/[\u0900-\u097F]/.test(en)) && en.toLowerCase() !== "none") {
+        return en;
+      }
+      if (detKey.includes("cotton")) return "Pink Bollworm (Pectinophora gossypiella)";
+      if (detKey.includes("tomato")) return "Early Blight (Alternaria solani)";
+      if (detKey.includes("rose_black")) return "Rose Black Spot (Diplocarpon rosae)";
+      if (detKey.includes("rose_powdery")) return "Powdery Mildew (Podosphaera pannosa)";
+      if (detKey.includes("soybean")) return "Yellow Mosaic Virus (YMV)";
+      if (detKey.includes("onion")) return "Purple Blotch (Alternaria porri)";
+      if (detKey.includes("healthy")) return "Healthy Plant — No Disease Detected";
+      return en || local || "Crop Pathology Detected";
+    }
+
+    if (language === "hi") {
+      if (detKey.includes("cotton") || local.includes("गुलाबी") || local.includes("सुंडी") || local.includes("कपास")) {
+        return "गुलाबी सुंडी (Pink Bollworm)";
+      }
+      return local || en || "रोग निदान";
+    }
+
+    // Marathi
+    if (detKey.includes("cotton") || local.includes("गुलाबी") || local.includes("बोंडअळी") || local.includes("कापूस")) {
+      return "गुलाबी बोंडअळी (Pink Bollworm)";
+    }
+    return local || en || "रोग निदान";
+  }, [diagnosis, language]);
+
+  // Dynamic symptoms list (Prioritizes live AI diagnosis symptoms)
   const displaySymptoms = useMemo(() => {
     if (!diagnosis) return [];
+    if (Array.isArray(diagnosis.symptoms) && diagnosis.symptoms.length > 0) {
+      return diagnosis.symptoms;
+    }
     if (activeFallback?.symptoms && activeFallback.symptoms.length > 0) {
       return activeFallback.symptoms;
     }
-    return diagnosis.symptoms || [];
+    return [];
   }, [diagnosis, activeFallback]);
 
-  // Dynamic remedies titles and instructions
+  // Dynamic remedies titles and instructions (Prioritizes live AI diagnosis)
   const displayChemicalTitle = useMemo(() => {
-    if (!diagnosis?.chemical_remedy) return "Recommended Chemical Treatment";
+    if (!diagnosis) return "Recommended Chemical Treatment";
+    const cr = diagnosis.chemical_remedy;
+    if (cr && (cr.title || cr.technical_name)) {
+      if (language === "en") {
+        return cr.technical_name || cr.title;
+      }
+      return cr.title || cr.technical_name;
+    }
     if (activeFallback?.chemical_remedy?.title) {
       return activeFallback.chemical_remedy.title;
     }
-    const cr = diagnosis.chemical_remedy;
-    if (language === "en") {
-      return cr.technical_name || cr.title || "Recommended Fungicide";
-    }
-    return cr.title || cr.technical_name || "रासायनिक फवारणी";
+    return language === "mr" ? "रासायनिक फवारणी" : language === "hi" ? "रासायनिक छिड़काव" : "Recommended Chemical Treatment";
   }, [diagnosis, activeFallback, language]);
 
   const displayChemicalInstructions = useMemo(() => {
+    if (diagnosis?.chemical_remedy?.instructions) {
+      return diagnosis.chemical_remedy.instructions;
+    }
     if (activeFallback?.chemical_remedy?.instructions) {
       return activeFallback.chemical_remedy.instructions;
     }
     return (
-      diagnosis?.chemical_remedy?.instructions ||
-      (language === "mr"
+      language === "mr"
         ? "नेहमी शांत हवेत सकाळी किंवा संध्याकाळी फवारणी करावी. तोंडावर मास्क, डोळ्यांवर गॉगल व हातमोजे वापरावेत."
         : language === "hi"
         ? "हमेशा शांत मौसम में सुबह या शाम को छिड़काव करें। चेहरे पर मास्क, चश्मा व दस्तानों का प्रयोग करें।"
-        : "Always spray in calm weather in the morning or late afternoon. Wear protective mask, eye goggles, and gloves.")
+        : "Always spray in calm weather in the morning or late afternoon. Wear protective mask, eye goggles, and gloves."
     );
   }, [diagnosis, activeFallback, language]);
 
   const displayOrganicTitle = useMemo(() => {
-    if (!diagnosis?.organic_remedy) return "Recommended Organic Remedy";
+    if (!diagnosis) return "Recommended Organic Remedy";
+    const or = diagnosis.organic_remedy;
+    if (or && or.title) {
+      return or.title;
+    }
     if (activeFallback?.organic_remedy?.title) {
       return activeFallback.organic_remedy.title;
     }
-    const or = diagnosis.organic_remedy;
-    if (language === "en") {
-      if (or.title && !(/[\u0900-\u097F]/.test(or.title))) return or.title;
-      return "Neem Oil 10,000 PPM / Bio-Agent Treatment";
-    }
-    return or.title || "सेंद्रिय उपाय";
+    return language === "mr" ? "सेंद्रिय उपाय" : language === "hi" ? "जैविक उपाय" : "Recommended Organic Remedy";
   }, [diagnosis, activeFallback, language]);
 
   const displayOrganicInstructions = useMemo(() => {
+    if (diagnosis?.organic_remedy?.instructions) {
+      return diagnosis.organic_remedy.instructions;
+    }
     if (activeFallback?.organic_remedy?.instructions) {
       return activeFallback.organic_remedy.instructions;
     }
-    return diagnosis?.organic_remedy?.instructions || "";
+    return "";
   }, [diagnosis, activeFallback]);
 
   const fileInputRef = useRef(null);
