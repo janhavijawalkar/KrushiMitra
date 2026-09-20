@@ -29,6 +29,32 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================
+   CROSS-PLATFORM ENGINE (Android, iPhone iOS Safari & Desktop)
+   ========================================================= */
+
+html, body, #root {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent auto-zooming on iPhone iOS Safari when user focuses an input */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* =========================================================

@@ -351,6 +351,11 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
     utterance.onerror = () => setSpeakingIndex(null);
 
     setSpeakingIndex(index !== null ? index : "active");
+    try {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    } catch (e) {}
     window.speechSynthesis.speak(utterance);
   };
 
@@ -691,7 +696,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
             setIsOpen(true);
             setIsVoiceMode(true);
           }}
-          className="no-print fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] px-4.5 py-3.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer border-2 border-white/40 ring-4 ring-green-600/20"
+          className="no-print fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px))] right-3 sm:right-6 lg:bottom-6 z-50 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#10B981] px-4 py-3 sm:px-4.5 sm:py-3.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer border-2 border-white/40 ring-4 ring-green-600/20"
           title={
             language === "mr"
               ? "कृषीमित्र AI व्हॉइस असिस्टंट 🎙️"
@@ -722,12 +727,12 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
       {/* ASSISTANT WINDOW */}
       {isOpen && (
         <div
-          className={`no-print fixed right-3 sm:right-6 bottom-4 z-50 flex flex-col overflow-hidden rounded-3xl bg-white dark:bg-[#0D1710] shadow-2xl border border-green-200 dark:border-[#24402A] transition-all duration-300 ${
+          className={`no-print fixed right-2 sm:right-6 bottom-[calc(68px+env(safe-area-inset-bottom,0px))] lg:bottom-4 z-50 flex flex-col overflow-hidden rounded-3xl bg-white dark:bg-[#0D1710] shadow-2xl border border-green-200 dark:border-[#24402A] transition-all duration-300 ${
             isMinimized
               ? "h-16 w-80 sm:w-96"
               : isExpanded
-              ? "h-[88vh] w-[95vw] sm:w-[580px]"
-              : "h-[600px] max-h-[88vh] w-[94vw] sm:w-[440px]"
+              ? "h-[82vh] w-[96vw] sm:w-[580px]"
+              : "h-[540px] max-h-[78vh] w-[95vw] sm:w-[440px]"
           }`}
         >
           {/* HEADER */}
