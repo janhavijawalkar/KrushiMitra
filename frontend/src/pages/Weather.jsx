@@ -746,21 +746,21 @@ function Detail({
   subtext,
 }) {
   return (
-    <div className="rounded-xl border border-[#E8EFE5] bg-[#F7FAF5] p-3.5 transition-all hover:bg-white hover:shadow-xs">
+    <div className="rounded-xl border border-[#E8EFE5] dark:border-[#24402a] bg-[#F7FAF5] dark:bg-[#132218] p-3.5 transition-all hover:bg-white dark:hover:bg-[#183321] hover:shadow-xs">
 
-      <div className="flex items-center gap-2 text-[#2E7D32]">
+      <div className="flex items-center gap-2 text-[#2E7D32] dark:text-emerald-400">
         {icon}
-        <span className="text-xs font-bold text-gray-600">
+        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
           {label}
         </span>
       </div>
 
-      <p className="mt-2 text-sm font-extrabold capitalize text-gray-800">
+      <p className="mt-2 text-sm font-extrabold capitalize text-gray-800 dark:text-gray-100">
         {value}
       </p>
 
       {subtext && (
-        <p className="mt-0.5 text-[10px] text-gray-400">
+        <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-400">
           {subtext}
         </p>
       )}
@@ -782,18 +782,18 @@ function AdvisoryItem({
   description,
 }) {
   const badgeColors = {
-    success: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    warning: "bg-amber-100 text-amber-800 border-amber-200",
-    info: "bg-blue-100 text-blue-800 border-blue-200",
+    success: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800",
+    warning: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800",
+    info: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800",
   };
 
   return (
-    <div className="rounded-xl border border-[#E8EFE5] bg-[#F7FAF5] p-3.5 transition-all hover:bg-white hover:shadow-xs">
+    <div className="rounded-xl border border-[#E8EFE5] dark:border-[#24402a] bg-[#F7FAF5] dark:bg-[#132218] p-3.5 transition-all hover:bg-white dark:hover:bg-[#183321] hover:shadow-xs">
 
       <div className="flex items-center justify-between gap-1">
-        <div className="flex items-center gap-1.5 text-[#2E7D32]">
+        <div className="flex items-center gap-1.5 text-[#2E7D32] dark:text-emerald-400">
           {icon}
-          <span className="text-xs font-bold text-gray-700">
+          <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
             {title}
           </span>
         </div>
@@ -807,7 +807,7 @@ function AdvisoryItem({
         </span>
       </div>
 
-      <p className="mt-2 text-[10px] leading-4 text-gray-500">
+      <p className="mt-2 text-[10px] leading-4 text-gray-500 dark:text-gray-300">
         {description}
       </p>
 

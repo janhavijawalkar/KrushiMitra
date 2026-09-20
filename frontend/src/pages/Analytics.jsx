@@ -77,10 +77,29 @@ export default function Analytics({ nav }) {
     recommendationHistory,
     language,
     t,
+    theme,
     tCrop,
     tDistrict,
     tSeason,
   } = useApp();
+
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-color-scheme: dark)")?.matches);
+
+  const axisColor = isDark ? "#cbd5e1" : "#334155";
+  const gridColor = isDark ? "#24402a" : "#CBD5E1";
+  const tooltipStyle = {
+    backgroundColor: isDark ? "#132218" : "#FFFFFF",
+    borderRadius: "14px",
+    border: `1px solid ${isDark ? "#24402a" : "#E2E8F0"}`,
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+    fontSize: "12px",
+    fontWeight: "bold",
+    color: isDark ? "#f8fafc" : "#1e293b",
+  };
 
   const userEmail = user?.email?.toLowerCase()?.trim();
   const userRole = user?.role || "Farmer";
@@ -476,39 +495,39 @@ export default function Analytics({ nav }) {
         </div>
 
         {/* FARMER PROFILE DOSSIER SUMMARY */}
-        <div className="mt-4 grid grid-cols-4 gap-3 rounded-xl border border-gray-200 bg-gray-50/90 p-3 text-xs">
+        <div className="mt-4 grid grid-cols-4 gap-3 rounded-xl border border-gray-200 dark:border-[#24402a] bg-gray-50/90 dark:bg-[#132218] p-3 text-xs">
           <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {language === "mr" ? "शेतकऱ्याचे नाव" : language === "hi" ? "किसान का नाम" : "Farmer Name"}
             </span>
-            <span className="font-extrabold text-gray-900">
+            <span className="font-extrabold text-gray-900 dark:text-gray-100">
               {user?.name || "Ramesh Patil"}
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {language === "mr" ? "किसान ओळख क्रमांक" : language === "hi" ? "किसान आईडी" : "Kisan ID"}
             </span>
-            <span className="font-mono font-bold text-[#1B5E20]">
+            <span className="font-mono font-bold text-[#1B5E20] dark:text-[#4ade80]">
               {user?.kisan_id || user?.kisanId || "KM-MH-2024-8921"}
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {language === "mr" ? "जिल्हा / कृषी विभाग" : language === "hi" ? "जिला / कृषि प्रभाग" : "District / Zone"}
             </span>
-            <span className="font-extrabold text-gray-900">
+            <span className="font-extrabold text-gray-900 dark:text-gray-100">
               {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}, Maharashtra
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {language === "mr" ? "शेत क्षेत्र व व्याप्ती" : language === "hi" ? "खेत का क्षेत्रफल" : "Farm Area & Scope"}
             </span>
-            <span className="font-extrabold text-gray-900">
+            <span className="font-extrabold text-gray-900 dark:text-gray-100">
               {userFarmSize} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"} ({dataMode === "myFarm" ? "Farmer Farm" : "District Benchmark"})
             </span>
           </div>
@@ -619,25 +638,23 @@ export default function Analytics({ nav }) {
         </div>
       </div>
 
-      {/* =========================================================
-          KEY PERFORMANCE INDICATORS (KPI CARDS)
-      ========================================================= */}
+      {/* KEY PERFORMANCE INDICATORS (KPI CARDS) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 print-kpi-grid">
         {/* KPI 1: YIELD PRODUCTIVITY */}
         <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">{txt.kpiYieldTitle}</span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-[#2E7D32]">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{txt.kpiYieldTitle}</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-[#2E7D32] dark:text-emerald-300">
               <TrendingUp size={18} />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-gray-800">
+            <span className="text-3xl font-black text-gray-800 dark:text-gray-100">
               {dynamicAverageYield}
             </span>
-            <span className="text-xs font-bold text-gray-400">t / ha</span>
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500">t / ha</span>
           </div>
-          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-[#2E7D32]">
+          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-[#2E7D32] dark:text-emerald-400">
             <CheckCircle2 size={13} />
             <span>{txt.kpiYieldSub}</span>
           </div>
@@ -646,16 +663,16 @@ export default function Analytics({ nav }) {
         {/* KPI 2: SOIL HEALTH */}
         <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">{txt.kpiSoilTitle}</span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{txt.kpiSoilTitle}</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300">
               <Sprout size={18} />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-gray-800">{dynamicSoilScore}</span>
-            <span className="text-xs font-bold text-gray-400">/ 100</span>
+            <span className="text-3xl font-black text-gray-800 dark:text-gray-100">{dynamicSoilScore}</span>
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500">/ 100</span>
           </div>
-          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-blue-600">
+          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400">
             <ShieldCheck size={13} />
             <span>{txt.kpiSoilSub}</span>
           </div>
@@ -664,16 +681,16 @@ export default function Analytics({ nav }) {
         {/* KPI 3: TOTAL ESTIMATED PRODUCTION */}
         <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">{txt.kpiMoistureTitle}</span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 text-teal-600">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{txt.kpiMoistureTitle}</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950/70 text-teal-600 dark:text-teal-300">
               <Droplets size={18} />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-gray-800">{dynamicTotalProduction}</span>
-            <span className="text-xs font-bold text-gray-400">{language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span>
+            <span className="text-3xl font-black text-gray-800 dark:text-gray-100">{dynamicTotalProduction}</span>
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500">{language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span>
           </div>
-          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-teal-600">
+          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400">
             <Activity size={13} />
             <span>{txt.kpiMoistureSub}</span>
           </div>
@@ -682,17 +699,17 @@ export default function Analytics({ nav }) {
         {/* KPI 4: TOP CROP */}
         <div className="card card-interactive print-card print-avoid-break p-5 depth-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">{txt.kpiTopCropTitle}</span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{txt.kpiTopCropTitle}</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300">
               <Wheat size={18} />
             </div>
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-black text-gray-800 truncate block">
+            <span className="text-2xl font-black text-gray-800 dark:text-gray-100 truncate block">
               {cropDiversityData[0]?.name || "Soybean"}
             </span>
           </div>
-          <div className="mt-2 text-[11px] font-bold text-amber-600">
+          <div className="mt-2 text-[11px] font-bold text-amber-600 dark:text-amber-400">
             {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict} (Zone)
           </div>
         </div>
@@ -700,20 +717,20 @@ export default function Analytics({ nav }) {
 
       {/* CALLOUT BANNER FOR USERS WITH FEW RECORDS (Hidden in Print) */}
       {userPredictions.length === 0 && (
-        <div className="no-print flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs">
+        <div className="no-print flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-[#122317] p-4 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
               <Sparkles size={20} />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-emerald-900">
+              <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
                 {language === "mr"
                   ? "तुमच्या शेताचे आलेख आणखी अचूक बनवा!"
                   : language === "hi"
                   ? "अपने खेत के विज़ुअलाइज़ेशन को और अधिक सटीक बनाएं!"
                   : "Personalize your farmland analytics!"}
               </h4>
-              <p className="text-[11px] text-emerald-800/80">
+              <p className="text-[11px] text-emerald-800/80 dark:text-emerald-400/90">
                 {language === "mr"
                   ? "उत्पादन अंदाज व माती चाचणी करून थेट आपल्या शेताची माहिती या आलेखांमध्ये जोडा."
                   : language === "hi"
@@ -728,14 +745,14 @@ export default function Analytics({ nav }) {
                 <button
                   type="button"
                   onClick={() => nav("yield-prediction")}
-                  className="rounded-xl bg-[#1B5E20] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#2E7D32] transition cursor-pointer"
+                  className="rounded-xl bg-[#1B5E20] dark:bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#2E7D32] dark:hover:bg-emerald-500 transition cursor-pointer"
                 >
                   🌾 {language === "mr" ? "उत्पादन अंदाज घ्या" : language === "hi" ? "उपज पूर्वानुमान" : "Forecast Yield"}
                 </button>
                 <button
                   type="button"
                   onClick={() => nav("crop-recommendation")}
-                  className="rounded-xl bg-white border border-emerald-300 px-3.5 py-1.5 text-xs font-bold text-emerald-800 shadow-xs hover:bg-emerald-100/50 transition cursor-pointer"
+                  className="rounded-xl bg-white dark:bg-[#183321] border border-emerald-300 dark:border-emerald-700 px-3.5 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs hover:bg-emerald-100/50 dark:hover:bg-[#20442c] transition cursor-pointer"
                 >
                   🧪 {language === "mr" ? "माती चाचणी करा" : language === "hi" ? "मृदा परीक्षण" : "Soil Test"}
                 </button>
@@ -751,15 +768,15 @@ export default function Analytics({ nav }) {
       <div className="grid gap-6 lg:grid-cols-2 analytics-grid-row">
         {/* CHART 1: CROP DIVERSITY (DONUT / PIE) */}
         <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
             <div>
-              <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
-                <PieChartIcon size={18} className="text-[#2E7D32]" />
+              <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <PieChartIcon size={18} className="text-[#2E7D32] dark:text-emerald-400" />
                 <span>{txt.cropDistTitle}</span>
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">{txt.cropDistDesc}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.cropDistDesc}</p>
             </div>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32]">
+            <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32] dark:text-emerald-300">
               {dataMode === "myFarm" ? "Farmer Profile" : "District Zone"}
             </span>
           </div>
@@ -783,27 +800,20 @@ export default function Analytics({ nav }) {
                     <Cell
                       key={`cell-${index}`}
                       fill={CROP_COLORS[index % CROP_COLORS.length]}
-                      stroke="#FFFFFF"
+                      stroke={isDark ? "#132218" : "#FFFFFF"}
                       strokeWidth={2}
                     />
                   ))}
                 </Pie>
                 <Tooltip
                   formatter={(value, name) => [`${value} ${dataMode === "myFarm" ? "Records" : "%"}`, name]}
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: "14px",
-                    border: "1px solid #E2E8F0",
-                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
+                  contentStyle={tooltipStyle}
                 />
                 <Legend
                   verticalAlign="bottom"
                   height={36}
                   iconType="circle"
-                  wrapperStyle={{ fontSize: "11px", fontWeight: "600" }}
+                  wrapperStyle={{ fontSize: "11px", fontWeight: "600", color: axisColor }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -812,15 +822,15 @@ export default function Analytics({ nav }) {
 
         {/* CHART 2: SOIL NUTRIENT N-P-K & pH (RADAR CHART) */}
         <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
             <div>
-              <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
-                <Activity size={18} className="text-blue-600" />
+              <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <Activity size={18} className="text-blue-600 dark:text-blue-400" />
                 <span>{txt.soilRadarTitle}</span>
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">{txt.soilRadarDesc}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.soilRadarDesc}</p>
             </div>
-            <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600">
+            <span className="rounded-full bg-blue-50 dark:bg-blue-950/70 border border-transparent dark:border-blue-800/40 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:text-blue-300">
               Spider Radar
             </span>
           </div>
@@ -828,12 +838,12 @@ export default function Analytics({ nav }) {
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height={280}>
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={soilRadarData}>
-                <PolarGrid stroke="#DCE8D9" />
+                <PolarGrid stroke={gridColor} />
                 <PolarAngleAxis
                   dataKey="nutrient"
-                  tick={{ fill: "#334155", fontSize: 11, fontWeight: "bold" }}
+                  tick={{ fill: axisColor, fontSize: 11, fontWeight: "bold" }}
                 />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 9 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: axisColor, fontSize: 9 }} />
                 <Radar
                   name={txt.yourFarmLegend}
                   dataKey="current"
@@ -855,18 +865,12 @@ export default function Analytics({ nav }) {
                 />
                 <Tooltip
                   formatter={(value) => [`${value} / 100 Index`, ""]}
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: "14px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
+                  contentStyle={tooltipStyle}
                 />
                 <Legend
                   verticalAlign="bottom"
                   height={36}
-                  wrapperStyle={{ fontSize: "11px", fontWeight: "600" }}
+                  wrapperStyle={{ fontSize: "11px", fontWeight: "600", color: axisColor }}
                 />
               </RadarChart>
             </ResponsiveContainer>
@@ -880,15 +884,15 @@ export default function Analytics({ nav }) {
       <div className="grid gap-6 lg:grid-cols-2 analytics-grid-row">
         {/* CHART 3: SEASONAL YIELD GROWTH (AREA CHART) */}
         <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
             <div>
-              <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
-                <TrendingUp size={18} className="text-[#2E7D32]" />
+              <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <TrendingUp size={18} className="text-[#2E7D32] dark:text-emerald-400" />
                 <span>{txt.yieldTrendTitle}</span>
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">{txt.yieldTrendDesc}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.yieldTrendDesc}</p>
             </div>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32]">
+            <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32] dark:text-emerald-300">
               Trajectory
             </span>
           </div>
@@ -902,20 +906,14 @@ export default function Analytics({ nav }) {
                     <stop offset="95%" stopColor="#2E7D32" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" />
-                <XAxis dataKey="season" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} />
-                <YAxis unit=" t" tick={{ fontSize: 11, fill: "#334155" }} domain={[2.5, 6.5]} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis dataKey="season" tick={{ fontSize: 11, fill: axisColor, fontWeight: 600 }} />
+                <YAxis unit=" t" tick={{ fontSize: 11, fill: axisColor }} domain={[2.5, 6.5]} />
                 <Tooltip
                   formatter={(val) => [`${val} t/ha`, ""]}
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: "14px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
+                  contentStyle={tooltipStyle}
                 />
-                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "11px", fontWeight: "600" }} />
+                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "11px", fontWeight: "600", color: axisColor }} />
                 <Area
                   type="monotone"
                   dataKey="yield"
@@ -943,15 +941,15 @@ export default function Analytics({ nav }) {
 
         {/* CHART 4: AGRO-CLIMATE & MOISTURE CORRELATION (COMPOSED) */}
         <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
             <div>
-              <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
-                <Thermometer size={18} className="text-rose-500" />
+              <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <Thermometer size={18} className="text-rose-500 dark:text-rose-400" />
                 <span>{txt.climateTitle}</span>
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">{txt.climateDesc}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.climateDesc}</p>
             </div>
-            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-600">
+            <span className="rounded-full bg-rose-50 dark:bg-rose-950/70 border border-transparent dark:border-rose-800/40 px-2.5 py-1 text-[10px] font-bold text-rose-600 dark:text-rose-300">
               Telemetry
             </span>
           </div>
@@ -959,20 +957,14 @@ export default function Analytics({ nav }) {
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={climateData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} />
-                <YAxis yAxisId="left" unit="°" tick={{ fontSize: 11, fill: "#334155" }} domain={[15, 45]} />
-                <YAxis yAxisId="right" orientation="right" unit="mm" tick={{ fontSize: 11, fill: "#334155" }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: axisColor, fontWeight: 600 }} />
+                <YAxis yAxisId="left" unit="°" tick={{ fontSize: 11, fill: axisColor }} domain={[15, 45]} />
+                <YAxis yAxisId="right" orientation="right" unit="mm" tick={{ fontSize: 11, fill: axisColor }} />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: "14px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
+                  contentStyle={tooltipStyle}
                 />
-                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "11px", fontWeight: "600" }} />
+                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "11px", fontWeight: "600", color: axisColor }} />
                 <Bar
                   yAxisId="right"
                   dataKey="rainfall"
@@ -1013,15 +1005,15 @@ export default function Analytics({ nav }) {
           ROW 3: MAHARASHTRA DISTRICT AGRONOMY RANKING (BAR CHART)
       ========================================================= */}
       <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
-        <div className="flex flex-col justify-between gap-2 border-b border-gray-100 pb-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-base font-extrabold text-gray-800 flex items-center gap-2">
-              <Layers size={18} className="text-[#2E7D32]" />
+            <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <Layers size={18} className="text-[#2E7D32] dark:text-emerald-400" />
               <span>{txt.districtRankTitle}</span>
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">{txt.districtRankDesc}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.districtRankDesc}</p>
           </div>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-[#2E7D32]">
+          <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-3 py-1 text-xs font-bold text-[#2E7D32] dark:text-emerald-300">
             8 Major Zones
           </span>
         </div>
@@ -1033,28 +1025,22 @@ export default function Analytics({ nav }) {
               layout="horizontal"
               margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" />
-              <XAxis dataKey="districtLabel" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} />
-              <YAxis unit=" t" tick={{ fontSize: 11, fill: "#334155" }} domain={[0, 7]} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+              <XAxis dataKey="districtLabel" tick={{ fontSize: 11, fill: axisColor, fontWeight: 600 }} />
+              <YAxis unit=" t" tick={{ fontSize: 11, fill: axisColor }} domain={[0, 7]} />
               <Tooltip
                 formatter={(value, name, item) => [
                   `${value} t/ha (${item.payload.topCrop})`,
                   txt.predictedYieldLegend,
                 ]}
-                contentStyle={{
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: "14px",
-                  border: "1px solid #E2E8F0",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                }}
+                contentStyle={tooltipStyle}
               />
               <Bar dataKey="yield" radius={[8, 8, 0, 0]} barSize={34} isAnimationActive={false}>
                 {districtRankingData.map((entry, idx) => (
                   <Cell
                     key={`bar-${idx}`}
-                    fill={entry.isCurrent ? "#1B5E20" : "#86EFAC"}
-                    stroke={entry.isCurrent ? "#2E7D32" : "#4ADE80"}
+                    fill={entry.isCurrent ? (isDark ? "#22c55e" : "#1B5E20") : (isDark ? "#14532d" : "#86EFAC")}
+                    stroke={entry.isCurrent ? (isDark ? "#4ade80" : "#2E7D32") : (isDark ? "#166534" : "#4ADE80")}
                     strokeWidth={entry.isCurrent ? 2 : 1}
                   />
                 ))}
@@ -1067,16 +1053,16 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           ROW 4: AGRONOMIC INSIGHTS & AI SUMMARY
       ========================================================= */}
-      <div className="card print-card print-avoid-break rounded-3xl border border-[#DCE8D9] bg-gradient-to-br from-[#F4F9F1] to-[#EAF3E6] p-6 depth-1">
+      <div className="card print-card print-avoid-break rounded-3xl border border-[#DCE8D9] dark:border-[#24402a] bg-gradient-to-br from-[#F4F9F1] to-[#EAF3E6] dark:from-[#132218] dark:to-[#0f1b13] p-6 depth-1">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#2E7D32] shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-[#183321] text-[#2E7D32] dark:text-emerald-400 shadow-sm border border-transparent dark:border-[#24402a]">
             <Sparkles size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-extrabold text-[#1B5E20]">
+            <h3 className="text-sm font-extrabold text-[#1B5E20] dark:text-emerald-300">
               {txt.keyInsightsTitle}
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {language === "mr"
                 ? "माती व हवामान विश्लेषणावर आधारित शेती सुधारणा सल्ला"
                 : language === "hi"
@@ -1087,12 +1073,12 @@ export default function Analytics({ nav }) {
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-2xl bg-white p-4 shadow-xs border border-green-100">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#2E7D32]">
+          <div className="rounded-2xl bg-white dark:bg-[#183321]/70 p-4 shadow-xs border border-green-100 dark:border-[#24402a]">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#2E7D32] dark:text-emerald-300">
               <CheckCircle2 size={15} />
               <span>{language === "mr" ? "सेंद्रिय खत व्यवस्थापन" : language === "hi" ? "जैविक खाद प्रबंधन" : "Nutrient Balance"}</span>
             </div>
-            <p className="mt-1.5 text-xs text-gray-600 leading-relaxed">
+            <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               {language === "mr"
                 ? "तुमच्या जमिनीत फॉस्फरसचे (P) प्रमाण मध्यम आहे; पेरणीपूर्वी सुपर फॉस्फेट किंवा शेणखताचा डोस वाढवावा."
                 : language === "hi"
@@ -1101,12 +1087,12 @@ export default function Analytics({ nav }) {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white p-4 shadow-xs border border-green-100">
-            <div className="flex items-center gap-2 text-xs font-bold text-blue-600">
+          <div className="rounded-2xl bg-white dark:bg-[#183321]/70 p-4 shadow-xs border border-green-100 dark:border-[#24402a]">
+            <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
               <Droplets size={15} />
               <span>{language === "mr" ? "पाण्याचे सूक्ष्म नियोजन" : language === "hi" ? "सूक्ष्म सिंचाई योजना" : "Micro-Irrigation"}</span>
             </div>
-            <p className="mt-1.5 text-xs text-gray-600 leading-relaxed">
+            <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               {language === "mr"
                 ? "पावसाचा खंड पडल्यास ठिबक सिंचनाचा वापर करून ओलावा टिकवून ठेवावा, ज्यामुळे उत्पादकतेत १५% वाढ होईल."
                 : language === "hi"
@@ -1115,12 +1101,12 @@ export default function Analytics({ nav }) {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white p-4 shadow-xs border border-green-100">
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-600">
+          <div className="rounded-2xl bg-white dark:bg-[#183321]/70 p-4 shadow-xs border border-green-100 dark:border-[#24402a]">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
               <Wheat size={15} />
               <span>{language === "mr" ? "हंगामी पीक फेरपालट" : language === "hi" ? "मौसमी फसल चक्र" : "Crop Rotation"}</span>
             </div>
-            <p className="mt-1.5 text-xs text-gray-600 leading-relaxed">
+            <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               {language === "mr"
                 ? "सोयाबीननंतर रब्बी हंगामात हरभरा किंवा गहू घेतल्यास जमिनीचा पोत व नायट्रोजन नैसर्गिकरित्या वाढतो."
                 : language === "hi"

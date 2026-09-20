@@ -157,7 +157,7 @@ input::-ms-clear {
   color: #4ade80 !important;
 }
 
-/* Soft Green Badges and Indicator Backgrounds */
+/* Soft Green Badges, Light Panels, and Indicator Backgrounds in Dark Mode */
 .dark .bg-\[\#EAF3E6\],
 .dark .bg-\[\#EAF5E8\],
 .dark .bg-\[\#EEF5EC\],
@@ -185,17 +185,87 @@ input::-ms-clear {
 .dark .bg-gray-50,
 .dark .bg-gray-100,
 .dark .bg-slate-50,
-.dark .bg-slate-100 {
-  background-color: #183321 !important;
-  color: #4ade80 !important;
+.dark .bg-slate-100,
+.dark .bg-green-100,
+.dark .bg-emerald-100,
+.dark .bg-teal-100,
+.dark .bg-blue-100,
+.dark .bg-amber-100,
+.dark .bg-rose-50,
+.dark .bg-rose-100,
+.dark .bg-emerald-50\/70,
+.dark .bg-emerald-50\/50,
+.dark .bg-emerald-50\/40,
+.dark .bg-green-50\/70,
+.dark .bg-green-50\/50,
+.dark .bg-green-50\/40,
+.dark .bg-amber-50\/50,
+.dark .bg-amber-50\/40,
+.dark .bg-gray-50\/90,
+.dark .bg-gray-50\/70,
+.dark .bg-gray-50\/50,
+.dark .bg-gray-100\/60,
+.dark .bg-green-100\/60 {
+  background-color: #152419 !important;
   border-color: #24402a !important;
 }
 
 /* Form header gradients and light gradient stops in dark mode */
 .dark .bg-gradient-to-r.from-\[\#F7FBF5\].to-white,
 .dark .from-\[\#F7FBF5\],
-.dark .to-white {
-  background: #132218 !important;
+.dark .to-white,
+.dark .from-\[\#F4F9F1\],
+.dark .to-\[\#EAF3E6\],
+.dark .from-\[\#F3F8F0\],
+.dark .to-\[\#EAF5E8\],
+.dark .from-\[\#EBF5EC\],
+.dark .via-\[\#F6FAF6\],
+.dark .to-\[\#E5F2E7\],
+.dark .from-green-50,
+.dark .to-emerald-50,
+.dark .from-amber-50,
+.dark .to-orange-50 {
+  background-color: #132218 !important;
+}
+
+/* High Contrast Colored Text Overrides for Dark Mode */
+.dark .text-emerald-950,
+.dark .text-emerald-900,
+.dark .text-green-950,
+.dark .text-green-900 {
+  color: #4ade80 !important;
+}
+
+.dark .text-emerald-800,
+.dark .text-green-800 {
+  color: #86efac !important;
+}
+
+.dark .text-amber-950,
+.dark .text-amber-900 {
+  color: #fde68a !important;
+}
+
+.dark .text-amber-800,
+.dark .text-amber-700 {
+  color: #fbbf24 !important;
+}
+
+.dark .text-blue-950,
+.dark .text-blue-900 {
+  color: #93c5fd !important;
+}
+
+.dark .text-blue-800,
+.dark .text-blue-700 {
+  color: #60a5fa !important;
+}
+
+.dark .text-rose-950,
+.dark .text-rose-900,
+.dark .text-red-950,
+.dark .text-red-900 {
+  color: #fca5a5 !important;
 }
 
 /* Cards, Modals, and Main Surfaces */
@@ -222,6 +292,38 @@ input::-ms-clear {
 .dark .bg-\[\#FBFDFB\],
 .dark .bg-\[\#FAFDF9\] {
   background-color: #0d1710 !important;
+}
+
+/* Dark Mode Recharts Telemetry Charts & Tooltips */
+.dark .recharts-cartesian-grid line {
+  stroke: #24402a !important;
+}
+.dark .recharts-polar-grid path,
+.dark .recharts-polar-grid line,
+.dark .recharts-polar-grid-angle line,
+.dark .recharts-polar-grid-concentric path {
+  stroke: #24402a !important;
+}
+.dark .recharts-text,
+.dark .recharts-cartesian-axis-tick-value,
+.dark .recharts-polar-angle-axis-tick-value {
+  fill: #cbd5e1 !important;
+}
+.dark .recharts-legend-item-text {
+  color: #cbd5e1 !important;
+}
+.dark .recharts-default-tooltip {
+  background-color: #132218 !important;
+  border: 1px solid #24402a !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+.dark .recharts-tooltip-item {
+  color: #4ade80 !important;
+}
+.dark .recharts-tooltip-label {
+  color: #f8fafc !important;
 }
 
 /* Advisory Banners & Severity Alert Cards in Dark Mode */

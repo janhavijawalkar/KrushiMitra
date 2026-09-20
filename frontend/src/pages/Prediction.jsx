@@ -587,44 +587,44 @@ export default function Prediction({ nav, pageParams }) {
                 {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"} ({tCrop ? tCrop(result.crop) : result.crop})
               </p>
 
-              <div className="mt-5 rounded-2xl bg-gradient-to-b from-[#F3F8F0] to-[#EAF5E8] p-4 border border-green-200/80 shadow-2xs">
+              <div className="mt-5 rounded-2xl bg-gradient-to-b from-[#F3F8F0] to-[#EAF5E8] dark:from-[#132218] dark:to-[#0e1a12] p-4 border border-green-200/80 dark:border-[#24402a] shadow-2xs">
 
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500 font-medium">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {t("district")}
                   </span>
 
-                  <span className="font-bold text-gray-800">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">
                     {tDistrict ? tDistrict(result.district) : result.district}
                   </span>
                 </div>
 
                 <div className="mt-3 flex justify-between text-xs">
-                  <span className="text-gray-500 font-medium">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {t("season")}
                   </span>
 
-                  <span className="font-bold text-gray-800">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">
                     {tSeason ? tSeason(result.season) : result.season}
                   </span>
                 </div>
 
                 <div className="mt-3 flex justify-between text-xs">
-                  <span className="text-gray-500 font-medium">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {t("cropYear")}
                   </span>
 
-                  <span className="font-bold text-gray-800">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">
                     {result.year}
                   </span>
                 </div>
 
-                <div className="mt-3 flex justify-between text-xs border-t border-[#DCE8D9] pt-2.5">
-                  <span className="font-bold text-[#1B5E20]">
+                <div className="mt-3 flex justify-between text-xs border-t border-[#DCE8D9] dark:border-[#24402a] pt-2.5">
+                  <span className="font-bold text-[#1B5E20] dark:text-emerald-300">
                     {t("totalHarvestEstimate") || (language === "mr" ? "एकूण अंदाजित उत्पादन" : language === "hi" ? "कुल अनुमानित पैदावार" : "Total Harvest Estimate")}:
                   </span>
 
-                  <span className="font-extrabold text-[#2E7D32]">
+                  <span className="font-extrabold text-[#2E7D32] dark:text-emerald-400">
                     {result.production ? `${result.production} ${language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}` : "—"}
                   </span>
                 </div>

@@ -843,7 +843,7 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
 
           {/* MAIN BODY: VOICE ASSISTANT MODE */}
           {!isMinimized && isVoiceMode && (
-            <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4 sm:p-5 bg-gradient-to-b from-[#EBF5EC] via-[#F6FAF6] to-[#E5F2E7] dark:bg-radial dark:from-[#12331B] dark:via-[#0D2414] dark:to-[#08170D] text-slate-800 dark:text-white transition-colors duration-300">
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4 sm:p-5 bg-gradient-to-b from-[#EBF5EC] via-[#F6FAF6] to-[#E5F2E7] dark:bg-gradient-to-b dark:from-[#12331B] dark:via-[#0D2414] dark:to-[#08170D] text-slate-800 dark:text-white transition-colors duration-300">
               {/* TOP STATUS BAR */}
               <div className="flex items-center justify-between text-[11px] text-emerald-800 dark:text-emerald-200/80 pb-2 border-b border-emerald-200/70 dark:border-white/10">
                 <span className="flex items-center gap-1.5 font-medium">

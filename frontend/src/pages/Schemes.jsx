@@ -475,7 +475,7 @@ export default function Schemes({ nav }) {
                     {name}
                   </h3>
 
-                  <div className="mt-1.5 inline-block rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-1 text-xs font-black text-amber-800 dark:text-amber-300">
+                  <div className="mt-1.5 inline-block rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-[#251608] dark:to-[#1c1106] border border-amber-200 dark:border-amber-800/60 px-3 py-1 text-xs font-black text-amber-800 dark:text-amber-300">
                     💰 {subsidy}
                   </div>
 

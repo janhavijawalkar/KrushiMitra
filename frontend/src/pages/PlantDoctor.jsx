@@ -1566,7 +1566,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
             <div className="space-y-6">
               {/* MULTI-CROP COLLAGE DETECTED BANNER */}
               {diagnosis?.all_crops_in_image && Array.isArray(diagnosis.all_crops_in_image) && diagnosis.all_crops_in_image.length > 1 && (
-                <div className="rounded-3xl border border-amber-300/80 bg-gradient-to-r from-amber-50 via-orange-50/60 to-yellow-50 p-4 sm:p-5 shadow-sm dark:border-amber-700/60 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-yellow-950/20 animate-fade-in">
+                <div className="rounded-3xl border border-amber-300/80 bg-gradient-to-r from-amber-50 via-orange-50/60 to-yellow-50 p-4 sm:p-5 shadow-sm dark:border-amber-700/60 dark:from-[#2a1705] dark:via-[#221204] dark:to-[#1a0e03] animate-fade-in">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-start sm:items-center gap-3">
                       <div className="h-10 w-10 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
@@ -1658,8 +1658,8 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
               <div
                 className={`rounded-3xl border p-6 shadow-sm transition-all ${
                   diagnosis.condition === "Healthy"
-                    ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20"
-                    : "border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20"
+                    ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-800/60 dark:bg-[#122417]"
+                    : "border-amber-200 bg-amber-50/50 dark:border-amber-800/60 dark:bg-[#23170c]"
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-200/60 dark:border-gray-800">
@@ -1878,7 +1878,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
                 {/* DOSAGE CARDS GRID */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   {/* CHEMICAL TREATMENT */}
-                  <div className="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/20 p-4 space-y-2">
+                  <div className="rounded-2xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-[#22160d] p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
                         <FlaskConical className="h-4 w-4 text-amber-600" />
@@ -1893,7 +1893,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
                       {displayChemicalTitle}
                     </div>
 
-                    <div className="rounded-xl bg-white dark:bg-black/40 border border-amber-200/80 dark:border-amber-800/40 p-2.5">
+                    <div className="rounded-xl bg-white dark:bg-[#150d06] border border-amber-200/80 dark:border-amber-800/40 p-2.5">
                       <div className="text-[11px] text-gray-500 dark:text-gray-400">
                         {language === "mr" ? "अचूक प्रमाण:" : language === "hi" ? "सटीक मात्रा:" : "Exact Quantity:"}
                       </div>
@@ -1922,7 +1922,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
                   </div>
 
                   {/* ORGANIC / BIO REMEDY */}
-                  <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 space-y-2">
+                  <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-[#0c1f13] p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
                         <Leaf className="h-4 w-4 text-emerald-600" />
@@ -1937,7 +1937,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
                       {displayOrganicTitle}
                     </div>
 
-                    <div className="rounded-xl bg-white dark:bg-black/40 border border-emerald-200/80 dark:border-emerald-800/40 p-2.5">
+                    <div className="rounded-xl bg-white dark:bg-[#07130a] border border-emerald-200/80 dark:border-emerald-800/40 p-2.5">
                       <div className="text-[11px] text-gray-500 dark:text-gray-400">
                         {language === "mr" ? "सेंद्रिय प्रमाण:" : language === "hi" ? "जैविक मात्रा:" : "Organic Quantity:"}
                       </div>
@@ -1958,7 +1958,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
                 </div>
 
                 {/* SAFETY & CULTURAL INSTRUCTIONS */}
-                <div className="mt-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 p-4 border border-gray-200/80 dark:border-gray-700/60 space-y-2 text-xs">
+                <div className="mt-4 rounded-2xl bg-gray-50 dark:bg-[#121c14] p-4 border border-gray-200/80 dark:border-[#24402a] space-y-2 text-xs">
                   <div className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                     <ShieldAlert className="h-4 w-4 text-red-500" />
                     {language === "mr"
@@ -1974,7 +1974,7 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
               </div>
 
               {/* 1-CLICK WHATSAPP SHARE BUTTON */}
-              <div className="rounded-3xl border border-green-200 dark:border-green-900/60 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="rounded-3xl border border-green-200 dark:border-green-800/60 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-[#132819] dark:to-[#0f2115] p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="space-y-0.5 text-center sm:text-left">
                   <div className="text-sm font-extrabold text-green-900 dark:text-green-300 flex items-center justify-center sm:justify-start gap-2">
                     <Share2 className="h-4 w-4 text-green-600" />
