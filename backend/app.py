@@ -1643,10 +1643,10 @@ def ai_diagnose_crop():
         user_query = data.get("query", "") or data.get("crop", "") or data.get("user_query", "")
         file_name = data.get("file_name", "") or data.get("fileName", "")
         
-        if not image_data and not user_query and not file_name:
+        if not image_data:
             return jsonify({
                 "success": False,
-                "message": "Please provide an image or specify a crop to diagnose."
+                "message": "Please provide a leaf or crop photo to diagnose."
             }), 400
         
         diagnosis = ai_assistant.diagnose_crop_disease(

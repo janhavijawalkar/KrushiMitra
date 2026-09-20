@@ -179,75 +179,6 @@ export const localizeDosageText = (text, lang = "mr") => {
   return t.replace(/\d/g, (d) => devDigits[d] || d);
 };
 
-const SAMPLE_LEAF_CASES = [
-  {
-    id: "rose_black_spot",
-    cropEn: "Rose",
-    cropMr: "गुलाब",
-    cropHi: "गुलाब",
-    diseaseEn: "Rose Black Spot (Fungal)",
-    diseaseMr: "काळे ठिपके (बुरशी रोग)",
-    diseaseHi: "काला धब्बा (कवक रोग)",
-    badgeColor: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-    icon: "🌹",
-  },
-  {
-    id: "cotton_pink_bollworm",
-    cropEn: "Cotton",
-    cropMr: "कापूस",
-    cropHi: "कपास",
-    diseaseEn: "Pink Bollworm",
-    diseaseMr: "गुलाबी बोंडअळी",
-    diseaseHi: "गुलाबी सुंडी",
-    badgeColor: "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800",
-    icon: "🐛",
-  },
-  {
-    id: "tomato_early_blight",
-    cropEn: "Tomato",
-    cropMr: "टोमॅटो",
-    cropHi: "टमाटर",
-    diseaseEn: "Early Blight",
-    diseaseMr: "अगाती करपा",
-    diseaseHi: "अगेती झुलसा",
-    badgeColor: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-    icon: "🍅",
-  },
-  {
-    id: "soybean_yellow_mosaic",
-    cropEn: "Soybean",
-    cropMr: "सोयाबीन",
-    cropHi: "सोयाबीन",
-    diseaseEn: "Yellow Mosaic",
-    diseaseMr: "पिवळा मोझॅक",
-    diseaseHi: "पीला मोज़ेक",
-    badgeColor: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-800",
-    icon: "🌱",
-  },
-  {
-    id: "onion_purple_blotch",
-    cropEn: "Onion",
-    cropMr: "कांदा",
-    cropHi: "प्याज",
-    diseaseEn: "Purple Blotch",
-    diseaseMr: "जांभळा करपा",
-    diseaseHi: "बैंगनी धब्बा",
-    badgeColor: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
-    icon: "🧅",
-  },
-  {
-    id: "healthy_leaf",
-    cropEn: "Healthy Crop",
-    cropMr: "निरोगी पीक",
-    cropHi: "स्वस्थ फसल",
-    diseaseEn: "No Disease Detected",
-    diseaseMr: "कोणताही रोग नाही",
-    diseaseHi: "कोई रोग नहीं",
-    badgeColor: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-    icon: "🌿",
-  },
-];
-
 const getFallbackPlantDiagnosis = (queryKey, lang = "mr") => {
   const catalog = {
     rose_black_spot: {
@@ -778,7 +709,6 @@ export default function PlantDoctor({ nav }) {
   const [diagnosis, setDiagnosis] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [pumpSize, setPumpSize] = useState("15l"); // "15l" | "20l" | "200l"
-  const [activeSampleId, setActiveSampleId] = useState(null);
 
   useEffect(() => {
     let timer;
@@ -1023,7 +953,6 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
     }
 
     setErrorMsg("");
-    setActiveSampleId(null);
     setAnalyzing(true);
 
     const fileName = file.name || "";
@@ -1064,26 +993,21 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
     reader.readAsDataURL(file);
   };
 
-  const handleSampleClick = (sample) => {
-    setActiveSampleId(sample.id);
-    setSelectedImage(null);
-    setErrorMsg("");
-    if (sample.id.startsWith("rose")) setSelectedCrop("rose");
-    else if (sample.id.startsWith("cotton")) setSelectedCrop("cotton");
-    else if (sample.id.startsWith("tomato")) setSelectedCrop("tomato");
-    else if (sample.id.startsWith("soybean")) setSelectedCrop("soybean");
-    else if (sample.id.startsWith("onion")) setSelectedCrop("onion");
-    triggerDiagnosis(null, sample.id);
-  };
-
   const handleCropChange = (cropId) => {
     setSelectedCrop(cropId);
     setShowCropSwitcher(false);
     const query = cropId !== "auto" ? cropId : "";
-    triggerDiagnosis(selectedImage, query);
+    if (selectedImage) {
+      triggerDiagnosis(selectedImage, query);
+    }
   };
 
   const triggerDiagnosis = async (imageBase64, queryOverride = null, fileName = "") => {
+    if (!imageBase64) {
+      setAnalyzing(false);
+      return;
+    }
+
     setAnalyzing(true);
     setDiagnosis(null);
     setErrorMsg("");
@@ -1153,7 +1077,6 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
   const clearImage = () => {
     setSelectedImage(null);
     setDiagnosis(null);
-    setActiveSampleId(null);
     setErrorMsg("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
@@ -1462,86 +1385,96 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
             </div>
           </div>
 
-          {/* QUICK TEST SAMPLES GALLERY */}
+          {/* PHOTO GUIDANCE & ACCURACY TIPS */}
           <div className="rounded-3xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-[#20432B] dark:bg-[#122317]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <FlaskConical className="h-4 w-4 text-[#2E7D32] dark:text-[#66BB6A]" />
+                <Sparkles className="h-4 w-4 text-[#2E7D32] dark:text-[#66BB6A]" />
                 {language === "mr"
-                  ? "नमुना पिकांची झटपट चाचणी (Quick Test)"
+                  ? "अचूक निदानासाठी फोटो कसा काढावा?"
                   : language === "hi"
-                  ? "त्वरित नमूना परीक्षण (Quick Test)"
-                  : "Quick Test with Sample Crops"}
+                  ? "सटीक जांच के लिए फोटो कैसे लें?"
+                  : "Tips for Accurate AI Diagnosis"}
               </h2>
-              <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                1-Click
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300">
+                AI Vision
               </span>
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3.5">
               {language === "mr"
-                ? "फोटो नसल्यास खालीलपैकी कोणत्याही पिकावर क्लिक करून रोग व फवारणी प्रमाण तपासा:"
+                ? "उत्तम आणि अचूक निकालांसाठी खालील मार्गदर्शक तत्त्वांचे पालन करा:"
                 : language === "hi"
-                ? "फोटो न होने पर नीचे दी गई किसी भी फसल पर क्लिक करके रोग व खुराक देखें:"
-                : "No leaf photo right now? Click any standard Maharashtra crop disease to test:"}
+                ? "उत्कृष्ट व सटीक जांच के लिए नीचे दिए गए सुझावों का पालन करें:"
+                : "Follow these simple tips to get the fastest and most accurate pathology report:"}
             </p>
 
-            <div className="space-y-2">
-              {SAMPLE_LEAF_CASES.map((sample) => {
-                const isSelected = activeSampleId === sample.id;
-                const cropLabel =
-                  language === "mr"
-                    ? sample.cropMr
-                    : language === "hi"
-                    ? sample.cropHi
-                    : sample.cropEn;
-                const diseaseLabel =
-                  language === "mr"
-                    ? sample.diseaseMr
-                    : language === "hi"
-                    ? sample.diseaseHi
-                    : sample.diseaseEn;
+            <div className="space-y-2.5">
+              <div className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-gray-50/70 dark:bg-black/20 border border-gray-100 dark:border-gray-800/60">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs">
+                  ☀️
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                    {language === "mr"
+                      ? "चांगला नैसर्गिक प्रकाश (Good Lighting)"
+                      : language === "hi"
+                      ? "उचित प्राकृतिक रोशनी (Good Lighting)"
+                      : "Natural Daylight & Clarity"}
+                  </div>
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                    {language === "mr"
+                      ? "सूर्यप्रकाशात फोटो काढा. तीव्र सावली किंवा अंधुक फ्लॅश टाळा."
+                      : language === "hi"
+                      ? "स्पष्ट धूप में फोटो लें। गहरी छाया या धुंधलापन न आने दें।"
+                      : "Capture in clear daylight. Avoid dark shadows or heavy camera blur."}
+                  </div>
+                </div>
+              </div>
 
-                return (
-                  <button
-                    key={sample.id}
-                    onClick={() => handleSampleClick(sample)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
-                      isSelected
-                        ? "border-[#2E7D32] bg-green-50/80 dark:border-[#66BB6A] dark:bg-green-950/40 ring-1 ring-[#2E7D32]"
-                        : "border-gray-200/70 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700 bg-gray-50/40 dark:bg-black/20"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{sample.icon}</span>
-                      <div>
-                        <div className="text-xs font-bold text-gray-900 dark:text-gray-100">
-                          {cropLabel}
-                        </div>
-                        <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                          {diseaseLabel}
-                        </div>
-                      </div>
-                    </div>
+              <div className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-gray-50/70 dark:bg-black/20 border border-gray-100 dark:border-gray-800/60">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 text-xs">
+                  🔍
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                    {language === "mr"
+                      ? "रोगाच्या भागावर फोकस (Focus on Symptoms)"
+                      : language === "hi"
+                      ? "लक्षणों पर फोकस (Focus on Symptoms)"
+                      : "Focus on Spots & Lesions"}
+                  </div>
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                    {language === "mr"
+                      ? "पानावरील ठिपके, करपा किंवा कीड स्पष्ट दिसेल इतके कॅमेरा जवळ धरा."
+                      : language === "hi"
+                      ? "पत्ती के धब्बे, झुलसा या कीड़े स्पष्ट दिखें इतना कैमरा पास रखें।"
+                      : "Hold the camera close to the affected spot, wilt, or pest damage."}
+                  </div>
+                </div>
+              </div>
 
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sample.badgeColor}`}
-                    >
-                      {sample.id === "healthy_leaf"
-                        ? language === "mr"
-                          ? "निरोगी"
-                          : language === "hi"
-                          ? "स्वस्थ"
-                          : "Healthy"
-                        : language === "mr"
-                        ? "रोगग्रस्त"
-                        : language === "hi"
-                        ? "रोगग्रस्त"
-                        : "Diseased"}
-                    </span>
-                  </button>
-                );
-              })}
+              <div className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-gray-50/70 dark:bg-black/20 border border-gray-100 dark:border-gray-800/60">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs">
+                  🍃
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                    {language === "mr"
+                      ? "पानाची दोन्ही बाजू तपासा (Both Sides)"
+                      : language === "hi"
+                      ? "पत्ती के दोनों तरफ देखें (Both Sides)"
+                      : "Check Underside of Leaf"}
+                  </div>
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                    {language === "mr"
+                      ? "बुरशीचे बीजाणू किंवा बारीक कीटक पानाच्या खालील बाजूस असू शकतात."
+                      : language === "hi"
+                      ? "कवक या बारीक कीड़े पत्ती के नीचे हो सकते हैं, उन्हें भी देखें।"
+                      : "Many fungal spores and sucking pests shelter underneath the leaf."}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2065,24 +1998,36 @@ const compressImageForDiagnosis = (file, maxDim = 1024, quality = 0.82) => {
 
           {/* EMPTY STATE / INITIAL GUIDANCE */}
           {!diagnosis && !analyzing && !errorMsg && (
-            <div className="rounded-3xl border border-dashed border-gray-300 dark:border-gray-800 p-8 text-center bg-gray-50/50 dark:bg-black/10">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100 dark:bg-green-950/60 text-[#2E7D32] dark:text-[#66BB6A] mb-3">
+            <div className="rounded-3xl border border-dashed border-gray-300 dark:border-gray-800 p-8 sm:p-10 text-center bg-gray-50/50 dark:bg-black/10">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100 dark:bg-green-950/60 text-[#2E7D32] dark:text-[#66BB6A] mb-4">
                 <Leaf className="h-8 w-8" />
               </div>
-              <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-200">
                 {language === "mr"
-                  ? "कोणताही फोटो किंवा नमुना निवडा"
+                  ? "पिकाच्या रोगट पानाचा फोटो अपलोड करा"
                   : language === "hi"
-                  ? "कोई फोटो या नमूना फसल चुनें"
-                  : "Upload a Photo or Pick a Sample Crop"}
+                  ? "फसल की पत्ती या रोग का फोटो अपलोड करें"
+                  : "Upload or Capture a Plant Photo"}
               </h3>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
                 {language === "mr"
-                  ? "डाव्या बाजूने कॅमेरा सुरू करून पानाचा फोटो काढा किंवा 'झटपट चाचणी' मधील कापूस, टोमॅटो, सोयाबीन निवडून थेट निदान पहा."
+                  ? "डाव्या बाजूने कॅमेरा सुरू करून पानाचा फोटो काढा किंवा गॅलरीतून निवडा. आमचे कृत्रिम बुद्धिमत्ता (AI) इंजिन रोगाचा अचूक शोध घेऊन रासायनिक व सेंद्रिय फवारणीचे प्रमाण देईल."
                   : language === "hi"
-                  ? "बाईं ओर से कैमरा खोलकर फोटो खींचें या नमूनों में से किसी फसल पर क्लिक करें।"
-                  : "Use the camera on the left to capture a leaf, or click any sample crop to instantly view symptoms and dosages."}
+                  ? "बाईं ओर दिए गए कैमरे से फोटो खींचें या गैलरी से अपलोड करें। हमारा AI इंजन रोग की सटीक पहचान कर सही दवा और फवारणी खुराक बताएगा।"
+                  : "Use the camera on the left to capture a leaf, or upload an image from your gallery. AI Plant Doctor will diagnose diseases and compute exact pump dosages."}
               </p>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-2xs">
+                  🌾 {language === "mr" ? "३५+ महाराष्ट्र पिके" : language === "hi" ? "३५+ महाराष्ट्र फसलें" : "35+ Crops"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-2xs">
+                  🧪 {language === "mr" ? "१५L, २०L व २००L पंप प्रमाण" : language === "hi" ? "१५L, २०L व २००L पंप खुराक" : "15L, 20L & 200L Pumps"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-2xs">
+                  ⚡ {language === "mr" ? "झटपट अचूक AI निदान" : language === "hi" ? "त्वरित सटीक AI जांच" : "Instant AI Analysis"}
+                </span>
+              </div>
             </div>
           )}
         </div>
