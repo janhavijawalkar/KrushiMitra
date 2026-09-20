@@ -1,13 +1,40 @@
+# Dependencies
 node_modules/
 frontend/node_modules/
+backend/venv/
+venv/
+.venv/
+env/
+
+# Build & Bundling
 dist/
 frontend/dist/
+frontend/dev-dist/
 build/
+
+# Environment Variables & Secrets
 .env
 .env.*
+.env.local
 !.env.example
+backend/.env
+frontend/.env
+
+# Python Bytecode & Cache
 __pycache__/
 backend/__pycache__/
 *.pyc
+*.pyo
+*.pyd
 
+# Local Database Files
+*.db
+*.sqlite
+*.sqlite3
+backend/krushimitra.db
 
+# OS / Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

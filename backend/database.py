@@ -1,6 +1,8 @@
 import os
 import sqlite3
 import secrets
+import urllib.parse
+import ssl
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
@@ -9,14 +11,55 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # Database Configuration
+# Support standard cloud connection strings: DATABASE_URL, MYSQL_URL, etc.
+RAW_DB_URL = (
+    os.getenv("DATABASE_URL")
+    or os.getenv("MYSQL_URL")
+    or os.getenv("MYSQL_PUBLIC_URL")
+    or os.getenv("JAWSDB_URL")
+    or os.getenv("CLEARDB_DATABASE_URL")
+    or ""
+).strip()
+
 DB_TYPE = os.getenv("DB_TYPE", "mysql").lower().strip()
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
-MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
+try:
+    MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
+except (ValueError, TypeError):
+    MYSQL_PORT = 3306
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
-MYSQL_DB = os.getenv("MYSQL_DB", "krushimitra")
+MYSQL_DB = os.getenv("MYSQL_DB") or os.getenv("MYSQL_DATABASE") or os.getenv("MYSQLDATABASE") or "krushimitra"
+MYSQL_SSL_MODE = os.getenv("MYSQL_SSL", "").lower().strip()
 
-SQLITE_PATH = os.path.join(BASE_DIR, "krushimitra.db")
+# If connection URL is provided, parse it
+if RAW_DB_URL:
+    try:
+        normalized_url = RAW_DB_URL
+        if normalized_url.startswith("mysql2://"):
+            normalized_url = "mysql://" + normalized_url[9:]
+        
+        parsed = urllib.parse.urlparse(normalized_url)
+        if parsed.scheme.startswith("mysql"):
+            DB_TYPE = "mysql"
+            if parsed.hostname:
+                MYSQL_HOST = parsed.hostname
+            if parsed.port:
+                MYSQL_PORT = parsed.port
+            if parsed.username:
+                MYSQL_USER = urllib.parse.unquote(parsed.username)
+            if parsed.password:
+                MYSQL_PASSWORD = urllib.parse.unquote(parsed.password)
+            if parsed.path and len(parsed.path) > 1:
+                MYSQL_DB = parsed.path.lstrip("/")
+            
+            query_params = urllib.parse.parse_qs(parsed.query)
+            if "ssl-mode" in query_params or "sslmode" in query_params or "ssl" in query_params:
+                MYSQL_SSL_MODE = "required"
+    except Exception as e:
+        print(f"[DATABASE] Error parsing DATABASE_URL: {e}")
+
+SQLITE_PATH = os.getenv("SQLITE_PATH", os.path.join(BASE_DIR, "krushimitra.db"))
 
 _active_engine = None
 
@@ -27,45 +70,82 @@ try:
 except ImportError:
     HAS_PYMYSQL = False
 
+def _build_ssl_context():
+    """Builds an SSL context suitable for cloud MySQL providers (Aiven, TiDB, Railway, AWS, PlanetScale)."""
+    try:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    except Exception:
+        return None
+
 def get_db():
     """
     Returns an active database connection.
     Attempts MySQL first if DB_TYPE is mysql, otherwise falls back to SQLite.
+    Supports local MySQL, cloud connection URLs, and SSL certificates automatically.
     """
     global _active_engine
 
     if DB_TYPE == "mysql" and HAS_PYMYSQL:
-        try:
-            # First ensure database exists
-            try:
-                temp_conn = pymysql.connect(
-                    host=MYSQL_HOST,
-                    port=MYSQL_PORT,
-                    user=MYSQL_USER,
-                    password=MYSQL_PASSWORD,
-                    connect_timeout=3
-                )
-                with temp_conn.cursor() as cur:
-                    cur.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-                temp_conn.commit()
-                temp_conn.close()
-            except Exception:
-                pass
+        is_remote_host = MYSQL_HOST not in ("127.0.0.1", "localhost", "")
+        use_ssl = (
+            MYSQL_SSL_MODE in ("true", "1", "required", "yes")
+            or (is_remote_host and MYSQL_SSL_MODE != "false")
+        )
+        ssl_ctx = _build_ssl_context() if use_ssl else None
 
-            conn = pymysql.connect(
-                host=MYSQL_HOST,
-                port=MYSQL_PORT,
-                user=MYSQL_USER,
-                password=MYSQL_PASSWORD,
-                database=MYSQL_DB,
-                cursorclass=DictCursor,
-                autocommit=True,
-                connect_timeout=3
-            )
+        def _try_connect(with_ssl):
+            connect_kwargs = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "database": MYSQL_DB,
+                "cursorclass": DictCursor,
+                "autocommit": True,
+                "connect_timeout": 10,
+                "charset": "utf8mb4"
+            }
+            if with_ssl and ssl_ctx:
+                connect_kwargs["ssl"] = ssl_ctx
+            return pymysql.connect(**connect_kwargs)
+
+        try:
+            # First ensure database exists if connecting locally with root/admin privileges
+            if not is_remote_host:
+                try:
+                    temp_conn = pymysql.connect(
+                        host=MYSQL_HOST,
+                        port=MYSQL_PORT,
+                        user=MYSQL_USER,
+                        password=MYSQL_PASSWORD,
+                        connect_timeout=3
+                    )
+                    with temp_conn.cursor() as cur:
+                        cur.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+                    temp_conn.commit()
+                    temp_conn.close()
+                except Exception:
+                    pass
+
+            # Connect with SSL if remote, fallback to unencrypted if needed
+            try:
+                conn = _try_connect(with_ssl=use_ssl)
+            except Exception as first_err:
+                if use_ssl:
+                    try:
+                        conn = _try_connect(with_ssl=False)
+                    except Exception:
+                        raise first_err
+                else:
+                    raise first_err
+
             _active_engine = "mysql"
             return conn, "mysql"
         except Exception as e:
-            print(f"[DATABASE WARNING] MySQL connection to {MYSQL_HOST}:{MYSQL_PORT} failed ({e}). Falling back to SQLite.")
+            print(f"[DATABASE WARNING] MySQL connection to {MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB} failed ({e}). Falling back to SQLite.")
 
     # SQLite fallback
     conn = sqlite3.connect(SQLITE_PATH)
