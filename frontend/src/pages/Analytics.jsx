@@ -1121,7 +1121,7 @@ export default function Analytics({ nav }) {
           PRINT-ONLY OFFICIAL DOSSIER FOOTER
           (Visible ONLY when printing or exporting to PDF)
       ========================================================= */}
-      <div className="print-only mt-8 border-t border-gray-200 pt-4 text-center text-[10px] text-gray-500">
+      <div className="print-only print-footer mt-8 border-t border-gray-200 pt-4 text-center text-[10px] text-gray-500 print:mt-2 print:pt-2">
         <div className="flex items-center justify-between">
           <span>🌱 KrushiMitra AI Agriculture Platform • Smart Telemetry Dossier</span>
           <span>Certified Agronomic Report • For Official Farm Reference</span>

@@ -1560,7 +1560,7 @@ textarea:focus-visible {
     width: 100% !important;
     min-width: 0 !important;
     margin: 0 !important;
-    padding: 10mm 12mm 12mm 12mm !important; /* Replaces page margins with clean content padding */
+    padding: 8mm 10mm 8mm 10mm !important; /* Replaces page margins with clean content padding */
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1683,18 +1683,18 @@ textarea:focus-visible {
   .card {
     background: #ffffff !important;
     border: 1px solid #d4e2d3 !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     box-shadow: none !important;
-    margin-bottom: 12pt !important;
-    padding: 12pt !important;
+    margin-bottom: 8pt !important;
+    padding: 10pt !important;
   }
 
   /* 7. Grid Handling for Print */
   .print-kpi-grid {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 8pt !important;
-    margin-bottom: 12pt !important;
+    gap: 6pt !important;
+    margin-bottom: 8pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1702,8 +1702,8 @@ textarea:focus-visible {
   .analytics-grid-row {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 12pt !important;
-    margin-bottom: 12pt !important;
+    gap: 8pt !important;
+    margin-bottom: 8pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1718,25 +1718,33 @@ textarea:focus-visible {
 
   /* Chart Height & Responsive Container in Print */
   .card .h-72 {
-    height: 260px !important;
-    max-height: 260px !important;
+    height: 200px !important;
+    max-height: 200px !important;
     overflow: visible !important;
   }
 
   .recharts-responsive-container {
     width: 100% !important;
-    height: 260px !important;
-    min-height: 260px !important;
-    max-height: 260px !important;
+    height: 200px !important;
+    min-height: 200px !important;
+    max-height: 200px !important;
     display: block !important;
     position: relative !important;
     overflow: visible !important;
   }
 
+  /* Force inner div of ResponsiveContainer to expand from 0px to 100% in print */
+  .recharts-responsive-container > div {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    position: relative !important;
+  }
+
   .recharts-wrapper {
     width: 100% !important;
-    height: 260px !important;
-    max-height: 260px !important;
+    height: 200px !important;
+    max-height: 200px !important;
     display: block !important;
     position: relative !important;
   }
@@ -1744,10 +1752,17 @@ textarea:focus-visible {
   /* CRITICAL FIX: Only the main chart canvas SVG is sized to the container */
   .recharts-wrapper > svg.recharts-surface {
     width: 100% !important;
-    height: 220px !important;
-    max-height: 220px !important;
+    height: 168px !important;
+    max-height: 168px !important;
     display: block !important;
     overflow: visible !important;
+  }
+
+  .print-footer {
+    margin-top: 6pt !important;
+    padding-top: 4pt !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   /* CRITICAL FIX: Legend Wrapper & Icons in Print */
