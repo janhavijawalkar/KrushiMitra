@@ -2945,16 +2945,27 @@ def diagnose_crop_disease(image_data: str, mime_type: str = "image/jpeg", lang: 
     # 1. Try Gemini Multimodal Vision with Multi-Model Fallback
     api_key = get_gemini_api_key()
     if api_key and clean_b64:
+        crop_focus_instruction = ""
+        clean_query = (user_query or "").strip()
+        if clean_query and clean_query.lower() not in ["auto", "all", "none"]:
+            crop_focus_instruction = f"""
+IMPORTANT USER DIRECTIVE: The farmer has specifically requested diagnosis for '{clean_query}'.
+If this image contains multiple plants or crops (such as a multi-panel collage, multiple leaves, or fruits), or if '{clean_query}' is visible anywhere in this image, you MUST focus your primary pathology diagnosis specifically on {clean_query}.
+"""
+
         vision_prompt = f"""You are an elite Agricultural Plant Pathologist and Agronomist specialized in Indian, Maharashtra, floriculture, and horticulture crops.
 Analyze this crop / plant / leaf / flower photo with high botanical precision.
-Accurately identify the true plant/crop species (e.g., Rose, Tomato, Cotton, Soybean, Chilli, Wheat, Grapes, Pomegranate, Onion, Sugarcane, Mango, Marigold, etc.).
-Accurately identify the condition: whether it is Diseased or Healthy. If diseased, identify the exact fungal, bacterial, viral, or pest issue (e.g. Rose Black Spot (Diplocarpon rosae), Powdery Mildew, Early Blight, Leaf Curl, Rust, Anthracnose, Downy Mildew, etc.).
+{crop_focus_instruction}
+Accurately identify the true plant/crop species (e.g., Tomato, Rose, Cotton, Soybean, Chilli, Wheat, Grapes, Pomegranate, Onion, Sugarcane, Mango, etc.).
+If this image contains multiple plants, crops, or is a collage of several panels, list all distinct crops identified in 'all_crops_in_image'.
+Accurately identify the condition: whether it is Diseased or Healthy. If diseased, identify the exact fungal, bacterial, viral, or pest issue (e.g. Tomato Early Blight (Alternaria solani), Fruit Cracking / Russeting, Rose Black Spot (Diplocarpon rosae), Powdery Mildew, Leaf Curl, Rust, Anthracnose, Downy Mildew, etc.).
 Respond STRICTLY with a valid JSON object matching this schema (NO markdown backticks, ONLY raw JSON):
 {{
-  "crop_detected": "Name of crop in English (e.g. Rose, Tomato, Cotton, Soybean, Chilli, etc.)",
-  "crop_detected_local": "Name in {prompt_lang} (e.g. गुलाब, टोमॅटो, कापूस, मिरची)",
+  "crop_detected": "Primary crop name in English (e.g. Tomato, Rose, Cotton, Soybean, Chilli, etc.)",
+  "crop_detected_local": "Primary crop name in {prompt_lang} (e.g. टोमॅटो, गुलाब, कापूस, मिरची)",
+  "all_crops_in_image": ["Crop 1", "Crop 2"],
   "condition": "Diseased" or "Healthy",
-  "disease_name": "Scientific / English name of disease or pest (e.g. Rose Black Spot (Diplocarpon rosae))",
+  "disease_name": "Scientific / English name of disease or pest",
   "disease_name_local": "Name of disease in {prompt_lang}",
   "severity": "Mild" or "Moderate" or "Severe" or "None",
   "confidence": 95,
@@ -2982,7 +2993,7 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
   "whatsapp_summary": "Concise WhatsApp shareable message in {prompt_lang}"
 }}"""
 
-        models_to_try = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
+        models_to_try = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest"]
         payload = {
             "contents": [
                 {
@@ -3022,31 +3033,91 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
                         parsed["crop_detected_local"] = parsed.get("crop_detected", "")
 
                     # Detect canonical disease key for full multilingual UI toggling
-                    combined_text = f"{parsed.get('crop_detected', '')} {parsed.get('crop_detected_local', '')} {parsed.get('disease_name', '')} {parsed.get('disease_name_local', '')}".lower()
+                    raw_crop = str(parsed.get('crop_detected', '')).lower()
+                    raw_crop_local = str(parsed.get('crop_detected_local', '')).lower()
+                    raw_disease = str(parsed.get('disease_name', '')).lower()
+                    raw_disease_local = str(parsed.get('disease_name_local', '')).lower()
+                    combined_text = f"{raw_crop} {raw_crop_local} {raw_disease} {raw_disease_local}"
+
+                    user_target = (user_query or "").lower().strip()
                     det_key = None
-                    if any(w in combined_text for w in ["rose", "गुलाब", "black spot", "काळे ठिपके", "काला धब्बा", "diplocarpon"]):
+
+                    # 1. First priority: Respect user explicit target query if provided
+                    if any(w in user_target for w in ["tomato", "टोमॅटो", "टमाटर"]):
+                        det_key = "tomato_early_blight"
+                    elif any(w in user_target for w in ["cotton", "कापूस", "कपास"]):
+                        det_key = "cotton_pink_bollworm"
+                    elif any(w in user_target for w in ["chilli", "chili", "मिरची", "मिर्च"]):
+                        det_key = "chilli_leaf_curl"
+                    elif any(w in user_target for w in ["wheat", "गहू", "गेहूं"]):
+                        det_key = "wheat_rust"
+                    elif any(w in user_target for w in ["grape", "द्राक्ष", "अंगूर"]):
+                        det_key = "grape_downy_mildew"
+                    elif any(w in user_target for w in ["pomegranate", "डाळिंब", "अनार"]):
+                        det_key = "pomegranate_bacterial_blight"
+                    elif any(w in user_target for w in ["soybean", "सोयाबीन"]):
+                        det_key = "soybean_yellow_mosaic"
+                    elif any(w in user_target for w in ["onion", "कांदा", "प्याज"]):
+                        det_key = "onion_purple_blotch"
+                    elif any(w in user_target for w in ["sugarcane", "ऊस", "गन्ना"]):
+                        det_key = "sugarcane_red_rot"
+                    elif any(w in user_target for w in ["rose", "गुलाब"]):
                         if any(w in combined_text for w in ["powdery", "mildew", "भुरी", "सफेद"]):
                             det_key = "rose_powdery_mildew"
                         else:
                             det_key = "rose_black_spot"
-                    elif any(w in combined_text for w in ["chilli", "मिरची", "मिर्च", "चुरडा", "मुरडा", "leaf curl", "thrips"]):
-                        det_key = "chilli_leaf_curl"
-                    elif any(w in combined_text for w in ["wheat", "गहू", "गेहूं", "तांबेरा", "rust"]):
-                        det_key = "wheat_rust"
-                    elif any(w in combined_text for w in ["grape", "द्राक्ष", "अंगूर", "डाउनी", "downy"]):
-                        det_key = "grape_downy_mildew"
-                    elif any(w in combined_text for w in ["pomegranate", "डाळिंब", "अनार", "तेल्या", "telya"]):
-                        det_key = "pomegranate_bacterial_blight"
-                    elif any(w in combined_text for w in ["cotton", "कापूस", "कपास", "बोंड", "bollworm"]):
-                        det_key = "cotton_pink_bollworm"
-                    elif any(w in combined_text for w in ["soybean", "सोयाबीन", "मोझॅक", "mosaic"]):
-                        det_key = "soybean_yellow_mosaic"
-                    elif any(w in combined_text for w in ["onion", "कांदा", "प्याज", "जांभळा", "purple blotch"]):
-                        det_key = "onion_purple_blotch"
-                    elif any(w in combined_text for w in ["tomato", "टोमॅटो", "टमाटर", "करपा", "blight"]):
-                        det_key = "tomato_early_blight"
-                    elif any(w in combined_text for w in ["healthy", "निरोगी", "स्वस्थ"]):
-                        det_key = "healthy_leaf"
+
+                    # 2. Second priority: Match on detected crop name specifically (NOT generic disease words)
+                    if not det_key:
+                        if any(w in raw_crop or w in raw_crop_local for w in ["tomato", "टोमॅटो", "टमाटर"]):
+                            det_key = "tomato_early_blight"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["cotton", "कापूस", "कपास"]):
+                            det_key = "cotton_pink_bollworm"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["chilli", "chili", "मिरची", "मिर्च"]):
+                            det_key = "chilli_leaf_curl"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["wheat", "गहू", "गेहूं"]):
+                            det_key = "wheat_rust"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["grape", "द्राक्ष", "अंगूर"]):
+                            det_key = "grape_downy_mildew"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["pomegranate", "डाळिंब", "अनार"]):
+                            det_key = "pomegranate_bacterial_blight"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["soybean", "सोयाबीन"]):
+                            det_key = "soybean_yellow_mosaic"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["onion", "कांदा", "प्याज"]):
+                            det_key = "onion_purple_blotch"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["sugarcane", "ऊस", "गन्ना"]):
+                            det_key = "sugarcane_red_rot"
+                        elif any(w in raw_crop or w in raw_crop_local for w in ["rose", "गुलाब"]):
+                            if any(w in combined_text for w in ["powdery", "mildew", "भुरी", "सफेद"]):
+                                det_key = "rose_powdery_mildew"
+                            else:
+                                det_key = "rose_black_spot"
+
+                    # 3. Third priority: Specific disease keyword matching across text
+                    if not det_key:
+                        if any(w in combined_text for w in ["tomato", "टोमॅटो", "टमाटर", "russet", "fruit cracking", "blight", "करपा"]):
+                            det_key = "tomato_early_blight"
+                        elif any(w in combined_text for w in ["rose", "गुलाब", "black spot", "diplocarpon"]):
+                            if any(w in combined_text for w in ["powdery", "mildew", "भुरी", "सफेद"]):
+                                det_key = "rose_powdery_mildew"
+                            else:
+                                det_key = "rose_black_spot"
+                        elif any(w in combined_text for w in ["chilli", "मिरची", "मिर्च", "चुरडा", "मुरडा", "leaf curl", "thrips"]):
+                            det_key = "chilli_leaf_curl"
+                        elif any(w in combined_text for w in ["wheat", "गहू", "गेहूं", "तांबेरा", "rust"]):
+                            det_key = "wheat_rust"
+                        elif any(w in combined_text for w in ["grape", "द्राक्ष", "अंगूर", "डाउनी", "downy"]):
+                            det_key = "grape_downy_mildew"
+                        elif any(w in combined_text for w in ["pomegranate", "डाळिंब", "अनार", "तेल्या", "telya"]):
+                            det_key = "pomegranate_bacterial_blight"
+                        elif any(w in combined_text for w in ["cotton", "कापूस", "कपास", "बोंड", "bollworm"]):
+                            det_key = "cotton_pink_bollworm"
+                        elif any(w in combined_text for w in ["soybean", "सोयाबीन", "मोझॅक", "mosaic"]):
+                            det_key = "soybean_yellow_mosaic"
+                        elif any(w in combined_text for w in ["onion", "कांदा", "प्याज", "जांभळा", "purple blotch"]):
+                            det_key = "onion_purple_blotch"
+                        elif any(w in combined_text for w in ["healthy", "निरोगी", "स्वस्थ"]):
+                            det_key = "healthy_leaf"
 
                     if det_key:
                         parsed["disease_key"] = det_key
@@ -3082,8 +3153,11 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
     q = f"{user_query or ''} {file_name or ''}".lower().strip()
     selected_key = None
 
+    # Check for Tomato / टोमॅटो
+    if any(w in q for w in ["tomato", "टोमॅटो", "टमाटर"]):
+        selected_key = "tomato_early_blight"
     # Check for Rose / गुलाब
-    if any(w in q for w in ["rose", "गुलाब", "गुलाबा", "black spot", "black_spot", "diplocarpon"]):
+    elif any(w in q for w in ["rose", "गुलाब", "गुलाबा", "diplocarpon"]):
         if any(w in q for w in ["powdery", "mildew", "भुरी", "सफेद"]):
             selected_key = "rose_powdery_mildew"
         else:
@@ -3112,23 +3186,17 @@ Respond STRICTLY with a valid JSON object matching this schema (NO markdown back
     # Check for Sugarcane / ऊस
     elif any(w in q for w in ["sugarcane", "ऊस", "गन्ना", "red rot", "rot"]):
         selected_key = "sugarcane_red_rot"
-    # Check for Tomato / टोमॅटो
-    elif any(w in q for w in ["tomato", "टोमॅटो", "टमाटर"]):
-        selected_key = "tomato_early_blight"
     # Check for Healthy
     elif any(w in q for w in ["healthy", "निरोगी", "स्वस्थ", "clean"]):
         selected_key = "healthy_leaf"
-    # Fungal infection keyword without crop name
-    elif any(w in q for w in ["fungal", "fungus", "बुरशी", "फंगस", "leaf_spot", "leafspot", "spot"]):
-        selected_key = "rose_black_spot"
 
     # If text keywords didn't select a key and an image was provided, run CV analysis:
     if not selected_key and clean_b64:
         selected_key = classify_leaf_image_cv(clean_b64)
 
-    # If still not selected, default to rose_black_spot (not blind tomato)
+    # If still not selected, default safely to tomato_early_blight (most common field pathology) or rose_black_spot
     if not selected_key:
-        selected_key = "rose_black_spot"
+        selected_key = "tomato_early_blight"
 
     item = CROP_DISEASE_CATALOG.get(selected_key, CROP_DISEASE_CATALOG["rose_black_spot"])
     

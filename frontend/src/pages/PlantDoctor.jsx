@@ -746,26 +746,24 @@ const getFallbackPlantDiagnosis = (queryKey, lang = "mr") => {
     },
   };
 
-  let key = queryKey || "rose_black_spot";
+  let key = queryKey || "tomato_early_blight";
   if (typeof key === "string") {
     const lk = key.toLowerCase();
-    if (lk.includes("rose") || lk.includes("गुलाब")) {
-      key = "rose_black_spot";
+    if (lk.includes("tomato") || lk.includes("टोमॅटो") || lk.includes("टमाटर")) {
+      key = "tomato_early_blight";
     } else if (lk.includes("cotton") || lk.includes("कापूस") || lk.includes("कपास")) {
       key = "cotton_pink_bollworm";
-    } else if (lk.includes("tomato") || lk.includes("टोमॅटो") || lk.includes("टमाटर")) {
-      key = "tomato_early_blight";
+    } else if (lk.includes("rose") || lk.includes("गुलाब")) {
+      key = "rose_black_spot";
     } else if (lk.includes("soybean") || lk.includes("सोयाबीन")) {
       key = "soybean_yellow_mosaic";
     } else if (lk.includes("onion") || lk.includes("कांदा") || lk.includes("प्याज")) {
       key = "onion_purple_blotch";
     } else if (lk.includes("healthy") || lk.includes("निरोगी") || lk.includes("स्वस्थ")) {
       key = "healthy_leaf";
-    } else if (lk.includes("fungal") || lk.includes("fungus") || lk.includes("बुरशी") || lk.includes("spot") || lk.includes("black_spot") || lk.includes("leaf_spot")) {
-      key = "rose_black_spot";
     }
   }
-  return catalog[key] || catalog.rose_black_spot;
+  return catalog[key] || catalog.tomato_early_blight || catalog.rose_black_spot;
 };
 
 export default function PlantDoctor({ nav }) {
@@ -982,8 +980,7 @@ export default function PlantDoctor({ nav }) {
     const fnLower = fileName.toLowerCase();
     let cropHint = selectedCrop !== "auto" ? selectedCrop : "";
     if (!cropHint) {
-      if (fnLower.includes("rose") || fnLower.includes("गुलाब")) cropHint = "rose";
-      else if (fnLower.includes("tomato") || fnLower.includes("टमाटर") || fnLower.includes("टोमॅटो")) cropHint = "tomato";
+      if (fnLower.includes("tomato") || fnLower.includes("टमाटर") || fnLower.includes("टोमॅटो")) cropHint = "tomato";
       else if (fnLower.includes("cotton") || fnLower.includes("कपास") || fnLower.includes("कापूस")) cropHint = "cotton";
       else if (fnLower.includes("soybean") || fnLower.includes("सोयाबीन")) cropHint = "soybean";
       else if (fnLower.includes("onion") || fnLower.includes("प्याज") || fnLower.includes("कांदा")) cropHint = "onion";
@@ -992,11 +989,7 @@ export default function PlantDoctor({ nav }) {
       else if (fnLower.includes("grape") || fnLower.includes("अंगूर") || fnLower.includes("द्राक्ष")) cropHint = "grapes";
       else if (fnLower.includes("pomegranate") || fnLower.includes("अनार") || fnLower.includes("डाळिंब")) cropHint = "pomegranate";
       else if (fnLower.includes("sugarcane") || fnLower.includes("गन्ना") || fnLower.includes("ऊस")) cropHint = "sugarcane";
-      else if (fnLower.includes("fungal") || fnLower.includes("spot") || fnLower.includes("fungus")) cropHint = "rose";
-    }
-
-    if (cropHint && selectedCrop === "auto") {
-      setSelectedCrop(cropHint);
+      else if (fnLower.includes("rose") || fnLower.includes("गुलाब")) cropHint = "rose";
     }
 
     const reader = new FileReader();
@@ -1052,8 +1045,7 @@ export default function PlantDoctor({ nav }) {
         setDiagnosis(data);
         // Sync selectedCrop pill with detected crop
         const detCrop = (data.crop_detected || "").toLowerCase();
-        if (detCrop.includes("rose") || detCrop.includes("गुलाब")) setSelectedCrop("rose");
-        else if (detCrop.includes("tomato") || detCrop.includes("टोमॅटो") || detCrop.includes("टमाटर")) setSelectedCrop("tomato");
+        if (detCrop.includes("tomato") || detCrop.includes("टोमॅटो") || detCrop.includes("टमाटर")) setSelectedCrop("tomato");
         else if (detCrop.includes("cotton") || detCrop.includes("कापूस") || detCrop.includes("कपास")) setSelectedCrop("cotton");
         else if (detCrop.includes("soybean") || detCrop.includes("सोयाबीन")) setSelectedCrop("soybean");
         else if (detCrop.includes("onion") || detCrop.includes("कांदा") || detCrop.includes("प्याज")) setSelectedCrop("onion");
@@ -1062,6 +1054,7 @@ export default function PlantDoctor({ nav }) {
         else if (detCrop.includes("grape") || detCrop.includes("द्राक्ष") || detCrop.includes("अंगूर")) setSelectedCrop("grapes");
         else if (detCrop.includes("pomegranate") || detCrop.includes("डाळिंब") || detCrop.includes("अनार")) setSelectedCrop("pomegranate");
         else if (detCrop.includes("sugarcane") || detCrop.includes("ऊस") || detCrop.includes("गन्ना")) setSelectedCrop("sugarcane");
+        else if (detCrop.includes("rose") || detCrop.includes("गुलाब")) setSelectedCrop("rose");
       } else {
         // Use client agronomic fallback
         const fallback = getFallbackPlantDiagnosis(activeQuery || fileName, language);
@@ -1526,6 +1519,96 @@ export default function PlantDoctor({ nav }) {
           {/* DIAGNOSIS RESULT CARD */}
           {diagnosis && !analyzing && (
             <div className="space-y-6">
+              {/* MULTI-CROP COLLAGE DETECTED BANNER */}
+              {diagnosis?.all_crops_in_image && Array.isArray(diagnosis.all_crops_in_image) && diagnosis.all_crops_in_image.length > 1 && (
+                <div className="rounded-3xl border border-amber-300/80 bg-gradient-to-r from-amber-50 via-orange-50/60 to-yellow-50 p-4 sm:p-5 shadow-sm dark:border-amber-700/60 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-yellow-950/20 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
+                        <Sparkles className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-amber-950 dark:text-amber-100 flex items-center gap-1.5">
+                          <span>
+                            {language === "mr"
+                              ? "📸 फोटोमध्ये एकापेक्षा जास्त पिके आढळली!"
+                              : language === "hi"
+                              ? "📸 फोटो में एक से अधिक फसलें पाई गईं!"
+                              : "📸 Multi-Plant / Collage Image Detected!"}
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                          {language === "mr"
+                            ? "आपण ज्या पिकाचे निदान पाहू इच्छिता ते निवडण्यासाठी खाली क्लिक करा:"
+                            : language === "hi"
+                            ? "आप जिस फसल की जांच रिपोर्ट देखना चाहते हैं उस पर क्लिक करें:"
+                            : "Click below to switch the report to your desired plant:"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {diagnosis.all_crops_in_image.map((cropName, idx) => {
+                        const cLower = String(cropName).toLowerCase();
+                        let targetId = "auto";
+                        let emoji = "🌿";
+                        if (cLower.includes("tomato") || cLower.includes("टमाटर") || cLower.includes("टोमॅटो")) {
+                          targetId = "tomato";
+                          emoji = "🍅";
+                        } else if (cLower.includes("rose") || cLower.includes("गुलाब")) {
+                          targetId = "rose";
+                          emoji = "🌹";
+                        } else if (cLower.includes("cotton") || cLower.includes("कापूस") || cLower.includes("कपास")) {
+                          targetId = "cotton";
+                          emoji = "🌿";
+                        } else if (cLower.includes("soybean") || cLower.includes("सोयाबीन")) {
+                          targetId = "soybean";
+                          emoji = "🌱";
+                        } else if (cLower.includes("onion") || cLower.includes("कांदा") || cLower.includes("प्याज")) {
+                          targetId = "onion";
+                          emoji = "🧅";
+                        } else if (cLower.includes("chilli") || cLower.includes("मिरची") || cLower.includes("मिर्च")) {
+                          targetId = "chilli";
+                          emoji = "🌶️";
+                        } else if (cLower.includes("wheat") || cLower.includes("गहू") || cLower.includes("गेहूं")) {
+                          targetId = "wheat";
+                          emoji = "🌾";
+                        } else if (cLower.includes("grape") || cLower.includes("द्राक्ष") || cLower.includes("अंगूर")) {
+                          targetId = "grapes";
+                          emoji = "🍇";
+                        } else if (cLower.includes("pomegranate") || cLower.includes("डाळिंब") || cLower.includes("अनार")) {
+                          targetId = "pomegranate";
+                          emoji = "🍎";
+                        } else if (cLower.includes("sugarcane") || cLower.includes("ऊस") || cLower.includes("गन्ना")) {
+                          targetId = "sugarcane";
+                          emoji = "🎋";
+                        }
+
+                        const isActive = selectedCrop === targetId;
+
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleCropChange(targetId !== "auto" ? targetId : cLower)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                              isActive
+                                ? "bg-[#2E7D32] text-white border border-[#2E7D32] shadow-sm scale-102 ring-2 ring-green-400/40"
+                                : "bg-white dark:bg-black/40 text-gray-800 dark:text-gray-200 border border-amber-300 dark:border-amber-800/60 hover:border-green-600 hover:bg-green-50/50"
+                            }`}
+                          >
+                            <span>{emoji}</span>
+                            <span>{cropName}</span>
+                            {isActive ? (
+                              <span className="text-[10px] bg-white/20 px-1 rounded ml-0.5">✓</span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* SUMMARY HERO CARD */}
               <div
                 className={`rounded-3xl border p-6 shadow-sm transition-all ${
