@@ -2636,6 +2636,14 @@ export function AppProvider({ children }) {
           return null;
         }
       }
+      const localUser = localStorage.getItem("krushimitra_user");
+      if (localUser) {
+        try {
+          return sanitizeUserData(JSON.parse(localUser));
+        } catch {
+          return null;
+        }
+      }
     }
     return null;
   });
