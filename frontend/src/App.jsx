@@ -40,7 +40,7 @@ export default function App() {
         return "reset-password";
       }
     }
-    return user ? "dashboard" : "landing";
+    return user ? "dashboard" : "login";
   });
 
   useEffect(() => {
@@ -48,8 +48,8 @@ export default function App() {
       setPage("dashboard");
     }
 
-    if (!user && !["landing", "login", "register", "forgot", "reset-password"].includes(page)) {
-      setPage("landing");
+    if (!user && !["login", "register", "forgot", "reset-password", "landing"].includes(page)) {
+      setPage("login");
     }
   }, [user, page]);
 
@@ -64,7 +64,7 @@ export default function App() {
       return <ResetPassword nav={navigate} token={pageParams.token} />;
     }
 
-    /* ================= LANDING FOR LOGGED IN USERS ================= */
+    /* ================= LANDING (ACCESSIBLE VIA HOME LINK) ================= */
     if (page === "landing") {
       return <Landing nav={navigate} />;
     }
@@ -79,11 +79,7 @@ export default function App() {
         return <ForgotPassword nav={navigate} />;
       }
 
-      if (page === "login") {
-        return <Login nav={navigate} />;
-      }
-
-      return <Landing nav={navigate} />;
+      return <Login nav={navigate} />;
     }
 
 

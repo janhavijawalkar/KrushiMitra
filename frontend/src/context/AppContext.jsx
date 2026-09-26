@@ -2627,16 +2627,17 @@ const sanitizeUserData = (u) => {
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("krushimitra_user");
-    if (!savedUser) {
-      return null;
+    if (typeof window !== "undefined") {
+      const sessionUser = sessionStorage.getItem("krushimitra_user");
+      if (sessionUser) {
+        try {
+          return sanitizeUserData(JSON.parse(sessionUser));
+        } catch {
+          return null;
+        }
+      }
     }
-
-    try {
-      return sanitizeUserData(JSON.parse(savedUser));
-    } catch {
-      return null;
-    }
+    return null;
   });
 
   const [language, setLanguage] = useState(() => {
@@ -3164,7 +3165,9 @@ export function AppProvider({ children }) {
 
   // Secure Authorization Headers (JWT + RBAC Identity)
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("krushimitra_token");
+    const token = typeof window !== "undefined"
+      ? (sessionStorage.getItem("krushimitra_token") || localStorage.getItem("krushimitra_token"))
+      : null;
     const headers = {};
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
@@ -3703,20 +3706,25 @@ export function AppProvider({ children }) {
     const sanitized = sanitizeUserData(userData);
     setUser(sanitized);
 
-    localStorage.setItem(
-      "krushimitra_user",
-      JSON.stringify(sanitized)
-    );
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("krushimitra_user", JSON.stringify(sanitized));
+      localStorage.setItem("krushimitra_user", JSON.stringify(sanitized));
 
-    if (userData?.token) {
-      localStorage.setItem("krushimitra_token", userData.token);
+      if (userData?.token) {
+        sessionStorage.setItem("krushimitra_token", userData.token);
+        localStorage.setItem("krushimitra_token", userData.token);
+      }
     }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("krushimitra_user");
-    localStorage.removeItem("krushimitra_token");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("krushimitra_user");
+      sessionStorage.removeItem("krushimitra_token");
+      localStorage.removeItem("krushimitra_user");
+      localStorage.removeItem("krushimitra_token");
+    }
   };
 
   const changeLanguage = (newLanguage) => {

@@ -16,11 +16,11 @@ import GoogleAuthButton from "../components/GoogleAuthButton";
 export default function Login({ nav }) {
   const { login, apiLogin, apiGoogleAuth, addNotification, t, language, changeLanguage } = useApp();
 
-  const [form, setForm] = useState({
-    email: "",
+  const [form, setForm] = useState(() => ({
+    email: (typeof window !== "undefined" ? localStorage.getItem("krushimitra_remembered_email") : "") || "",
     password: "",
     rememberMe: true,
-  });
+  }));
 
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -52,6 +52,13 @@ export default function Login({ nav }) {
     setIsLoading(false);
 
     if (result.success) {
+      if (typeof window !== "undefined") {
+        if (form.rememberMe) {
+          localStorage.setItem("krushimitra_remembered_email", form.email.trim());
+        } else {
+          localStorage.removeItem("krushimitra_remembered_email");
+        }
+      }
       nav("dashboard");
     } else {
       setError(result.message || "Invalid credentials. Please verify your email and password.");
