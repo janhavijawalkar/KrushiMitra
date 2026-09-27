@@ -24,6 +24,57 @@ import { buildApiUrl } from "../utils/apiConfig";
 import { openWhatsAppShare, formatRecommendationShareText } from "../utils/whatsappShare";
 import { getCropRecommendationReason } from "../utils/cropReasoning";
 
+const QUICK_PRESETS = [
+  {
+    id: "cotton",
+    name: { en: "Cotton (Kapus)", mr: "कापूस (Cotton)", hi: "कपास (Cotton)" },
+    icon: "🌱",
+    values: { nitrogen: "118", phosphorus: "46", potassium: "20", temperature: "24", humidity: "80", ph: "6.9", rainfall: "80" },
+  },
+  {
+    id: "rice",
+    name: { en: "Rice (Paddy)", mr: "भात (Rice)", hi: "धान (Rice)" },
+    icon: "🌾",
+    values: { nitrogen: "80", phosphorus: "47", potassium: "40", temperature: "24", humidity: "82", ph: "6.4", rainfall: "236" },
+  },
+  {
+    id: "maize",
+    name: { en: "Maize (Maka)", mr: "मका (Maize)", hi: "मक्का (Maize)" },
+    icon: "🌽",
+    values: { nitrogen: "78", phosphorus: "48", potassium: "20", temperature: "22", humidity: "65", ph: "6.2", rainfall: "85" },
+  },
+  {
+    id: "chickpea",
+    name: { en: "Gram (Harbhara)", mr: "हरभरा (Chickpea)", hi: "चना (Chickpea)" },
+    icon: "🥔",
+    values: { nitrogen: "40", phosphorus: "68", potassium: "80", temperature: "19", humidity: "17", ph: "7.3", rainfall: "80" },
+  },
+  {
+    id: "pigeonpeas",
+    name: { en: "Tur (Arhar)", mr: "तूर (Pigeon Pea)", hi: "अरहर (Tur)" },
+    icon: "🌿",
+    values: { nitrogen: "35", phosphorus: "68", potassium: "20", temperature: "28", humidity: "48", ph: "5.7", rainfall: "150" },
+  },
+  {
+    id: "banana",
+    name: { en: "Banana (Keli)", mr: "केळी (Banana)", hi: "केला (Banana)" },
+    icon: "🍌",
+    values: { nitrogen: "100", phosphorus: "82", potassium: "50", temperature: "27", humidity: "80", ph: "6.0", rainfall: "105" },
+  },
+  {
+    id: "grapes",
+    name: { en: "Grapes (Draksha)", mr: "द्राक्षे (Grapes)", hi: "अंगूर (Grapes)" },
+    icon: "🍇",
+    values: { nitrogen: "23", phosphorus: "133", potassium: "200", temperature: "24", humidity: "82", ph: "6.0", rainfall: "70" },
+  },
+  {
+    id: "watermelon",
+    name: { en: "Watermelon", mr: "कलिंगड (Watermelon)", hi: "तरबूज (Watermelon)" },
+    icon: "🍉",
+    values: { nitrogen: "99", phosphorus: "17", potassium: "50", temperature: "26", humidity: "88", ph: "6.5", rainfall: "51" },
+  },
+];
+
 export default function Recommendation({ nav }) {
   const { addRecommendation, language, t, tCrop } = useApp();
 
@@ -41,6 +92,12 @@ export default function Recommendation({ nav }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [voiceToast, setVoiceToast] = useState("");
+
+  const applyPreset = (preset) => {
+    setForm(preset.values);
+    setError("");
+    if (result) setResult(null);
+  };
 
   const reasoning = useMemo(() => {
     if (!result?.crop) return null;
@@ -156,7 +213,8 @@ export default function Recommendation({ nav }) {
 
       const recommendation = {
         crop: data.recommended_crop,
-
+        confidence: data.confidence || 88.0,
+        topRecommendations: data.top_recommendations || [],
         nitrogen: Number(form.nitrogen),
         phosphorus: Number(form.phosphorus),
         potassium: Number(form.potassium),
@@ -199,6 +257,11 @@ export default function Recommendation({ nav }) {
         crop: offlineCrop,
         confidence: 88.0,
         isOfflineEstimate: true,
+        topRecommendations: [
+          { crop: offlineCrop, confidence: 88.0 },
+          { crop: "Soybean", confidence: 72.0 },
+          { crop: "Maize", confidence: 60.0 }
+        ],
         nitrogen: n,
         phosphorus: p,
         potassium: k,
@@ -337,6 +400,49 @@ export default function Recommendation({ nav }) {
             onSubmit={handleRecommend}
             className="grid gap-5 p-6 sm:grid-cols-2"
           >
+            {/* 1-CLICK QUICK SAMPLE TEST PRESETS */}
+            <div className="col-span-1 sm:col-span-2 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50/70 via-green-50/50 to-teal-50/60 p-4 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎯</span>
+                  <span className="text-xs font-black text-emerald-950">
+                    {language === "mr"
+                      ? "जलद नमुना चाचणी (1-Click Sample Presets):"
+                      : language === "hi"
+                      ? "त्वरित नमूना परीक्षण (1-Click Sample Presets):"
+                      : "1-Click Crop Test Presets:"}
+                  </span>
+                </div>
+                <span className="text-[10px] text-emerald-800/80 font-medium">
+                  {language === "mr"
+                    ? "कोणत्याही पिकावर क्लिक करून अचूक माती घटक आपोआप भरा"
+                    : language === "hi"
+                    ? "किसी भी फसल पर क्लिक कर सटीक मृदा मान स्वतः भरें"
+                    : "Click any crop chip to auto-populate agronomic benchmarks"}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_PRESETS.map((p) => {
+                  const isSelected = form.nitrogen === p.values.nitrogen && form.rainfall === p.values.rainfall;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-[#2E7D32] text-white shadow-sm ring-2 ring-emerald-400"
+                          : "bg-white text-emerald-900 hover:bg-emerald-100/70 border border-emerald-200 shadow-2xs hover:-translate-y-0.5"
+                      }`}
+                    >
+                      <span>{p.icon}</span>
+                      <span>{p.name[language] || p.name.en}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* SMART VOICE AUTO-FILL BANNER */}
             <div className="col-span-1 sm:col-span-2 rounded-2xl border border-green-200 bg-gradient-to-r from-[#F0F8ED] via-[#F7FCF5] to-white p-4 shadow-2xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -373,7 +479,7 @@ export default function Recommendation({ nav }) {
               value={form.nitrogen}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("nitrogen", val)}
-              placeholder="e.g. 90"
+              placeholder="e.g. 40 - 120"
               icon={<Activity size={15} />}
               suffix="kg/ha"
             />
@@ -384,7 +490,7 @@ export default function Recommendation({ nav }) {
               value={form.phosphorus}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("phosphorus", val)}
-              placeholder="e.g. 42"
+              placeholder="e.g. 20 - 90"
               icon={<Activity size={15} />}
               suffix="kg/ha"
             />
@@ -395,7 +501,7 @@ export default function Recommendation({ nav }) {
               value={form.potassium}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("potassium", val)}
-              placeholder="e.g. 43"
+              placeholder="e.g. 15 - 100"
               icon={<Activity size={15} />}
               suffix="kg/ha"
             />
@@ -406,7 +512,7 @@ export default function Recommendation({ nav }) {
               value={form.temperature}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("temperature", val)}
-              placeholder="e.g. 27"
+              placeholder="e.g. 18 - 35"
               icon={<Thermometer size={15} />}
               suffix="°C"
               step="0.1"
@@ -418,7 +524,7 @@ export default function Recommendation({ nav }) {
               value={form.humidity}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("humidity", val)}
-              placeholder="e.g. 75"
+              placeholder="e.g. 30 - 90"
               icon={<Droplets size={15} />}
               suffix="%"
               step="0.1"
@@ -430,7 +536,7 @@ export default function Recommendation({ nav }) {
               value={form.ph}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("ph", val)}
-              placeholder="e.g. 6.5"
+              placeholder="e.g. 5.5 - 7.5"
               icon={<FlaskConical size={15} />}
               suffix="pH"
               step="0.01"
@@ -442,7 +548,7 @@ export default function Recommendation({ nav }) {
               value={form.rainfall}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("rainfall", val)}
-              placeholder="e.g. 202"
+              placeholder="e.g. 60 - 250"
               icon={<CloudRain size={15} />}
               suffix="mm"
               step="0.1"
@@ -704,7 +810,7 @@ export default function Recommendation({ nav }) {
                       phosphorus: form.phosphorus || "--",
                       potassium: form.potassium || "--",
                       ph: form.ph || "--",
-                      confidence: result.confidence ? Math.round(result.confidence * 100) : 95,
+                      confidence: result.confidence ? Math.round(result.confidence) : 95,
                       lang: language,
                     })
                   )
@@ -717,6 +823,70 @@ export default function Recommendation({ nav }) {
               </button>
 
             </div>
+
+            {/* TOP ALTERNATIVE CROP CANDIDATES WITH PROBABILITY BARS */}
+            {result.topRecommendations && result.topRecommendations.length > 1 && (
+              <div className="mt-6 rounded-2xl bg-white/10 backdrop-blur-md p-4 sm:p-5 border border-white/20">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-yellow-300" />
+                    <h3 className="text-xs font-black uppercase tracking-wider text-green-100">
+                      {language === "mr"
+                        ? "इतर पर्यायी शिफारसी व संभाव्यता (Alternative Crop Candidates)"
+                        : language === "hi"
+                        ? "वैकल्पिक फसल संभावनाएं (Alternative Crop Candidates)"
+                        : "Alternative Crop Candidates & Confidence"}
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-green-200/80 font-medium">
+                    {language === "mr"
+                      ? "मल्टी-क्लास ML मॉडेल विश्लेषण"
+                      : language === "hi"
+                      ? "मल्टी-क्लास ML मॉडल विश्लेषण"
+                      : "Multi-Class ML Probability"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {result.topRecommendations.slice(0, 3).map((cand, idx) => {
+                    const isPrimary = cand.crop.toLowerCase() === result.crop.toLowerCase();
+                    return (
+                      <div
+                        key={idx}
+                        className={`rounded-xl p-3 border transition ${
+                          isPrimary
+                            ? "bg-white/25 border-yellow-300 shadow-sm"
+                            : "bg-black/20 border-white/10 hover:bg-black/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-extrabold text-white flex items-center gap-1.5">
+                            <span>{idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"}</span>
+                            <span>{tCrop ? tCrop(cand.crop) : cand.crop}</span>
+                          </span>
+                          <span
+                            className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
+                              isPrimary
+                                ? "bg-yellow-400 text-gray-950"
+                                : "bg-white/20 text-green-100"
+                            }`}
+                          >
+                            {cand.confidence}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/15 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isPrimary ? "bg-yellow-400" : "bg-emerald-300"
+                            }`}
+                            style={{ width: `${Math.min(cand.confidence, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Non-field / Orchard Crop Clarification Badge */}
             {(() => {
