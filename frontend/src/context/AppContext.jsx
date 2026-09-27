@@ -2784,76 +2784,56 @@ export function AppProvider({ children }) {
     const saved = localStorage.getItem("krushimitra_users_db");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const cleanUsers = parsed.filter(u => 
+            !["suresh.deshmukh@krushimitra.in", "priya.shinde@krushimitra.in", "anil.jadhav@krushimitra.in", "balasaheb@krushimitra.in", "namdev.koli@krushimitra.in", "raju.shetti.test@gmail.com", "pooja.deshmukh@example.com"].includes(u?.email)
+            && !(u?.email && u.email.startsWith("test.farmer."))
+          );
+          if (cleanUsers.length > 0) {
+            localStorage.setItem("krushimitra_users_db", JSON.stringify(cleanUsers));
+            return cleanUsers;
+          }
+        }
       } catch {
         // fallback
       }
     }
     const initialUsers = [
       {
-        id: "usr-admin-01",
+        id: 1,
         name: "KrushiMitra Administrator",
         email: "admin@krushimitra.in",
-        password: "adminpassword",
         role: "Admin",
         district: "Pune",
         phone: "+91 98000 00001",
-        joinedDate: "January 2026",
         status: "Active",
-        totalPredictions: 42,
+        member_since: "January 2026",
       },
       {
-        id: "usr-farmer-01",
+        id: 2,
         name: "Ramesh Patil",
         email: "ramesh.patil@krushimitra.in",
-        password: "password123",
         role: "Farmer",
         district: "Pune",
-        farmSize: "5.0 Acres",
+        farm_size: "5.0",
+        farm_unit: "Acres",
         phone: "+91 98230 45678",
-        joinedDate: "February 2026",
         status: "Active",
-        totalPredictions: 14,
+        member_since: "February 2026",
       },
       {
-        id: "usr-farmer-02",
-        name: "Suresh Deshmukh",
-        email: "suresh.deshmukh@krushimitra.in",
-        password: "password123",
-        role: "Farmer",
-        district: "Nagpur",
-        farmSize: "12.5 Acres",
-        phone: "+91 94221 88901",
-        joinedDate: "March 2026",
-        status: "Active",
-        totalPredictions: 9,
-      },
-      {
-        id: "usr-farmer-03",
-        name: "Priya Shinde",
-        email: "priya.shinde@krushimitra.in",
-        password: "password123",
-        role: "Farmer",
-        district: "Nashik",
-        farmSize: "8.0 Acres",
-        phone: "+91 98902 33412",
-        joinedDate: "May 2026",
-        status: "Active",
-        totalPredictions: 21,
-      },
-      {
-        id: "usr-farmer-04",
-        name: "Anil Jadhav",
-        email: "anil.jadhav@krushimitra.in",
-        password: "password123",
+        id: 20,
+        name: "Janhavi Jawalkar",
+        email: "janhavijawalkar15@gmail.com",
         role: "Farmer",
         district: "Amravati",
-        farmSize: "3.5 Acres",
-        phone: "+91 97654 11223",
-        joinedDate: "June 2026",
+        farm_size: "4.5",
+        farm_unit: "Acres",
+        phone: "+91 98220 12345",
         status: "Active",
-        totalPredictions: 6,
-      },
+        member_since: "September 2026",
+      }
     ];
     localStorage.setItem("krushimitra_users_db", JSON.stringify(initialUsers));
     return initialUsers;
