@@ -272,7 +272,7 @@ export default function Admin({ nav }) {
         ? true
         : (t.status || "Submitted").toLowerCase() === ticketStatusFilter.toLowerCase();
 
-    const isFeedback = (t.category || "").toLowerCase().includes("feedback") || Boolean(t.rating);
+    const isFeedback = (t.category || "").toLowerCase().includes("feedback") || t.type === "feedback";
     const matchesType =
       ticketTypeTab === "all"
         ? true
@@ -292,8 +292,8 @@ export default function Admin({ nav }) {
   const totalAdmins = (usersList || []).filter((u) => u.role === "Admin").length;
   const resolvedTickets = ticketsList.filter((t) => t.status === "Resolved").length;
   const pendingTickets = ticketsList.filter((t) => t.status !== "Resolved").length;
-  const feedbackTickets = ticketsList.filter((t) => (t.category || "").toLowerCase().includes("feedback") || Boolean(t.rating)).length;
-  const queryTickets = ticketsList.filter((t) => !((t.category || "").toLowerCase().includes("feedback") || Boolean(t.rating))).length;
+  const feedbackTickets = ticketsList.filter((t) => (t.category || "").toLowerCase().includes("feedback") || t.type === "feedback").length;
+  const queryTickets = ticketsList.filter((t) => !((t.category || "").toLowerCase().includes("feedback") || t.type === "feedback")).length;
 
   const handleRoleToggle = async (userId, currentRole) => {
     const newRole = currentRole === "Admin" ? "Farmer" : "Admin";
@@ -1613,7 +1613,7 @@ export default function Admin({ nav }) {
                 </div>
               ) : (
                 filteredTickets.map((ticket) => {
-                  const isFeedback = (ticket.category || "").toLowerCase().includes("feedback") || Boolean(ticket.rating);
+                  const isFeedback = (ticket.category || "").toLowerCase().includes("feedback") || ticket.type === "feedback";
                   const isResolved = ticket.status === "Resolved";
                   const isUnderReview = ticket.status === "Under Review";
 
@@ -1632,10 +1632,10 @@ export default function Admin({ nav }) {
                                 : "bg-[#E5F7EA] text-[#2E7D32] border-[#CDE5D1]"
                             }`}
                           >
-                            {isFeedback ? at("feedbackStarCategory") : at("queryCropCategory")}
+                            {isFeedback ? at("feedbackStarCategory") : `🌾 ${ticket.category || at("queryCropCategory")}`}
                           </span>
 
-                          {ticket.rating && (
+                          {isFeedback && ticket.rating && (
                             <div className="flex items-center gap-1 text-amber-500 text-xs font-bold pl-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                               <div className="flex items-center">
                                 {[...Array(Number(ticket.rating) || 5)].map((_, i) => (

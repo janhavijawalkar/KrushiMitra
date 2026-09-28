@@ -112,13 +112,15 @@ export default function Settings() {
 
     try {
       setIsSubmittingTicket(true);
+      const isFeedback = ticketForm.type === "feedback";
       const created = await submitSupportTicket({
         ...ticketForm,
+        type: ticketForm.type,
         user_email: user?.email || undefined,
         name: user?.name || undefined,
         district: user?.district || undefined,
-        rating: ticketForm.type === "feedback" ? ticketForm.rating : 5,
-        category: ticketForm.type === "feedback" ? "App Feedback & Rating" : ticketForm.category,
+        rating: isFeedback ? Number(ticketForm.rating) || 5 : null,
+        category: isFeedback ? "App Feedback & Rating" : ticketForm.category,
       });
       const ticketId = created?.ticket_id || created?.id || "TICK-" + Date.now().toString().slice(-6);
       setTicketSuccess(

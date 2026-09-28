@@ -431,6 +431,18 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
+
+        # Ensure SQLite support_tickets has district, rating, admin_reply
+        for col_def in [
+            ("district", "TEXT DEFAULT 'Maharashtra'"),
+            ("rating", "INTEGER DEFAULT NULL"),
+            ("admin_reply", "TEXT DEFAULT NULL")
+        ]:
+            try:
+                cursor.execute(f"ALTER TABLE support_tickets ADD COLUMN {col_def[0]} {col_def[1]}")
+            except Exception:
+                pass
+
         conn.commit()
 
     # Check and Seed Initial Users
@@ -853,32 +865,42 @@ def get_recommendation_history(user_email=None):
 
 def save_support_ticket(data):
     ticket_id = data.get("ticket_id") or f"TICK-{int(datetime.now().timestamp()) % 1000000:06d}"
+    
+    # Handle rating: only numeric ratings (1-5) for feedback; None for general agronomy queries
+    raw_rating = data.get("rating")
+    rating_val = None
+    if raw_rating is not None and str(raw_rating).strip() != "" and str(raw_rating).strip() != "null":
+        try:
+            rating_val = int(raw_rating)
+        except (ValueError, TypeError):
+            rating_val = None
+
     record_id = execute_insert("""
     INSERT INTO support_tickets (
         ticket_id, user_email, name, district, category, subject, message, status, rating
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         ticket_id,
-        data.get("user_email", "guest"),
-        data.get("name") or data.get("user_name", "Farmer"),
-        data.get("district", "Maharashtra"),
-        data.get("category", "General Inquiry"),
-        data.get("subject", "General Query"),
-        data.get("message", ""),
-        data.get("status", "Submitted"),
-        int(data.get("rating", 5))
+        data.get("user_email") or "guest@krushimitra.in",
+        data.get("name") or data.get("user_name") or "Farmer",
+        data.get("district") or "Maharashtra",
+        data.get("category") or "General Inquiry",
+        data.get("subject") or "General Query",
+        data.get("message") or "",
+        data.get("status") or "Submitted",
+        rating_val
     ))
     return {
         "id": record_id,
         "ticket_id": ticket_id,
-        "user_email": data.get("user_email", "guest"),
-        "name": data.get("name") or data.get("user_name", "Farmer"),
-        "district": data.get("district", "Maharashtra"),
-        "category": data.get("category", "General Inquiry"),
+        "user_email": data.get("user_email") or "guest@krushimitra.in",
+        "name": data.get("name") or data.get("user_name") or "Farmer",
+        "district": data.get("district") or "Maharashtra",
+        "category": data.get("category") or "General Inquiry",
         "subject": data.get("subject"),
         "message": data.get("message"),
-        "status": "Submitted",
-        "rating": int(data.get("rating", 5)),
+        "status": data.get("status") or "Submitted",
+        "rating": rating_val,
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 

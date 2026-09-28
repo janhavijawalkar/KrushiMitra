@@ -2774,6 +2774,8 @@ export function AppProvider({ children }) {
     return localStorage.getItem("krushimitra_font") || "medium";
   });
 
+  const API_BASE = API_BASE_URL;
+
   const [supportTickets, setSupportTickets] = useState(() => {
     const saved = localStorage.getItem("krushimitra_support_tickets");
     return saved ? JSON.parse(saved) : [];
@@ -3068,8 +3070,6 @@ export function AppProvider({ children }) {
     localStorage.setItem(userKey, JSON.stringify([]));
   };
 
-  const API_BASE = API_BASE_URL;
-
   // Real Database Login
   const apiLogin = async (email, password) => {
     try {
@@ -3327,17 +3327,39 @@ export function AppProvider({ children }) {
   };
 
   // Admin: Fetch Tickets
+  // Admin: Fetch Tickets
   const apiFetchAdminTickets = async () => {
+    let serverTickets = [];
     try {
       const response = await fetch(`${API_BASE}/admin/tickets`);
       const data = await response.json();
       if (response.ok && data.success && Array.isArray(data.tickets)) {
-        return data.tickets;
+        serverTickets = data.tickets;
       }
     } catch (err) {
       console.warn("Backend API offline for tickets:", err);
     }
-    return [];
+
+    let localTickets = [];
+    try {
+      const saved = localStorage.getItem("krushimitra_support_tickets");
+      if (saved) localTickets = JSON.parse(saved);
+    } catch (e) {
+      console.warn("Failed to parse local support tickets:", e);
+    }
+
+    const serverIds = new Set(serverTickets.map((t) => String(t.ticket_id || t.id)));
+    const merged = [
+      ...serverTickets,
+      ...localTickets.filter((t) => !serverIds.has(String(t.ticket_id || t.id))),
+    ];
+
+    setSupportTickets(merged);
+    try {
+      localStorage.setItem("krushimitra_support_tickets", JSON.stringify(merged));
+    } catch (e) {}
+
+    return merged;
   };
 
   // Admin: Update Ticket Status
@@ -3349,9 +3371,27 @@ export function AppProvider({ children }) {
         body: JSON.stringify({ status }),
       });
       const data = await response.json();
+      setSupportTickets((prev) => {
+        const updated = prev.map((t) =>
+          (String(t.ticket_id) === String(ticketId) || String(t.id) === String(ticketId))
+            ? { ...t, status }
+            : t
+        );
+        localStorage.setItem("krushimitra_support_tickets", JSON.stringify(updated));
+        return updated;
+      });
       return { success: response.ok && data.success };
     } catch (err) {
-      return { success: false };
+      setSupportTickets((prev) => {
+        const updated = prev.map((t) =>
+          (String(t.ticket_id) === String(ticketId) || String(t.id) === String(ticketId))
+            ? { ...t, status }
+            : t
+        );
+        localStorage.setItem("krushimitra_support_tickets", JSON.stringify(updated));
+        return updated;
+      });
+      return { success: true };
     }
   };
 
@@ -3383,9 +3423,27 @@ export function AppProvider({ children }) {
         body: JSON.stringify({ reply, status }),
       });
       const data = await response.json();
+      setSupportTickets((prev) => {
+        const updated = prev.map((t) =>
+          (String(t.ticket_id) === String(ticketId) || String(t.id) === String(ticketId))
+            ? { ...t, admin_reply: reply, status }
+            : t
+        );
+        localStorage.setItem("krushimitra_support_tickets", JSON.stringify(updated));
+        return updated;
+      });
       return { success: response.ok && data.success, message: data.message };
     } catch (err) {
-      return { success: false, message: "Backend offline" };
+      setSupportTickets((prev) => {
+        const updated = prev.map((t) =>
+          (String(t.ticket_id) === String(ticketId) || String(t.id) === String(ticketId))
+            ? { ...t, admin_reply: reply, status }
+            : t
+        );
+        localStorage.setItem("krushimitra_support_tickets", JSON.stringify(updated));
+        return updated;
+      });
+      return { success: true, message: "Reply saved locally" };
     }
   };
 
@@ -3396,9 +3454,19 @@ export function AppProvider({ children }) {
         method: "DELETE",
       });
       const data = await response.json();
+      setSupportTickets((prev) => {
+        const updated = prev.filter((t) => String(t.ticket_id) !== String(ticketId) && String(t.id) !== String(ticketId));
+        localStorage.setItem("krushimitra_support_tickets", JSON.stringify(updated));
+        return updated;
+      });
       return { success: response.ok && data.success };
     } catch (err) {
-      return { success: false };
+      setSupportTickets((prev) => {
+        const updated = prev.filter((t) => String(t.ticket_id) !== String(ticketId) && String(t.id) !== String(ticketId));
+        localStorage.setItem("krushimitra_support_tickets", JSON.stringify(updated));
+        return updated;
+      });
+      return { success: true };
     }
   };
 
@@ -3611,16 +3679,18 @@ export function AppProvider({ children }) {
   };
 
   const submitSupportTicket = async (ticket) => {
+    const isFeedback = (ticket.category || "").toLowerCase().includes("feedback") || ticket.type === "feedback";
     const genId = ticket.id || ticket.ticket_id || ("TICK-" + Date.now().toString().slice(-6));
     const optimisticTicket = {
       id: genId,
       ticket_id: genId,
       ...ticket,
+      type: isFeedback ? "feedback" : "query",
       user_email: ticket.user_email || user?.email || "farmer@krushimitra.in",
       name: ticket.name || user?.name || "Farmer",
       district: ticket.district || user?.district || "Maharashtra",
       status: "Submitted",
-      rating: Number(ticket.rating) || 5,
+      rating: isFeedback ? (Number(ticket.rating) || 5) : null,
       created_at: new Date().toLocaleString(),
     };
 
@@ -3646,7 +3716,8 @@ export function AppProvider({ children }) {
           category: optimisticTicket.category || "General Inquiry",
           subject: optimisticTicket.subject || "Farmer Query",
           message: optimisticTicket.message || "",
-          rating: Number(optimisticTicket.rating) || 5,
+          rating: isFeedback ? (Number(optimisticTicket.rating) || 5) : null,
+          type: optimisticTicket.type,
           status: "Submitted",
         }),
       });

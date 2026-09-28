@@ -1427,6 +1427,13 @@ def submit_support_ticket_api():
     try:
         data = request.get_json() or {}
         ticket = database.save_support_ticket(data)
+
+        # Notify administrator via email dispatch
+        try:
+            email_service.send_ticket_notification_email(ticket, wait_timeout=3)
+        except Exception as mail_err:
+            print(f"[HELPDESK] Admin alert notification skipped: {mail_err}", flush=True)
+
         return jsonify({
             "success": True,
             "message": "Support inquiry / feedback recorded successfully.",

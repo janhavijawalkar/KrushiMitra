@@ -330,3 +330,71 @@ def send_password_reset_email(to_email, user_name=None, reset_token="", reset_ur
 
     return send_email_robust(to_email, subject, html_content, text_content, wait_timeout=wait_timeout)
 
+
+def send_ticket_notification_email(ticket, wait_timeout=3):
+    """
+    Sends an email notification to the administrator when a farmer submits a new inquiry or feedback.
+    """
+    admin_recipient = os.getenv("SMTP_EMAIL", "krushimitra.project1@gmail.com").strip()
+    ticket_id = ticket.get("ticket_id") or "TICK"
+    user_name = ticket.get("name") or "Farmer"
+    user_email = ticket.get("user_email") or "Not provided"
+    district = ticket.get("district") or "Maharashtra"
+    category = ticket.get("category") or "General Inquiry"
+    subject_text = ticket.get("subject") or "Farmer Query"
+    message_text = ticket.get("message") or ""
+    is_feedback = "feedback" in category.lower()
+
+    email_subject = f"🌾 [KrushiMitra Helpdesk] New {'Feedback' if is_feedback else 'Agronomy Query'}: {subject_text} ({ticket_id})"
+    admin_url = f"{APP_URL}/admin"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F4F9F2; margin: 0; padding: 20px; }}
+        .card {{ max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #DCE8D9; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }}
+        .header {{ background: linear-gradient(135deg, #1B5E20, #2E7D32); padding: 26px; text-align: center; color: #ffffff; }}
+        .content {{ padding: 28px 24px; color: #17291A; font-size: 14px; line-height: 1.6; }}
+        .meta-box {{ background: #F8FAF7; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1.5px solid #C8E6C9; }}
+        .meta-row {{ margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; }}
+        .meta-label {{ color: #557258; font-weight: bold; }}
+        .msg-box {{ background: #EAF7EC; border-left: 4px solid #2E7D32; padding: 14px 18px; border-radius: 8px; margin: 16px 0; font-style: italic; color: #1B5E20; }}
+        .btn {{ display: inline-block; background: linear-gradient(135deg, #1B5E20, #2E7D32); color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: bold; font-size: 13px; margin: 12px 0; }}
+        .footer {{ background: #FAFCFA; padding: 18px; text-align: center; font-size: 11px; color: #7D8C80; border-top: 1px solid #E2EAE0; }}
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="header">
+          <h2 style="margin:0; font-size: 22px;">🌾 KrushiMitra Helpdesk Alert</h2>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #C8E6C9; font-weight: bold;">New Farmer Inbound Communication</p>
+        </div>
+        <div class="content">
+          <p>A new farmer inquiry has just been submitted on the KrushiMitra platform:</p>
+          <div class="meta-box">
+            <div class="meta-row"><span class="meta-label">🆔 Ticket ID:</span> <strong>{ticket_id}</strong></div>
+            <div class="meta-row"><span class="meta-label">👤 Farmer:</span> <strong>{user_name}</strong></div>
+            <div class="meta-row"><span class="meta-label">📧 Email:</span> {user_email}</div>
+            <div class="meta-row"><span class="meta-label">📍 District:</span> {district}</div>
+            <div class="meta-row"><span class="meta-label">📂 Category:</span> {category}</div>
+            <div class="meta-row" style="margin-bottom:0;"><span class="meta-label">📌 Subject:</span> <strong>{subject_text}</strong></div>
+          </div>
+          <p><strong>Query Message:</strong></p>
+          <div class="msg-box">"{message_text}"</div>
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="{admin_url}" class="btn">🚀 Open Admin Helpdesk to Review &amp; Reply &rarr;</a>
+          </div>
+        </div>
+        <div class="footer">
+          KrushiMitra Automated Helpdesk Dispatcher &bull; Maharashtra, India
+        </div>
+      </div>
+    </body>
+    </html>
+    """
+
+    return send_email_robust(admin_recipient, email_subject, html_content, message_text, wait_timeout=wait_timeout)
+
