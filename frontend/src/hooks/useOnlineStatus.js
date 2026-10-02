@@ -8,11 +8,21 @@ export function useOnlineStatus() {
   });
 
   const [wasOffline, setWasOffline] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(() => {
+    return typeof window !== "undefined" ? window.__krushiMitraDeferredPrompt || null : null;
+  });
+  const [isInstallable, setIsInstallable] = useState(() => {
+    return typeof window !== "undefined" ? Boolean(window.__krushiMitraDeferredPrompt) : false;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Check if early capture already has it
+    if (window.__krushiMitraDeferredPrompt && !deferredPrompt) {
+      setDeferredPrompt(window.__krushiMitraDeferredPrompt);
+      setIsInstallable(true);
+    }
 
     const handleOnline = () => {
       setIsOnline(true);
@@ -27,36 +37,53 @@ export function useOnlineStatus() {
 
     const handleBeforeInstall = (e) => {
       e.preventDefault();
+      window.__krushiMitraDeferredPrompt = e;
       setDeferredPrompt(e);
       setIsInstallable(true);
     };
 
     const handleAppInstalled = () => {
+      window.__krushiMitraDeferredPrompt = null;
       setDeferredPrompt(null);
       setIsInstallable(false);
+    };
+
+    const handlePromptReady = () => {
+      if (window.__krushiMitraDeferredPrompt) {
+        setDeferredPrompt(window.__krushiMitraDeferredPrompt);
+        setIsInstallable(true);
+      }
     };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     window.addEventListener("appinstalled", handleAppInstalled);
+    window.addEventListener("krushimitra-deferred-prompt-ready", handlePromptReady);
+    window.addEventListener("krushimitra-app-installed", handleAppInstalled);
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
       window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("krushimitra-deferred-prompt-ready", handlePromptReady);
+      window.removeEventListener("krushimitra-app-installed", handleAppInstalled);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const promptInstall = async () => {
-    if (!deferredPrompt) return false;
+    const promptEvent = deferredPrompt || (typeof window !== "undefined" ? window.__krushiMitraDeferredPrompt : null);
+    if (!promptEvent) return false;
     try {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
+      promptEvent.prompt();
+      const choiceResult = await promptEvent.userChoice;
       if (choiceResult.outcome === "accepted") {
         setIsInstallable(false);
         setDeferredPrompt(null);
+        if (typeof window !== "undefined") {
+          window.__krushiMitraDeferredPrompt = null;
+        }
         return true;
       }
     } catch (err) {

@@ -26,7 +26,19 @@
   <body>
     <div id="root"></div>
 
-    <!-- Official Google Identity Services SDK -->
+    <!-- Early capture of PWA beforeinstallprompt to ensure 1-click install works reliably -->
+    <script>
+      window.__krushiMitraDeferredPrompt = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        window.__krushiMitraDeferredPrompt = e;
+        window.dispatchEvent(new CustomEvent("krushimitra-deferred-prompt-ready"));
+      });
+      window.addEventListener("appinstalled", function () {
+        window.__krushiMitraDeferredPrompt = null;
+        window.dispatchEvent(new CustomEvent("krushimitra-app-installed"));
+      });
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>

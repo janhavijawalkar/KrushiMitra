@@ -32,6 +32,8 @@ import {
   WifiOff,
   Menu,
   X,
+  ShieldCheck,
+  FolderDown,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
@@ -100,6 +102,28 @@ export default function Landing({ nav }) {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [modalPlatform, setModalPlatform] = useState(null);
   const [downloadPlatformTab, setDownloadPlatformTab] = useState("all");
+  const [isDesktopUser, setIsDesktopUser] = useState(() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+    return !/android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+  });
+
+  const downloadWindowsShortcut = () => {
+    const origin =
+      typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : "https://krushimitra.vercel.app";
+    const content = `[InternetShortcut]\r\nURL=${origin}/\r\nIconIndex=0\r\nIconFile=${origin}/favicon.ico\r\nHotKey=0\r\nIDList=\r\n[{000214A0-0000-0000-C000-000000000046}]\r\nProp3=19,0\r\n`;
+    const blob = new Blob([content], { type: "application/x-msdownload;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "KrushiMitra_Desktop.url";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(null);
   const [demoLoading, setDemoLoading] = useState(false);
@@ -687,11 +711,37 @@ export default function Landing({ nav }) {
                 setShowInstallModal(true);
               }}
               className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
-              title={language === "mr" ? "अ‍ॅप डाऊनलोड व इन्स्टॉल करा" : language === "hi" ? "ऐप डाउनलोड व इंस्टॉल करें" : "Download & Install App"}
+              title={
+                isDesktopUser
+                  ? language === "mr"
+                    ? "संगणकावर KrushiMitra इन्स्टॉल करा"
+                    : language === "hi"
+                    ? "कंप्यूटर पर KrushiMitra इंस्टॉल करें"
+                    : "Install KrushiMitra on Desktop"
+                  : language === "mr"
+                  ? "अ‍ॅप इन्स्टॉल करा"
+                  : language === "hi"
+                  ? "ऐप इंस्टॉल करें"
+                  : "Install App"
+              }
             >
-              <Download size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+              {isDesktopUser ? (
+                <Monitor size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+              ) : (
+                <Smartphone size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+              )}
               <span className="hidden sm:inline">
-                {language === "mr" ? "अ‍ॅप डाऊनलोड" : language === "hi" ? "ऐप डाउनलोड" : "Download App"}
+                {isDesktopUser
+                  ? language === "mr"
+                    ? "डेस्कटॉप अ‍ॅप"
+                    : language === "hi"
+                    ? "डेस्कटॉप ऐप"
+                    : "Desktop App"
+                  : language === "mr"
+                  ? "अ‍ॅप इन्स्टॉल"
+                  : language === "hi"
+                  ? "ऐप इंस्टॉल"
+                  : "Install App"}
               </span>
               <span className="sm:hidden">
                 {language === "mr" ? "अ‍ॅप" : language === "hi" ? "ऐप" : "App"}
@@ -1709,59 +1759,152 @@ export default function Landing({ nav }) {
           {/* HEADER */}
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
             <span className="key-cap text-xs py-1.5 px-4 bg-emerald-100 dark:bg-[#183321] text-[#1B5E20] dark:text-[#4ADE80] font-black border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
-              📲 {language === "mr" ? "मोबाईल अ‍ॅप डाऊनलोड" : language === "hi" ? "मोबाइल ऐप डाउनलोड" : "Download Mobile App"}
+              {isDesktopUser ? "💻 " : "📲 "}
+              {isDesktopUser
+                ? language === "mr"
+                  ? "संगणक, लॅपटॉप व मोबाईल अ‍ॅप"
+                  : language === "hi"
+                  ? "कंप्यूटर, लैपटॉप व मोबाइल ऐप"
+                  : "Desktop, Laptop & Mobile App"
+                : language === "mr"
+                ? "मोबाईल अ‍ॅप डाऊनलोड"
+                : language === "hi"
+                ? "मोबाइल ऐप डाउनलोड"
+                : "Download Mobile App"}
             </span>
 
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
               {language === "mr"
-                ? "कृषीमित्र अ‍ॅप थेट मोबाईलवर इन्स्टॉल करा"
+                ? "कृषीमित्र अ‍ॅप थेट तुमच्या डिव्हाइसवर इन्स्टॉल करा"
                 : language === "hi"
-                ? "कृषि-मित्र ऐप सीधे मोबाइल में इंस्टॉल करें"
+                ? "कृषि-मित्र ऐप सीधे अपने डिवाइस पर इंस्टॉल करें"
                 : "Install KrushiMitra Directly on Your Device"}
             </h2>
 
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
               {language === "mr"
-                ? "प्ले स्टोअरच्या त्रासाशिवाय थेट १-क्लिक इन्स्टॉल. शेतात मोबाइल इंटरनेट नसतानाही १००% ऑफलाइन कार्य करते."
+                ? "कोणत्याही ३ऱ्या पार्टी ॲप किंवा एमुलेटरशिवाय १-क्लिक थेट इन्स्टॉल. १००% मोफत व शेतात ऑफलाइन चालणारे तंत्रज्ञान."
                 : language === "hi"
-                ? "बिना किसी झंझट के सीधा १-क्लिक इंस्टॉल। खेत में इंटरनेट न होने पर भी १००% ऑफलाइन काम करता है।"
-                : "Zero Play Store hassle. Instant 1-click install. Works 100% offline in fields with zero mobile data."}
+                ? "बिना किसी तीसरे सॉफ़्टवेयर या एमुलेटर के सीधा १-क्लिक इंस्टॉल। १००% मुफ्त और ऑफलाइन काम करता है।"
+                : "1-Click Direct Install with ZERO 3rd-party emulators. 100% Free & Works Offline."}
             </p>
 
             {/* ACTION BUTTONS & PLATFORM SELECTOR (UPSIDE) */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-              <a
-                href="/downloads/KrushiMitra.apk"
-                download="KrushiMitra.apk"
-                className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-7 py-3.5 text-xs sm:text-sm font-black !text-white shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline"
-              >
-                <Download size={18} className="!text-white" />
-                <span className="!text-white">
-                  {language === "mr"
-                    ? "📥 थेट KrushiMitra.apk डाऊनलोड करा (Android APK)"
-                    : language === "hi"
-                    ? "📥 सीधे KrushiMitra.apk डाउनलोड करें (Android APK)"
-                    : "📥 Download KrushiMitra.apk directly (Android APK)"}
-                </span>
-              </a>
+              {isDesktopUser ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPlatform("desktop");
+                      setShowInstallModal(true);
+                    }}
+                    className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-7 py-3.5 text-xs sm:text-sm font-black !text-white shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                  >
+                    <Monitor size={18} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr"
+                        ? "🖥️ संगणकावर थेट इन्स्टॉल करा (१-क्लिक Desktop App)"
+                        : language === "hi"
+                        ? "🖥️ कंप्यूटर पर सीधे इंस्टॉल करें (१-क्लिक Desktop App)"
+                        : "🖥️ Install Directly on Desktop (1-Click App)"}
+                    </span>
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setModalPlatform(null);
-                  setShowInstallModal(true);
-                }}
-                className="key-cap flex items-center gap-2 rounded-2xl px-6 py-3.5 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer"
-              >
-                <Smartphone size={17} />
-                <span>
-                  {language === "mr"
-                    ? "📲 १-क्लिक इन्स्टॉल व इतर साधने"
+                  <button
+                    type="button"
+                    onClick={downloadWindowsShortcut}
+                    className="key-cap flex items-center gap-2 rounded-2xl px-6 py-3.5 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer"
+                    title={
+                      language === "mr"
+                        ? "Windows डेस्कटॉप शॉर्टकट (.url) डाऊनलोड करा"
+                        : language === "hi"
+                        ? "Windows डेस्कटॉप शॉर्टकट (.url) डाउनलोड करें"
+                        : "Download Windows Desktop Shortcut"
+                    }
+                  >
+                    <FolderDown size={17} className="text-emerald-700 dark:text-emerald-400" />
+                    <span>
+                      {language === "mr"
+                        ? "⬇️ डेस्कटॉप शॉर्टकट (.url)"
+                        : language === "hi"
+                        ? "⬇️ डेस्कटॉप शॉर्टकट (.url)"
+                        : "⬇️ Desktop Shortcut (.url)"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPlatform("android");
+                      setShowInstallModal(true);
+                    }}
+                    className="key-cap flex items-center gap-2 rounded-2xl px-5 py-3.5 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer"
+                  >
+                    <Smartphone size={17} />
+                    <span>
+                      {language === "mr"
+                        ? "📲 मोबाईल पर्याय / APK"
+                        : language === "hi"
+                        ? "📲 मोबाइल विकल्प / APK"
+                        : "📲 Mobile / APK Options"}
+                    </span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPlatform("android");
+                      setShowInstallModal(true);
+                    }}
+                    className="btn-shimmer btn-glow flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] px-7 py-3.5 text-xs sm:text-sm font-black !text-white shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                  >
+                    <Smartphone size={18} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr"
+                        ? "📲 १-क्लिक ॲप इन्स्टॉल करा (Add to Screen)"
+                        : language === "hi"
+                        ? "📲 १-क्लिक ऐप इंस्टॉल करें (Add to Screen)"
+                        : "📲 1-Click Install App (Add to Screen)"}
+                    </span>
+                  </button>
+
+                  <a
+                    href="/downloads/KrushiMitra.apk"
+                    download="KrushiMitra.apk"
+                    className="key-cap flex items-center gap-2 rounded-2xl px-6 py-3.5 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] cursor-pointer no-underline"
+                  >
+                    <Download size={17} />
+                    <span>
+                      {language === "mr"
+                        ? "📥 KrushiMitra.apk डाऊनलोड"
+                        : language === "hi"
+                        ? "📥 KrushiMitra.apk डाउनलोड"
+                        : "📥 Download KrushiMitra.apk"}
+                    </span>
+                  </a>
+                </>
+              )}
+            </div>
+
+            {/* REASSURANCE SUBTEXT */}
+            <div className="pt-2 flex items-center justify-center gap-2 text-[11px] sm:text-xs font-bold text-emerald-800 dark:text-emerald-300">
+              <ShieldCheck size={15} className="text-[#2E7D32] shrink-0" />
+              <span>
+                {isDesktopUser
+                  ? language === "mr"
+                    ? "✅ १००% थेट इन्स्टॉल • कोणत्याही ३ऱ्या पार्टी ॲप किंवा एमुलेटरची गरज नाही • सुरक्षित"
                     : language === "hi"
-                    ? "📲 १-क्लिक इंस्टॉल व अन्य उपकरण"
-                    : "📲 1-Click Install & Guide"}
-                </span>
-              </button>
+                    ? "✅ १००% सीधा इंस्टॉल • किसी भी तीसरे ऐप या एमुलेटर की बिल्कुल आवश्यकता नहीं • सुरक्षित"
+                    : "✅ 100% Direct Install • ZERO 3rd-party emulators or software required • Safe & Free"
+                  : language === "mr"
+                  ? "⚡ १००% मोफत • शेतात इंटरनेट नसतानाही पूर्ण कार्य करते"
+                  : language === "hi"
+                  ? "⚡ १००% मुफ्त • खेत में इंटरनेट के बिना भी काम करता है"
+                  : "⚡ 100% Free • Works 100% Offline in Fields"}
+              </span>
             </div>
 
             {/* PLATFORM SELECTOR TABS (PERMANENTLY VISIBLE UPSIDE) */}
@@ -2012,7 +2155,19 @@ export default function Landing({ nav }) {
                   </div>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                {/* REASSURANCE BADGE */}
+                <div className="rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-[#162A1D] p-2.5 text-xs flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0" />
+                  <span className="text-[11px] text-gray-700 dark:text-gray-300 font-semibold">
+                    {language === "mr"
+                      ? "कोणत्याही ३ऱ्या पार्टी सॉफ्टवेअरची (उदा. BlueStacks, एमुलेटर) गरज नाही. थेट संगणकावर चालते."
+                      : language === "hi"
+                      ? "किसी भी तीसरे सॉफ़्टवेयर (जैसे BlueStacks, एमुलेटर) की जरूरत नहीं। सीधे कंप्यूटर पर चलता है।"
+                      : "No 3rd-party emulators (like BlueStacks) required. Runs directly on your PC."}
+                  </span>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
                   <button
                     type="button"
                     onClick={() => {
@@ -2023,7 +2178,18 @@ export default function Landing({ nav }) {
                   >
                     <Monitor size={15} className="!text-white" />
                     <span className="!text-white">
-                      {language === "mr" ? "PC / Desktop वर इन्स्टॉल करा" : language === "hi" ? "PC / Desktop में इंस्टॉल करें" : "Install on PC / Desktop"}
+                      {language === "mr" ? "🖥️ १-क्लिक इन्स्टॉल करा" : language === "hi" ? "🖥️ १-क्लिक इंस्टॉल करें" : "🖥️ 1-Click Install App"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={downloadWindowsShortcut}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-purple-600 dark:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 py-2.5 px-3 text-xs font-bold text-purple-900 dark:text-purple-300 transition cursor-pointer"
+                  >
+                    <FolderDown size={15} />
+                    <span>
+                      {language === "mr" ? "⬇️ डेस्कटॉप शॉर्टकट (.url)" : language === "hi" ? "⬇️ डेस्कटॉप शॉर्टकट (.url)" : "⬇️ Desktop Shortcut"}
                     </span>
                   </button>
                 </div>

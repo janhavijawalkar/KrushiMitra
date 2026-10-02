@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   BarChart3,
   Smartphone,
+  Monitor,
   Download,
   Leaf,
   Landmark,
@@ -393,38 +394,74 @@ export default function Sidebar({
 
       {/* INSTALL APP PROMPT BUTTON */}
       <div className="shrink-0 border-t border-[#D7E4D3] p-3 space-y-2">
-        <button
-          onClick={() => {
-            if (setMobileOpen) setMobileOpen(false);
-            setShowInstallModal(true);
-          }}
-          title={language === "mr" ? "मोबाईल अ‍ॅप डाऊनलोड व इन्स्टॉल करा" : language === "hi" ? "मोबाइल ऐप डाउनलोड एवं इंस्टॉल करें" : "Download & Install Mobile App"}
-          className={`
-            group flex w-full items-center rounded-xl
-            border border-emerald-300/80 bg-emerald-100/70 text-[#1B5E20] transition-all duration-200 cursor-pointer
-            hover:bg-emerald-200/80 hover:text-[#0F4716] active:scale-95 shadow-2xs
-            ${
-              collapsed
-                ? "justify-center px-3 py-3"
-                : "gap-2.5 px-3.5 py-2.5"
-            }
-          `}
-        >
-          <Smartphone
-            size={17}
-            className="shrink-0 text-[#2E7D32] transition-transform duration-200 group-hover:scale-110"
-          />
-          {!collapsed && (
-            <div className="text-left flex-1">
-              <p className="text-[12px] font-extrabold leading-tight">
-                {language === "mr" ? "मोबाईल अ‍ॅप" : language === "hi" ? "मोबाइल ऐप" : "Mobile App"}
-              </p>
-              <p className="text-[10px] text-emerald-800/80 font-medium">
-                {language === "mr" ? "इन्स्टॉल करा" : language === "hi" ? "इंस्टॉल करें" : "Install Now"}
-              </p>
-            </div>
-          )}
-        </button>
+        {(() => {
+          const isDesktop =
+            typeof navigator !== "undefined" &&
+            !/android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent || "");
+          return (
+            <button
+              onClick={() => {
+                if (setMobileOpen) setMobileOpen(false);
+                setShowInstallModal(true);
+              }}
+              title={
+                isDesktop
+                  ? language === "mr"
+                    ? "संगणकावर KrushiMitra अ‍ॅप इन्स्टॉल करा"
+                    : language === "hi"
+                    ? "कंप्यूटर पर KrushiMitra ऐप इंस्टॉल करें"
+                    : "Install KrushiMitra Desktop App"
+                  : language === "mr"
+                  ? "मोबाईल अ‍ॅप डाऊनलोड व इन्स्टॉल करा"
+                  : language === "hi"
+                  ? "मोबाइल ऐप डाउनलोड एवं इंस्टॉल करें"
+                  : "Download & Install Mobile App"
+              }
+              className={`
+                group flex w-full items-center rounded-xl
+                border border-emerald-300/80 bg-emerald-100/70 text-[#1B5E20] transition-all duration-200 cursor-pointer
+                hover:bg-emerald-200/80 hover:text-[#0F4716] active:scale-95 shadow-2xs
+                ${
+                  collapsed
+                    ? "justify-center px-3 py-3"
+                    : "gap-2.5 px-3.5 py-2.5"
+                }
+              `}
+            >
+              {isDesktop ? (
+                <Monitor
+                  size={17}
+                  className="shrink-0 text-[#2E7D32] transition-transform duration-200 group-hover:scale-110"
+                />
+              ) : (
+                <Smartphone
+                  size={17}
+                  className="shrink-0 text-[#2E7D32] transition-transform duration-200 group-hover:scale-110"
+                />
+              )}
+              {!collapsed && (
+                <div className="text-left flex-1">
+                  <p className="text-[12px] font-extrabold leading-tight">
+                    {isDesktop
+                      ? language === "mr"
+                        ? "डेस्कटॉप अ‍ॅप"
+                        : language === "hi"
+                        ? "डेस्कटॉप ऐप"
+                        : "Desktop App"
+                      : language === "mr"
+                      ? "मोबाईल अ‍ॅप"
+                      : language === "hi"
+                      ? "मोबाइल ऐप"
+                      : "Mobile App"}
+                  </p>
+                  <p className="text-[10px] text-emerald-800/80 font-medium">
+                    {language === "mr" ? "१-क्लिक इन्स्टॉल" : language === "hi" ? "१-क्लिक इंस्टॉल" : "1-Click Install"}
+                  </p>
+                </div>
+              )}
+            </button>
+          );
+        })()}
 
         {/* LOGOUT */}
         <button
