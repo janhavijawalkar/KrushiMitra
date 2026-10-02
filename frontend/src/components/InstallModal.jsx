@@ -10,10 +10,6 @@ import {
   FolderDown,
   LayoutGrid,
   ShieldCheck,
-  QrCode,
-  ExternalLink,
-  Laptop,
-  AlertCircle,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
@@ -23,7 +19,6 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
   const { isInstallable, promptInstall } = useOnlineStatus();
   const [activeTab, setActiveTab] = useState("desktop");
   const [installSuccess, setInstallSuccess] = useState(false);
-  const [showPhoneOptions, setShowPhoneOptions] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -61,35 +56,9 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
         return;
       }
     }
-    // If browser prompt is not immediately available, show success notice & guidance
     setInstallSuccess(true);
     setTimeout(() => setInstallSuccess(false), 3500);
   };
-
-  const downloadWindowsShortcut = () => {
-    const origin =
-      typeof window !== "undefined" && window.location.origin
-        ? window.location.origin
-        : "https://krushimitra.vercel.app";
-    const content = `[InternetShortcut]\r\nURL=${origin}/\r\nIconIndex=0\r\nIconFile=${origin}/favicon.ico\r\nHotKey=0\r\nIDList=\r\n[{000214A0-0000-0000-C000-000000000046}]\r\nProp3=19,0\r\n`;
-    const blob = new Blob([content], { type: "application/x-msdownload;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "KrushiMitra_Desktop.url";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    setInstallSuccess(true);
-    setTimeout(() => setInstallSuccess(false), 3000);
-  };
-
-  const currentUrl =
-    typeof window !== "undefined" && window.location.origin
-      ? window.location.origin
-      : "https://krushimitra.vercel.app";
 
   const modalContent = (
     <div
@@ -155,7 +124,7 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
               }`}
             >
               <Monitor size={14} className={activeTab === "desktop" ? "!text-white" : "!text-purple-600 dark:!text-purple-400"} />
-              <span>PC / Laptop</span>
+              <span>PC / Laptop (EXE)</span>
             </button>
 
             <button
@@ -168,7 +137,7 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
               }`}
             >
               <Smartphone size={14} className={activeTab === "android" ? "!text-white" : "!text-emerald-700 dark:!text-emerald-400"} />
-              <span>Android</span>
+              <span>Android (APK)</span>
             </button>
 
             <button
@@ -191,99 +160,88 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           {/* ===================== TAB 1: DESKTOP / PC ===================== */}
           {activeTab === "desktop" && (
             <>
-              {/* PRIMARY ACTION 1: 1-CLICK PWA INSTALL */}
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="btn-shimmer group w-full flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer text-left transition"
+              {/* OPTION 1: DIRECT WINDOWS EXE DOWNLOAD */}
+              <a
+                href="/downloads/KrushiMitra-Setup.exe"
+                download="KrushiMitra-Setup.exe"
+                className="btn-shimmer group flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline transition"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
-                    <Monitor size={21} className="!text-white" />
+                    <Download size={21} className="!text-white" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="text-left min-w-0">
                     <p className="text-xs sm:text-sm font-black !text-white leading-tight">
-                      {installSuccess
-                        ? language === "mr"
-                          ? "✓ इन्स्टॉल प्रक्रिया सुरू झाली!"
-                          : language === "hi"
-                          ? "✓ इंस्टॉल प्रक्रिया शुरू हो गई!"
-                          : "✓ Installation Launched!"
-                        : language === "mr"
-                        ? "🖥️ संगणकावर १-क्लिक इन्स्टॉल करा"
+                      {language === "mr"
+                        ? "💻 KrushiMitra-Setup.exe डाऊनलोड करा"
                         : language === "hi"
-                        ? "🖥️ कंप्यूटर पर १-क्लिक इंस्टॉल करें"
-                        : "🖥️ 1-Click Install to Desktop"}
+                        ? "💻 KrushiMitra-Setup.exe डाउनलोड करें"
+                        : "💻 Download KrushiMitra-Setup.exe"}
                     </p>
                     <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
                       {language === "mr"
-                        ? "Windows डेस्कटॉप स्क्रीनवर KrushiMitra चे आयकॉन जोडले जाईल"
+                        ? "Windows संगणकासाठी थेट इन्स्टॉलर (.exe फाईल)"
                         : language === "hi"
-                        ? "Windows डेस्कटॉप स्क्रीन पर KrushiMitra का आइकन जुड़ जाएगा"
-                        : "Adds KrushiMitra directly to your Windows desktop & start menu"}
+                        ? "Windows कंप्यूटर हेतु सीधी इंस्टॉलर (.exe फ़ाइल)"
+                        : "Direct Windows installer for PC and Laptop"}
                     </p>
                   </div>
                 </div>
                 <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
-                  1-Click App
+                  .EXE File
                 </span>
-              </button>
+              </a>
 
-              {/* SECONDARY ACTION 2: DOWNLOAD WINDOWS SHORTCUT (.URL) */}
+              {/* OPTION 2: 1-CLICK PWA APP INSTALL */}
               <button
                 type="button"
-                onClick={downloadWindowsShortcut}
-                className="group w-full flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-50 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer transition text-left"
+                onClick={handleInstallClick}
+                className="group w-full flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer transition text-left"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
-                    <FolderDown size={19} />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-200 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
+                    <LayoutGrid size={19} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-black leading-tight text-gray-900 dark:text-white">
-                      {language === "mr"
-                        ? "⬇️ Windows डेस्कटॉप शॉर्टकट डाऊनलोड करा"
+                      {installSuccess
+                        ? language === "mr"
+                          ? "✓ अ‍ॅप इन्स्टॉल झाले!"
+                          : language === "hi"
+                          ? "✓ ऐप इंस्टॉल हो गया!"
+                          : "✓ Installed Successfully!"
+                        : language === "mr"
+                        ? "🖥️ १-क्लिक थेट ॲप इन्स्टॉल (Chrome / Edge)"
                         : language === "hi"
-                        ? "⬇️ Windows डेस्कटॉप शॉर्टकट डाउनलोड करें"
-                        : "⬇️ Download Windows Desktop Shortcut (.url)"}
+                        ? "🖥️ १-क्लिक सीधा ऐप इंस्टॉल (Chrome / Edge)"
+                        : "🖥️ 1-Click Direct Install (Chrome / Edge)"}
                     </p>
                     <p className="text-[10.5px] text-gray-600 dark:text-emerald-300 font-medium truncate mt-0.5">
                       {language === "mr"
-                        ? "डाऊनलोड झालेली फाईल डेस्कटॉपवर ठेवा — त्यावर डबल-क्लिक करताच ॲप उघडेल"
+                        ? "थेट कॉम्प्युटरच्या डेस्कटॉप स्क्रीनवर ॲप जोडले जाईल"
                         : language === "hi"
-                        ? "डाउनलोड फ़ाइल डेस्कटॉप पर रखें — डबल-क्लिक करते ही सीधा ऐप खुलेगा"
-                        : "Save to your desktop — double-click anytime to open instantly"}
+                        ? "सीधे कंप्यूटर स्क्रीन पर ऐप जुड़ जाएगा"
+                        : "Installs directly to your Windows desktop & start menu"}
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-lg bg-emerald-100 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
-                  Direct .url
+                <span className="shrink-0 rounded-lg bg-emerald-200/80 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
+                  1-Click PWA
                 </span>
               </button>
 
-              {/* BROWSER URL BAR VISUAL GUIDE */}
+              {/* BROWSER URL BAR 2-STEP GUIDE */}
               <div className="rounded-2xl border border-gray-200 dark:border-[#24402A] bg-gray-50/80 dark:bg-[#162A1D] p-3 text-xs space-y-2">
-                <p className="font-black text-gray-900 dark:text-emerald-200 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                  <Monitor size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
-                  <span>
-                    {language === "mr"
-                      ? "किंवा Chrome / Edge मध्ये थेट इन्स्टॉल करा:"
-                      : language === "hi"
-                      ? "या Chrome / Edge में सीधे इंस्टॉल करें:"
-                      : "Or Install Directly via Chrome / Edge:"}
-                  </span>
-                </p>
-
                 <div className="flex items-center gap-2 text-gray-800 dark:text-emerald-100 font-bold">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-[10px] font-black">
                     १
                   </span>
                   <span>
                     {language === "mr"
-                      ? "ब्राऊजरच्या सर्वात वरच्या ॲड्रेस बारमध्ये उजव्या बाजूला (🖥️ किंवा ⊕) चिन्ह दाबा"
+                      ? "वर दिलेल्या 'KrushiMitra-Setup.exe' बटनावर क्लिक करून फाईल चालवा"
                       : language === "hi"
-                      ? "ब्राउज़र के सबसे ऊपर एड्रेस बार में दाईं ओर (🖥️ या ⊕) आइकन पर क्लिक करें"
-                      : "Look at top URL bar in Chrome/Edge, click the (🖥️ or ⊕) icon"}
+                      ? "ऊपर दिए गए 'KrushiMitra-Setup.exe' बटन पर क्लिक करके फ़ाइल चलाएं"
+                      : "Download and run KrushiMitra-Setup.exe or click 1-Click Install"}
                   </span>
                 </div>
 
@@ -293,98 +251,12 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                   </span>
                   <span>
                     {language === "mr"
-                      ? "'Install' वर क्लिक करा — KrushiMitra चे स्वतंत्र ॲप संगणकावर तयार होईल ✓"
+                      ? "किंवा Chrome / Edge च्या ॲड्रेस बारमधील (🖥️ किंवा ⊕) इन्स्टॉल चिन्ह दाबा ✓"
                       : language === "hi"
-                      ? "'Install' चुनें — KrushiMitra का स्वतंत्र ऐप कंप्यूटर पर तैयार हो जाएगा ✓"
-                      : "Click 'Install' — KrushiMitra runs in its own clean desktop window ✓"}
+                      ? "या Chrome / Edge के एड्रेस बार में (🖥️ या ⊕) आइकन दबाएं ✓"
+                      : "Or click the (🖥️ / ⊕) Install icon in Chrome / Edge address bar ✓"}
                   </span>
                 </div>
-              </div>
-
-              {/* TOGGLE FOR MOBILE PHONE OPTIONS (FOR USERS VISITING ON PC BUT WANTING APP ON PHONE) */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowPhoneOptions(!showPhoneOptions)}
-                  className="w-full flex items-center justify-between rounded-xl bg-gray-100 dark:bg-[#1A3322] px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-[#1B5E20] dark:hover:text-[#4ADE80] transition cursor-pointer"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Smartphone size={14} className="text-emerald-600" />
-                    <span>
-                      {language === "mr"
-                        ? "📲 हे ॲप तुमच्या मोबाईल फोनवर हवे आहे का?"
-                        : language === "hi"
-                        ? "📲 यह ऐप अपने मोबाइल फ़ोन पर चाहिए?"
-                        : "📲 Need this app on your Mobile Phone?"}
-                    </span>
-                  </span>
-                  <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-                    {showPhoneOptions ? "▲ लपवा (Hide)" : "▼ येथे पहा (Show)"}
-                  </span>
-                </button>
-
-                {showPhoneOptions && (
-                  <div className="mt-2 p-3 rounded-2xl border border-gray-200 dark:border-[#22402A] bg-gray-50/50 dark:bg-[#15271b] space-y-3 animate-fade-in">
-                    {/* QR CODE SCANNER */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-1.5 bg-white rounded-xl shadow-xs border border-gray-200 shrink-0">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent(
-                            currentUrl
-                          )}`}
-                          alt="Scan to open on phone"
-                          className="h-20 w-20 rounded-lg"
-                        />
-                      </div>
-                      <div className="text-xs space-y-1">
-                        <p className="font-bold text-gray-900 dark:text-white">
-                          {language === "mr"
-                            ? "📱 फोनच्या कॅमेऱ्याने QR स्कॅन करा"
-                            : language === "hi"
-                            ? "📱 फ़ोन के कैमरे से QR स्कैन करें"
-                            : "📱 Scan QR with Phone Camera"}
-                        </p>
-                        <p className="text-[11px] text-gray-600 dark:text-gray-300 leading-snug">
-                          {language === "mr"
-                            ? "स्कॅन करताच तुमच्या मोबाईल फोनवर KrushiMitra थेट उघडेल."
-                            : language === "hi"
-                            ? "स्कैन करते ही आपके मोबाइल फ़ोन पर KrushiMitra सीधे खुल जाएगा।"
-                            : "Scan to open KrushiMitra directly on your mobile browser."}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* DIRECT APK DOWNLOAD WITH WARNING */}
-                    <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
-                      <a
-                        href="/downloads/KrushiMitra.apk"
-                        download="KrushiMitra.apk"
-                        className="flex items-center justify-between gap-2 rounded-xl bg-gray-200 dark:bg-[#203D27] hover:bg-emerald-100 hover:text-[#1B5E20] dark:hover:bg-[#254d30] p-2.5 text-xs font-bold text-gray-800 dark:text-gray-200 transition no-underline"
-                      >
-                        <span className="flex items-center gap-2">
-                          <FolderDown size={16} className="text-emerald-700 dark:text-emerald-400" />
-                          <span>
-                            {language === "mr"
-                              ? "📥 Android फोनसाठी APK फाईल डाऊनलोड करा"
-                              : language === "hi"
-                              ? "📥 Android फ़ोन हेतु APK फ़ाइल डाउनलोड करें"
-                              : "📥 Download APK for Android Phone"}
-                          </span>
-                        </span>
-                        <span className="rounded bg-black/10 dark:bg-white/10 px-1.5 py-0.5 text-[10px] font-black">
-                          Android Only
-                        </span>
-                      </a>
-                      <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium mt-1">
-                        {language === "mr"
-                          ? "⚠️ टीप: ही .apk फाइल फक्त अँड्रॉइड फोनवर चालते, संगणकावर उघडू नये."
-                          : language === "hi"
-                          ? "⚠️ ध्यान दें: यह .apk फ़ाइल केवल एंड्रॉइड फ़ोन पर चलेगी, कंप्यूटर पर न खोलें।"
-                          : "⚠️ Note: .apk files are for Android phones only and do not run on Windows PC."}
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             </>
           )}
@@ -392,18 +264,50 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           {/* ===================== TAB 2: ANDROID MOBILE ===================== */}
           {activeTab === "android" && (
             <>
-              {/* OPTION 1: 1-CLICK PWA INSTALL */}
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="btn-shimmer group w-full flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer text-left transition"
+              {/* OPTION 1: DIRECT APK DOWNLOAD */}
+              <a
+                href="/downloads/KrushiMitra.apk"
+                download="KrushiMitra.apk"
+                className="btn-shimmer group flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline transition"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
-                    <LayoutGrid size={20} className="!text-white" />
+                    <FolderDown size={21} className="!text-white" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
+                      {language === "mr"
+                        ? "📥 थेट KrushiMitra.apk डाऊनलोड"
+                        : language === "hi"
+                        ? "📥 सीधे KrushiMitra.apk डाउनलोड"
+                        : "📥 Download KrushiMitra.apk (Direct APK)"}
+                    </p>
+                    <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
+                      {language === "mr"
+                        ? "Android मोबाईलसाठी थेट इन्स्टॉलर फाईल"
+                        : language === "hi"
+                        ? "Android मोबाइल हेतु सीधी इंस्टॉलर फ़ाइल"
+                        : "Direct installer for Android mobile phones"}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
+                  .APK File
+                </span>
+              </a>
+
+              {/* OPTION 2: 1-CLICK PWA INSTALL */}
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="group w-full flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer transition text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-200 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
+                    <LayoutGrid size={19} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
+                    <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-tight">
                       {installSuccess
                         ? language === "mr"
                           ? "✓ अ‍ॅप इन्स्टॉल झाले!"
@@ -416,7 +320,7 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                         ? "📲 तुरंत १-क्लिक इंस्टॉल (Add to Screen)"
                         : "📲 1-Click Install to Phone Screen"}
                     </p>
-                    <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
+                    <p className="text-[10.5px] text-gray-600 dark:text-emerald-300 font-medium truncate mt-0.5">
                       {language === "mr"
                         ? "मोबाईलच्या होम स्क्रीनवर ॲप जोडले जाईल (१००% मोफत)"
                         : language === "hi"
@@ -425,42 +329,10 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
+                <span className="shrink-0 rounded-lg bg-emerald-200/80 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
                   1-Click
                 </span>
               </button>
-
-              {/* OPTION 2: DIRECT APK DOWNLOAD */}
-              <a
-                href="/downloads/KrushiMitra.apk"
-                download="KrushiMitra.apk"
-                className="group flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-50 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer no-underline transition"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
-                    <FolderDown size={19} />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-tight">
-                      {language === "mr"
-                        ? "📥 थेट KrushiMitra.apk डाऊनलोड"
-                        : language === "hi"
-                        ? "📥 सीधे KrushiMitra.apk डाउनलोड"
-                        : "📥 Download KrushiMitra.apk (Offline)"}
-                    </p>
-                    <p className="text-[10.5px] text-gray-600 dark:text-emerald-300 font-medium truncate mt-0.5">
-                      {language === "mr"
-                        ? "फोनच्या 'Downloads' फोल्डरमध्ये सेव्ह होते"
-                        : language === "hi"
-                        ? "फ़ोन के 'Downloads' फ़ोल्डर में सेव होगा"
-                        : "Saves directly to your phone Downloads"}
-                    </p>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-lg bg-emerald-100 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
-                  APK File
-                </span>
-              </a>
 
               {/* 2-STEP ANDROID INSTRUCTIONS */}
               <div className="rounded-2xl border border-emerald-100 dark:border-[#24402A] bg-emerald-50/40 dark:bg-[#162A1D] p-3 text-xs space-y-2">
@@ -470,10 +342,10 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                   </span>
                   <span>
                     {language === "mr"
-                      ? "वर दिलेल्या '१-क्लिक इन्स्टॉल' बटनावर क्लिक करा"
+                      ? "वर दिलेल्या 'KrushiMitra.apk' फाईलवर क्लिक करून इन्स्टॉल करा"
                       : language === "hi"
-                      ? "ऊपर दिए गए '१-क्लिक इंस्टॉल' बटन पर क्लिक करें"
-                      : "Tap the 1-Click Install button above"}
+                      ? "ऊपर दी गई 'KrushiMitra.apk' फ़ाइल पर क्लिक करके इंस्टॉल करें"
+                      : "Download the APK file or tap 1-Click Install"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-800 dark:text-emerald-100 font-bold">
