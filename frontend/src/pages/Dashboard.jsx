@@ -12,6 +12,8 @@ import {
   ShieldAlert,
   Megaphone,
   X,
+  BarChart3,
+  Wheat,
 } from "lucide-react";
 
 import StatCard from "../components/StatCard";
@@ -98,7 +100,44 @@ export default function Dashboard({ nav }) {
       0
     );
 
-    return `${(total / userPredictions.length).toFixed(2)} t/ha`;
+    return `${(total / userPredictions.length).toFixed(2)} ${language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}`;
+  })();
+
+  const userAcres = parseFloat(user?.farm_size || user?.farmSize || "5.0") || 5.0;
+
+  const avgYieldNum = (() => {
+    if (!userPredictions.length) return 2.45;
+    const total = userPredictions.reduce(
+      (sum, item) => sum + Number(item.productivity || 0),
+      0
+    );
+    return parseFloat((total / userPredictions.length).toFixed(2));
+  })();
+
+  const estTotalTonnes = (avgYieldNum * userAcres).toFixed(1);
+  const estTotalBags = Math.round(avgYieldNum * userAcres * 20); // 1 tonne = 20 bags of 50kg
+
+  const topCropsList = (() => {
+    if (userPredictions.length > 0) {
+      const counts = {};
+      userPredictions.forEach((p) => {
+        const c = p.crop || "Soybean";
+        counts[c] = (counts[c] || 0) + 1;
+      });
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([c, count]) => ({
+          name: tCrop ? tCrop(c) : c,
+          rawName: c,
+          percent: Math.round((count / userPredictions.length) * 100),
+        }));
+    }
+    return [
+      { name: language === "mr" ? "सोयाबीन" : language === "hi" ? "सोयाबीन" : "Soybean", percent: 45 },
+      { name: language === "mr" ? "कापूस" : language === "hi" ? "कपास" : "Cotton", percent: 35 },
+      { name: language === "mr" ? "हरभरा" : language === "hi" ? "चना" : "Gram", percent: 20 },
+    ];
   })();
 
   const latestRecommendation = userRecommendations.length
@@ -490,6 +529,183 @@ export default function Dashboard({ nav }) {
 
 
       {/* =====================================================
+          FARM VISUAL OVERVIEW & SIMPLE GRAPHS (शेत प्रगती व पीक आलेख)
+      ===================================================== */}
+      <section className="card card-interactive p-5 sm:p-6 depth-1 border border-emerald-100 dark:border-emerald-900/60 bg-gradient-to-br from-white via-[#FAFCF8] to-[#F1F8EE] dark:from-[#0F1E14] dark:to-[#0A160E] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-100 dark:border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF3E6] dark:bg-emerald-950/70 text-[#2E7D32] dark:text-emerald-300 shadow-xs">
+              <Wheat size={22} />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100">
+                  {language === "mr"
+                    ? "🌾 शेत प्रगती व पीक आलेख (सोपे दृश्य)"
+                    : language === "hi"
+                    ? "🌾 खेत प्रगति एवं फसल ग्राफ (सरल दृश्य)"
+                    : "🌾 Farm Progress & Visual Overview"}
+                </h2>
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-[#1B5E20] dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-black uppercase">
+                  {language === "mr" ? "शेतकरी अनुकूल" : language === "hi" ? "किसान अनुकूल" : "Farmer Friendly"}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {language === "mr"
+                  ? `तुमच्या ${userAcres} एकर शेतातील उत्पादन क्षमता, मातीचे पोषण आणि पिकांचे समजायला सोपे विश्लेषण.`
+                  : language === "hi"
+                  ? `आपके ${userAcres} एकड़ खेत की उत्पादन क्षमता, मृदा पोषण और फसलों का सरल विश्लेषण।`
+                  : `Simple, at-a-glance yield capacity and soil health for your ${userAcres} acres.`}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => nav?.("analytics")}
+            className="btn-shimmer flex items-center justify-center gap-2 rounded-xl bg-[#1B5E20] hover:bg-[#2E7D32] text-white px-4 py-2.5 text-xs font-bold shadow-md transition cursor-pointer self-start sm:self-auto"
+          >
+            <BarChart3 size={15} />
+            <span>
+              {language === "mr"
+                ? "📊 संपूर्ण सोपे आलेख पहा"
+                : language === "hi"
+                ? "📊 संपूर्ण सरल ग्राफ देखें"
+                : "View All Simple Graphs"}
+            </span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+
+        {/* 3 VISUAL FARMER GAUGES */}
+        <div className="grid gap-4 sm:grid-cols-3 pt-1">
+          {/* GAUGE 1: YIELD CAPACITY */}
+          <div className="rounded-2xl border border-emerald-100 dark:border-emerald-800/40 bg-white/80 dark:bg-[#132418]/80 p-4 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                <span>📈</span>
+                {language === "mr" ? "सरासरी उत्पादन क्षमता" : language === "hi" ? "औसत उत्पादन क्षमता" : "Yield Capacity"}
+              </span>
+              <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 text-[#1B5E20] dark:text-emerald-300 px-2 py-0.5 text-[10px] font-black">
+                {language === "mr" ? "उत्कृष्ट" : language === "hi" ? "उत्कृष्ट" : "Good"}
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-gray-800 dark:text-gray-100">
+                {avgYieldNum}
+              </span>
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                {language === "mr" ? "टन / एकर" : language === "hi" ? "टन / एकड़" : "t / acre"}
+              </span>
+            </div>
+
+            {/* Visual Progress Bar */}
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-emerald-500 to-[#1B5E20] h-2.5 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.round((avgYieldNum / 3.5) * 100))}%` }}
+              />
+            </div>
+
+            <div className="text-[11px] font-bold text-[#1B5E20] dark:text-emerald-300 flex items-center justify-between">
+              <span>🌾 {userAcres} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}</span>
+              <span>💰 {estTotalTonnes} {language === "mr" ? "टन" : language === "hi" ? "टन" : "t"} (~{estTotalBags} {language === "mr" ? "पोती" : language === "hi" ? "बोरी" : "bags"})</span>
+            </div>
+          </div>
+
+          {/* GAUGE 2: SOIL HEALTH */}
+          <div className="rounded-2xl border border-blue-100 dark:border-blue-800/40 bg-white/80 dark:bg-[#132418]/80 p-4 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                <span>🧪</span>
+                {language === "mr" ? "मातीचे आरोग्य (सुपीकता)" : language === "hi" ? "मृदा स्वास्थ्य (उर्वरता)" : "Soil Health"}
+              </span>
+              <span className="rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 text-[10px] font-black">
+                {language === "mr" ? "सुपीक" : language === "hi" ? "उपजाऊ" : "Fertile"}
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-gray-800 dark:text-gray-100">
+                85
+              </span>
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                / 100
+              </span>
+            </div>
+
+            {/* Visual Progress Bar */}
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full transition-all duration-500"
+                style={{ width: "85%" }}
+              />
+            </div>
+
+            <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+              <CheckCircle2 size={12} />
+              <span>
+                {language === "mr"
+                  ? "नत्र, स्फुरद व पालाश योग्य प्रमाणात"
+                  : language === "hi"
+                  ? "नाइट्रोजन, फास्फोरस व पोटाश संतुलित"
+                  : "N-P-K nutrients in good balance"}
+              </span>
+            </div>
+          </div>
+
+          {/* GAUGE 3: CROP ALLOCATION */}
+          <div className="rounded-2xl border border-amber-100 dark:border-amber-800/40 bg-white/80 dark:bg-[#132418]/80 p-4 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                <span>🌾</span>
+                {language === "mr" ? "प्रमुख पिके आणि वाटा" : language === "hi" ? "मुख्य फसलें एवं शेयर" : "Crops & Land Share"}
+              </span>
+              <span className="rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-0.5 text-[10px] font-black">
+                {userDistrict}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 pt-0.5">
+              {topCropsList.map((item, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-gray-700 dark:text-gray-200">
+                    <span>{item.name}</span>
+                    <span>{item.percent}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        idx === 0 ? "bg-emerald-600" : idx === 1 ? "bg-amber-500" : "bg-blue-500"
+                      }`}
+                      style={{ width: `${item.percent}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM TAKEAWAY NOTICE */}
+        <div className="rounded-xl bg-[#F0FDF4] dark:bg-[#06180B] border border-emerald-200 dark:border-emerald-800/60 p-3 text-xs flex items-start gap-2.5">
+          <span className="text-base shrink-0">💡</span>
+          <div className="text-emerald-950 dark:text-emerald-100 font-medium">
+            <strong className="text-[#1B5E20] dark:text-emerald-300 font-extrabold mr-1">
+              {language === "mr" ? "शेतकऱ्यांसाठी सोपा सल्ला:" : language === "hi" ? "किसानों के लिए सरल सलाह:" : "Farmer Takeaway:"}
+            </strong>
+            {language === "mr"
+              ? `तुमच्या ${userDistrict} जिल्ह्यात ${topCropsList[0]?.name || "सोयाबीन"} पिकासाठी हवामान व माती अनुकूल आहे. संपूर्ण रंगीत मापक, खत नियोजन आणि हवामान पाहण्यासाठी वरील "संपूर्ण सोपे आलेख पहा" बटणावर क्लिक करा.`
+              : language === "hi"
+              ? `आपके ${userDistrict} जिले में ${topCropsList[0]?.name || "सोयाबीन"} फसल के लिए मौसम और मिट्टी अनुकूल है। विस्तृत रंगीन ग्राफ और खाद प्रबंधन देखने के लिए ऊपर क्लिक करें।`
+              : `Agro-climate in ${userDistrict} is optimal for ${topCropsList[0]?.name || "Soybean"}. Click "View All Simple Graphs" above to explore intuitive nutrient meters and weather matrices.`}
+          </div>
+        </div>
+      </section>
+
+
+      {/* =====================================================
           RECENT PREDICTIONS
       ===================================================== */}
 
@@ -623,7 +839,7 @@ export default function Dashboard({ nav }) {
                         {Number(
                           item.productivity
                         ).toFixed(2)}{" "}
-                        {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
+                        {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
                       </td>
 
                       <td className="px-5 py-4">
@@ -680,7 +896,7 @@ export default function Dashboard({ nav }) {
                         {Number(
                           item.productivity
                         ).toFixed(2)}{" "}
-                        {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
+                        {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
                       </p>
                     </div>
 

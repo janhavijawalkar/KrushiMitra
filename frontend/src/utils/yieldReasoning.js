@@ -14,8 +14,8 @@
 
 export const CROP_YIELD_PROFILES = {
   cotton: {
-    baseYield: 1.8, // t/ha (seed cotton / kapas)
-    unit: "t/ha",
+    baseYield: 0.75, // tonnes/acre (seed cotton / kapas ~7.5 quintals/acre)
+    unit: "tonnes/acre",
     rainMin: 550,
     rainIdealMin: 650,
     rainIdealMax: 900,
@@ -36,25 +36,25 @@ export const CROP_YIELD_PROFILES = {
     tips: {
       mr: [
         "पात्या व फुले लागण्याच्या अवस्थेत 13:0:45 (पोटॅशियम नायट्रेट) ची २ ग्रॅम/लिटर दराने फवारणी केल्यास बोंडाचे वजन वाढते व गळ कमी होते.",
-        "गुलाबी बोंडअळीच्या नियंत्रणासाठी पेरणीनंतर ४५ दिवसांनी हेक्टरी ५ कामगंध सापळे (Pheromone Traps) उभारावेत.",
+        "गुलाबी बोंडअळीच्या नियंत्रणासाठी पेरणीनंतर ४५ दिवसांनी एकरी २ कामगंध सापळे (Pheromone Traps) उभारावेत.",
         "पाण्याचा ताण पडल्यास किंवा जास्त पाऊस झाल्यास शेतात पाणी साचू न देता चर काढून पाण्याचा निचरा ठेवा."
       ],
       hi: [
         "फूल व टिंडे बनते समय 13:0:45 (पोटेशियम नाइट्रेट) का 2 ग्राम/लीटर पानी में छिड़काव करें जिससे कलियां झड़ने से बचेंगी।",
-        "गुलाबी सुंडी की रोकथाम के लिए बुवाई के 45 दिनों बाद प्रति हेक्टेयर 5 फेरोमोन ट्रैप लगाएं।",
+        "गुलाबी सुंडी की रोकथाम के लिए बुवाई के 45 दिनों बाद प्रति एकड़ 2 फेरोमोन ट्रैप लगाएं।",
         "भारी वर्षा की स्थिति में खेत से अतिरिक्त पानी निकालने के लिए नालियां खुली रखें।"
       ],
       en: [
         "Foliar spray of Potassium Nitrate (13:0:45 @ 10g/L) during flowering and square formation reduces shedding and boosts boll weight.",
-        "Install 5 pheromone traps per hectare at 45 DAS for early pink bollworm scouting and monitoring.",
+        "Install 2 pheromone traps per acre at 45 DAS for early pink bollworm scouting and monitoring.",
         "Ensure drainage furrows are clear to prevent water stagnation in heavy black clay soils during continuous rains."
       ]
     }
   },
 
   soybean: {
-    baseYield: 2.2, // t/ha
-    unit: "t/ha",
+    baseYield: 0.90, // tonnes/acre (~9 quintals/acre)
+    unit: "tonnes/acre",
     rainMin: 500,
     rainIdealMin: 600,
     rainIdealMax: 850,
@@ -92,8 +92,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   sugarcane: {
-    baseYield: 82.0, // t/ha
-    unit: "t/ha",
+    baseYield: 35.0, // tonnes/acre (~35 t/acre)
+    unit: "tonnes/acre",
     rainMin: 1200,
     rainIdealMin: 1500,
     rainIdealMax: 2500,
@@ -114,25 +114,25 @@ export const CROP_YIELD_PROFILES = {
     tips: {
       mr: [
         "मोठ्या बांधणीच्या वेळी (१२० ते १३० दिवसांनी) शिफारशीत रासायनिक खतांचा शेवटचा हप्ता देऊन मातीची भर लावावी.",
-        "ठिबक सिंचनाचा वापर केल्यास ५०% पाण्याची बचत होऊन हेक्टरी २० ते ३० टनांनी उत्पादन वाढते.",
+        "ठिबक सिंचनाचा वापर केल्यास ५०% पाण्याची बचत होऊन एकरी ८ ते १२ टनांनी उत्पादन वाढते.",
         "कांड्या पोसताना पालाश (Potash) ची मात्रा वेळेवर दिल्यास उसाचा उतारा (Sucrose recovery) वाढतो."
       ],
       hi: [
         "गन्ने की भारी बंधाई के समय उर्वरकों की अंतिम किस्त देकर जड़ों पर मिट्टी अवश्य चढ़ाएं।",
-        "टपक (ड्रिप) सिंचाई अपनाने से जल बचत के साथ 20-30 टन प्रति हेक्टेयर अतिरिक्त पैदावार मिलती है।",
+        "टपक (ड्रिप) सिंचाई अपनाने से जल बचत के साथ 8-12 टन प्रति एकड़ अतिरिक्त पैदावार मिलती है।",
         "पोटाश की उचित मात्रा गन्ने के वजन और चीनी की मात्रा (रिकवरी) को बढ़ाती है।"
       ],
       en: [
         "Perform earthing up at 120-130 days along with final split fertilizer dose to support thick internodes and prevent lodging.",
-        "Adopting drip fertigation saves 40-50% water while increasing millable cane tonnage by 20-30 t/ha.",
+        "Adopting drip fertigation saves 40-50% water while increasing millable cane tonnage by 8-12 t/acre.",
         "Ensure adequate potassium application during Grand Growth stage for enhanced sucrose accumulation."
       ]
     }
   },
 
   wheat: {
-    baseYield: 3.2, // t/ha
-    unit: "t/ha",
+    baseYield: 1.30, // tonnes/acre (~13 quintals/acre)
+    unit: "tonnes/acre",
     rainMin: 200,
     rainIdealMin: 250,
     rainIdealMax: 450,
@@ -170,8 +170,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   rice: {
-    baseYield: 3.0, // t/ha
-    unit: "t/ha",
+    baseYield: 1.25, // tonnes/acre
+    unit: "tonnes/acre",
     rainMin: 900,
     rainIdealMin: 1100,
     rainIdealMax: 2000,
@@ -209,8 +209,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   gram: {
-    baseYield: 1.2, // t/ha
-    unit: "t/ha",
+    baseYield: 0.50, // tonnes/acre (~5 quintals/acre)
+    unit: "tonnes/acre",
     rainMin: 150,
     rainIdealMin: 200,
     rainIdealMax: 350,
@@ -230,17 +230,17 @@ export const CROP_YIELD_PROFILES = {
     },
     tips: {
       mr: [
-        "घाटे अळीच्या (Helicoverpa) नियंत्रणासाठी हेक्टरी ५ कामगंध सापळे आणि टी आकाराचे पक्षी थांबे लावावेत.",
+        "घाटे अळीच्या (Helicoverpa) नियंत्रणासाठी एकरी २ कामगंध सापळे आणि टी आकाराचे पक्षी थांबे लावावेत.",
         "फुलोऱ्याच्या अवस्थेत पाणी देणे टाळावे; घाटे भरताना एक हलके सिंचन दिल्यास उत्पादनात ३०% वाढ होते.",
         "पेरणीपूर्वी बियाण्यास रायझोबियम व पीएसबी जिवाणू संवर्धकाची बीजप्रक्रिया अवश्य करावी."
       ],
       hi: [
-        "फली छेदक कीट की निगरानी के लिए प्रति हेक्टेयर 5 फेरोमोन ट्रैप और टी-आकार के पक्षी बसेरे लगाएं।",
+        "फली छेदक कीट की निगरानी के लिए प्रति एकड़ 2 फेरोमोन ट्रैप और टी-आकार के पक्षी बसेरे लगाएं।",
         "फूल आने के समय पानी देने से बचें; फली बनते समय एक हल्की सिंचाई पैदावार में 30% वृद्धि करती है।",
         "बीज जनित उकठा रोग से बचाव हेतु बुवाई से पूर्व ट्राइकोडर्मा से बीजोपचार करें।"
       ],
       en: [
-        "Install 5 pheromone traps and 10 T-shaped bird perches per hectare to naturally manage pod borer (Helicoverpa).",
+        "Install 2 pheromone traps and 4 T-shaped bird perches per acre to naturally manage pod borer (Helicoverpa).",
         "Avoid irrigating during peak flowering; provide one light irrigation at pod development stage.",
         "Treat seeds with Rhizobium and PSB biofertilizer along with Trichoderma before sowing."
       ]
@@ -248,8 +248,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   tur: {
-    baseYield: 1.0, // t/ha
-    unit: "t/ha",
+    baseYield: 0.42, // tonnes/acre (~4.2 quintals/acre)
+    unit: "tonnes/acre",
     rainMin: 500,
     rainIdealMin: 600,
     rainIdealMax: 850,
@@ -287,8 +287,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   maize: {
-    baseYield: 3.8, // t/ha
-    unit: "t/ha",
+    baseYield: 1.55, // tonnes/acre
+    unit: "tonnes/acre",
     rainMin: 450,
     rainIdealMin: 550,
     rainIdealMax: 800,
@@ -326,8 +326,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   jowar: {
-    baseYield: 1.5, // t/ha
-    unit: "t/ha",
+    baseYield: 0.60, // tonnes/acre
+    unit: "tonnes/acre",
     rainMin: 350,
     rainIdealMin: 450,
     rainIdealMax: 650,
@@ -365,8 +365,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   bajra: {
-    baseYield: 1.3, // t/ha
-    unit: "t/ha",
+    baseYield: 0.55, // tonnes/acre
+    unit: "tonnes/acre",
     rainMin: 250,
     rainIdealMin: 350,
     rainIdealMax: 550,
@@ -403,8 +403,8 @@ export const CROP_YIELD_PROFILES = {
   },
 
   groundnut: {
-    baseYield: 2.0, // t/ha
-    unit: "t/ha",
+    baseYield: 0.85, // tonnes/acre
+    unit: "tonnes/acre",
     rainMin: 450,
     rainIdealMin: 550,
     rainIdealMax: 750,
@@ -424,25 +424,25 @@ export const CROP_YIELD_PROFILES = {
     tips: {
       mr: [
         "आऱ्या सुटण्याच्या (Pegging) वेळी माती भुसभुशीत ठेवावी व खुरपणी करताना आऱ्यांना इजा होणार नाही याची दक्षता घ्यावी.",
-        "शेंगा भरताना जिप्सम (Gypsum) प्रति हेक्टरी ४०० ते ५०० किलो दिल्यास शेंगा पोकळ न राहता दाणे टपोरे भरतात.",
+        "शेंगा भरताना जिप्सम (Gypsum) प्रति एकर १५० ते २०० किलो दिल्यास शेंगा पोकळ न राहता दाणे टपोरे भरतात.",
         "टिक्का (Tikka) रोगाच्या नियंत्रणासाठी कार्बेन्डाझिम किंवा मॅन्कोझेबची फवारणी करावी."
       ],
       hi: [
         "आरे (Pegging) बनते समय मिट्टी भुरभुरी रखें ताकि फलियों का विकास सुगमता से हो सके।",
-        "फलियों में दाना भरते समय प्रति हेक्टेयर 400-500 किग्रा जिप्सम डालें जिससे फलियां खाली (पोपटी) नहीं रहेंगी।",
+        "फलियों में दाना भरते समय प्रति एकड़ 150-200 किग्रा जिप्सम डालें जिससे फलियां खाली (पोपटी) नहीं रहेंगी।",
         "टिक्का रोग की रोकथाम के लिए मैंकोजेब 75% WP का 2 ग्राम/लीटर पानी में छिड़काव करें।"
       ],
       en: [
         "Keep the soil friable during pegging and avoid disturbing pegs during intercultural weeding.",
-        "Apply Gypsum @ 400-500 kg/ha at flowering/pegging to provide calcium and sulfur for solid kernel filling without pops.",
+        "Apply Gypsum @ 150-200 kg/acre at flowering/pegging to provide calcium and sulfur for solid kernel filling without pops.",
         "Spray Mancozeb @ 2.5g/L at the first appearance of Cercospora leaf spot (Tikka)."
       ]
     }
   },
 
   banana: {
-    baseYield: 50.0, // t/ha
-    unit: "t/ha",
+    baseYield: 20.0, // tonnes/acre
+    unit: "tonnes/acre",
     rainMin: 1000,
     rainIdealMin: 1400,
     rainIdealMax: 2200,
@@ -580,39 +580,39 @@ export function getYieldPredictionReason(prediction = {}, lang = "en") {
     statusBadgeColor = "emerald";
     if (selectedLang === "mr") {
       statusLabel = "उच्च / विक्रमी उत्पादन क्षमता";
-      statusHeadline = `अंदाजित हेक्टरी उत्पादन (${prodNum.toFixed(2)} टन/हेक्टर) महाराष्ट्रातील सरासरीपेक्षा (${profile.baseYield} टन/हेक्टर) सुमारे ${Math.round((ratio - 1) * 100)}% जास्त आहे. अनुकूल हवामान व योग्य मशागतीमुळे हे पीक उत्कृष्ट परतावा देईल.`;
+      statusHeadline = `अंदाजित एकरी उत्पादन (${prodNum.toFixed(2)} टन/एकर) महाराष्ट्रातील सरासरीपेक्षा (${profile.baseYield} टन/एकर) सुमारे ${Math.round((ratio - 1) * 100)}% जास्त आहे. अनुकूल हवामान व योग्य मशागतीमुळे हे पीक उत्कृष्ट परतावा देईल.`;
     } else if (selectedLang === "hi") {
       statusLabel = "उच्च / उत्कृष्ट पैदावार क्षमता";
-      statusHeadline = `अनुमानित उपज (${prodNum.toFixed(2)} टन/हेक्टेयर) राज्य औसत (${profile.baseYield} टन/हेक्टेयर) से लगभग ${Math.round((ratio - 1) * 100)}% अधिक है। अनुकूल वातावरण व उन्नत प्रबंधन से यह फसल बंपर उत्पादन देने में सक्षम है।`;
+      statusHeadline = `अनुमानित उपज (${prodNum.toFixed(2)} टन/एकड़) राज्य औसत (${profile.baseYield} टन/एकड़) से लगभग ${Math.round((ratio - 1) * 100)}% अधिक है। अनुकूल वातावरण व उन्नत प्रबंधन से यह फसल बंपर उत्पादन देने में सक्षम है।`;
     } else {
       statusLabel = "High / Optimal Yield Potential";
-      statusHeadline = `Predicted productivity (${prodNum.toFixed(2)} t/ha) exceeds the Maharashtra state benchmark (${profile.baseYield} t/ha) by ~${Math.round((ratio - 1) * 100)}%, indicating high harvest potential under favorable climatic conditions.`;
+      statusHeadline = `Predicted productivity (${prodNum.toFixed(2)} t/acre) exceeds the Maharashtra state benchmark (${profile.baseYield} t/acre) by ~${Math.round((ratio - 1) * 100)}%, indicating high harvest potential under favorable climatic conditions.`;
     }
   } else if (ratio < 0.85) {
     yieldStatus = "low";
     statusBadgeColor = "rose";
     if (selectedLang === "mr") {
       statusLabel = "सरासरीपेक्षा कमी / हवामान ताण";
-      statusHeadline = `अंदाजित उत्पादन (${prodNum.toFixed(2)} टन/हेक्टर) राज्याच्या मानकापेक्षा (${profile.baseYield} टन/हेक्टर) सुमारे ${Math.round((1 - ratio) * 100)}% कमी दिसत आहे. पाऊस किंवा तापमानातील तफावतीमुळे पिकावर ताण येण्याची शक्यता आहे. खालील सल्ल्यानुसार नियोजन करा.`;
+      statusHeadline = `अंदाजित उत्पादन (${prodNum.toFixed(2)} टन/एकर) राज्याच्या मानकापेक्षा (${profile.baseYield} टन/एकर) सुमारे ${Math.round((1 - ratio) * 100)}% कमी दिसत आहे. पाऊस किंवा तापमानातील तफावतीमुळे पिकावर ताण येण्याची शक्यता आहे. खालील सल्ल्यानुसार नियोजन करा.`;
     } else if (selectedLang === "hi") {
       statusLabel = "औसत से कम / मौसम का तनाव";
-      statusHeadline = `अनुमानित उपज (${prodNum.toFixed(2)} टन/हेक्टेयर) राज्य औसत (${profile.baseYield} टन/हेक्टेयर) से लगभग ${Math.round((1 - ratio) * 100)}% कम है। वर्षा या तापमान के उतार-चढ़ाव के कारण फसल तनाव में रह सकती है। नीचे दिए गए सुझावों का पालन करें।`;
+      statusHeadline = `अनुमानित उपज (${prodNum.toFixed(2)} टन/एकड़) राज्य औसत (${profile.baseYield} टन/एकड़) से लगभग ${Math.round((1 - ratio) * 100)}% कम है। वर्षा या तापमान के उतार-चढ़ाव के कारण फसल तनाव में रह सकती है। नीचे दिए गए सुझावों का पालन करें।`;
     } else {
       statusLabel = "Below Average / Climate Stress";
-      statusHeadline = `Predicted yield (${prodNum.toFixed(2)} t/ha) is ~${Math.round((1 - ratio) * 100)}% lower than state benchmark (${profile.baseYield} t/ha). Environmental or moisture constraints are dampening output; apply targeted crop management below.`;
+      statusHeadline = `Predicted yield (${prodNum.toFixed(2)} t/acre) is ~${Math.round((1 - ratio) * 100)}% lower than state benchmark (${profile.baseYield} t/acre). Environmental or moisture constraints are dampening output; apply targeted crop management below.`;
     }
   } else {
     yieldStatus = "moderate";
     statusBadgeColor = "blue";
     if (selectedLang === "mr") {
       statusLabel = "मध्यम / समाधानकारक उत्पादन";
-      statusHeadline = `अंदाजित उत्पादन (${prodNum.toFixed(2)} टन/हेक्टर) या पिकासाठीच्या सर्वसाधारण मानकांशी (${profile.baseYield} टन/हेक्टर) सुसंगत आहे. वेळेवर खते व पाणी व्यवस्थापन ठेवल्यास यामध्ये आणखी १५-२०% वाढ शक्य आहे.`;
+      statusHeadline = `अंदाजित उत्पादन (${prodNum.toFixed(2)} टन/एकर) या पिकासाठीच्या सर्वसाधारण मानकांशी (${profile.baseYield} टन/एकर) सुसंगत आहे. वेळेवर खते व पाणी व्यवस्थापन ठेवल्यास यामध्ये आणखी १५-२०% वाढ शक्य आहे.`;
     } else if (selectedLang === "hi") {
       statusLabel = "मध्यम / सामान्य अपेक्षित पैदावार";
-      statusHeadline = `अनुमानित पैदावार (${prodNum.toFixed(2)} टन/हेक्टेयर) सामान्य कृषि मानकों (${profile.baseYield} टन/हेक्टेयर) के अनुरूप है। समय पर उर्वरक व सिंचाई प्रबंधन से इसमें 15-20% की अतिरिक्त वृद्धि संभव है।`;
+      statusHeadline = `अनुमानित पैदावार (${prodNum.toFixed(2)} टन/एकड़) सामान्य कृषि मानकों (${profile.baseYield} टन/एकड़) के अनुरूप है। समय पर उर्वरक व सिंचाई प्रबंधन से इसमें 15-20% की अतिरिक्त वृद्धि संभव है।`;
     } else {
       statusLabel = "Moderate / Standard Harvest";
-      statusHeadline = `Predicted productivity (${prodNum.toFixed(2)} t/ha) aligns closely with state agronomic benchmarks (${profile.baseYield} t/ha). Timely fertigation and pest management can boost final tonnage further.`;
+      statusHeadline = `Predicted productivity (${prodNum.toFixed(2)} t/acre) aligns closely with state agronomic benchmarks (${profile.baseYield} t/acre). Timely fertigation and pest management can boost final tonnage further.`;
     }
   }
 
@@ -762,11 +762,11 @@ export function getYieldPredictionReason(prediction = {}, lang = "en") {
   // 7. CONCISE SPEECH TEXT (for Voice synthesis read-out)
   let speechText = "";
   if (selectedLang === "mr") {
-    speechText = `${cropName} पिकासाठी ${district} जिल्ह्यात ${prodNum.toFixed(2)} टन प्रति हेक्टर उत्पादन अंदाजित केले आहे. ${statusLabel}. पाऊस ${rainNum} मिलिमीटर आणि तापमान ${tempNum} अंश सेल्सिअस नोंदवले आहे. ${rainDesc} ${tempDesc}`;
+    speechText = `${cropName} पिकासाठी ${district} जिल्ह्यात ${prodNum.toFixed(2)} टन प्रति एकर उत्पादन अंदाजित केले आहे. ${statusLabel}. पाऊस ${rainNum} मिलिमीटर आणि तापमान ${tempNum} अंश सेल्सिअस नोंदवले आहे. ${rainDesc} ${tempDesc}`;
   } else if (selectedLang === "hi") {
-    speechText = `${cropName} फसल के लिए ${district} जिले में ${prodNum.toFixed(2)} टन प्रति हेक्टेयर पैदावार अनुमानित है। ${statusLabel}। वर्षा ${rainNum} मिलीमीटर और तापमान ${tempNum} डिग्री सेल्सियस दर्ज किया गया है। ${rainDesc} ${tempDesc}`;
+    speechText = `${cropName} फसल के लिए ${district} जिले में ${prodNum.toFixed(2)} टन प्रति एकड़ पैदावार अनुमानित है। ${statusLabel}। वर्षा ${rainNum} मिलीमीटर और तापमान ${tempNum} डिग्री सेल्सियस दर्ज किया गया है। ${rainDesc} ${tempDesc}`;
   } else {
-    speechText = `For ${crop} in ${district}, predicted yield is ${prodNum.toFixed(2)} tonnes per hectare. ${statusLabel}. Rainfall is ${rainNum} millimeters and temperature is ${tempNum} degrees Celsius. ${rainDesc} ${tempDesc}`;
+    speechText = `For ${crop} in ${district}, predicted yield is ${prodNum.toFixed(2)} tonnes per acre. ${statusLabel}. Rainfall is ${rainNum} millimeters and temperature is ${tempNum} degrees Celsius. ${rainDesc} ${tempDesc}`;
   }
 
   return {

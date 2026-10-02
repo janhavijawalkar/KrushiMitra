@@ -162,6 +162,176 @@ def home():
     })
 
 
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    """System health & active database engine diagnostic endpoint."""
+    try:
+        conn, engine = database.get_db()
+        conn.close()
+        return jsonify({
+            "status": "healthy",
+            "success": True,
+            "db_engine": engine,
+            "mysql_active": engine == "mysql",
+            "database": database.MYSQL_DB if engine == "mysql" else "krushimitra.db",
+            "host": database.MYSQL_HOST if engine == "mysql" else "local",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "degraded",
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# =========================================================
+# AGRONOMIC CALIBRATION & PREDICTION INTEGRATION HELPERS
+# =========================================================
+
+CROP_SEASON_MAP = {
+    "kharif": ["rice", "paddy", "maize", "cotton", "soybean", "pigeonpeas", "tur", "mothbeans", "mungbean", "moong", "blackgram", "urad", "groundnut", "jute", "sugarcane", "papaya", "banana", "watermelon"],
+    "rabi": ["wheat", "chickpea", "gram", "lentil", "mustard", "jowar", "sorghum", "barley", "peas", "sunflower", "maize"],
+    "summer": ["watermelon", "muskmelon", "groundnut", "mungbean", "moong", "blackgram", "urad", "maize", "vegetables", "fodder", "cucumber"],
+    "whole year": ["sugarcane", "banana", "pomegranate", "mango", "orange", "papaya", "coconut", "coffee", "grapes"]
+}
+
+CROP_WATER_CATEGORY = {
+    # High water crops (1000-2500 mm, requires assured irrigation / canal / heavy rainfall)
+    "high": ["sugarcane", "rice", "paddy", "banana", "jute", "papaya"],
+    # Medium water crops (500-900 mm, suitable for drip/sprinkler or moderate rain)
+    "medium": ["cotton", "soybean", "maize", "wheat", "groundnut", "pomegranate", "orange", "grapes", "watermelon", "muskmelon", "coffee"],
+    # Low / Drought hardy crops (250-500 mm, thrives in rainfed & scarce water)
+    "low": ["pigeonpeas", "tur", "chickpea", "gram", "jowar", "sorghum", "bajra", "mothbeans", "mungbean", "moong", "blackgram", "urad", "lentil", "mustard"]
+}
+
+CROP_SOIL_SUITABILITY = {
+    "black": ["cotton", "soybean", "sugarcane", "wheat", "chickpea", "gram", "jowar", "sorghum", "pigeonpeas", "tur", "maize"],
+    "medium_black": ["soybean", "cotton", "maize", "groundnut", "wheat", "chickpea", "gram", "pomegranate", "pigeonpeas", "tur", "vegetables"],
+    "red_laterite": ["rice", "paddy", "coconut", "mango", "cashew", "groundnut", "mungbean", "moong", "papaya", "banana"],
+    "alluvial": ["sugarcane", "wheat", "rice", "paddy", "maize", "banana", "vegetables", "cotton", "papaya"],
+    "sandy_light": ["bajra", "groundnut", "watermelon", "muskmelon", "mothbeans", "mungbean", "moong"]
+}
+
+DISTRICT_AGRO_SPECIALTIES = {
+    # Vidarbha
+    "AMRAVATI": ["Cotton", "Soybean", "Pigeonpeas", "Orange", "Chickpea"],
+    "AKOLA": ["Cotton", "Soybean", "Pigeonpeas", "Jowar", "Chickpea"],
+    "NAGPUR": ["Orange", "Soybean", "Cotton", "Pigeonpeas", "Wheat"],
+    "YAVATMAL": ["Cotton", "Soybean", "Pigeonpeas", "Wheat"],
+    "WARDHA": ["Cotton", "Soybean", "Pigeonpeas", "Orange"],
+    "BULDHANA": ["Cotton", "Soybean", "Maize", "Jowar", "Chickpea"],
+    "CHANDRAPUR": ["Rice", "Cotton", "Soybean", "Pigeonpeas"],
+    "GADCHIROLI": ["Rice", "Soybean", "Maize"],
+    "BHANDARA": ["Rice", "Sugarcane", "Soybean"],
+    "GONDIA": ["Rice", "Sugarcane", "Soybean"],
+    "WASHIM": ["Soybean", "Cotton", "Pigeonpeas", "Chickpea"],
+    # Marathwada
+    "AURANGABAD": ["Cotton", "Maize", "Soybean", "Bajra", "Pomegranate"],
+    "JALNA": ["Cotton", "Soybean", "Maize", "Pomegranate", "Sweet Orange"],
+    "BEED": ["Cotton", "Soybean", "Bajra", "Jowar", "Sugarcane"],
+    "LATUR": ["Soybean", "Pigeonpeas", "Sugarcane", "Gram", "Jowar"],
+    "NANDED": ["Cotton", "Soybean", "Sugarcane", "Banana", "Pigeonpeas"],
+    "PARBHANI": ["Cotton", "Soybean", "Jowar", "Pigeonpeas"],
+    "HINGOLI": ["Soybean", "Cotton", "Turmeric", "Pigeonpeas"],
+    "OSMANABAD": ["Soybean", "Pigeonpeas", "Jowar", "Sugarcane", "Chickpea"],
+    # Western Maharashtra
+    "PUNE": ["Sugarcane", "Wheat", "Soybean", "Gram", "Vegetables", "Grapes"],
+    "KOLHAPUR": ["Sugarcane", "Rice", "Soybean", "Groundnut"],
+    "SATARA": ["Sugarcane", "Soybean", "Strawberry", "Wheat", "Jowar"],
+    "SANGLI": ["Grapes", "Sugarcane", "Soybean", "Turmeric", "Pomegranate"],
+    "SOLAPUR": ["Pomegranate", "Sugarcane", "Jowar", "Grape", "Soybean"],
+    "AHMEDNAGAR": ["Sugarcane", "Cotton", "Pomegranate", "Bajra", "Soybean", "Wheat"],
+    # Khandesh
+    "JALGAON": ["Banana", "Cotton", "Maize", "Jowar", "Soybean"],
+    "DHULE": ["Cotton", "Maize", "Bajra", "Wheat", "Groundnut"],
+    "NANDURBAR": ["Cotton", "Maize", "Soybean", "Rice", "Chilli"],
+    "NASHIK": ["Grapes", "Onion", "Pomegranate", "Sugarcane", "Tomato", "Maize", "Wheat"],
+    # Konkan & Coastal
+    "RATNAGIRI": ["Rice", "Mango", "Cashew", "Coconut"],
+    "SINDHUDURG": ["Rice", "Mango", "Cashew", "Coconut"],
+    "RAIGAD": ["Rice", "Vegetables", "Watermelon", "Coconut"],
+    "THANE": ["Rice", "Vegetables", "Watermelon"],
+    "PALGHAR": ["Rice", "Chickoo", "Vegetables", "Watermelon"],
+}
+
+def estimate_crop_productivity_tonnes_acre(crop_name, district_name, season_name, area_acres, rainfall_val, temp_val):
+    """
+    Estimates expected yield in Tonnes/Acre using productivity model if available,
+    falling back to regional Maharashtra agricultural benchmarks.
+    """
+    crop_std = str(crop_name).strip().capitalize()
+    dist_std = str(district_name).strip().upper()
+    district_aliases = {
+        "AHILYA NAGAR": "AHMEDNAGAR", "AHILYANAGAR": "AHMEDNAGAR",
+        "CHHATRAPATI SAMBHAJINAGAR": "AURANGABAD", "SAMBHAJINAGAR": "AURANGABAD",
+        "DHARASHIV": "OSMANABAD", "MUMBAI": "THANE", "MUMBAI CITY": "THANE", "MUMBAI SUBURBAN": "THANE"
+    }
+    if dist_std in district_aliases:
+        dist_std = district_aliases[dist_std]
+
+    season_std = str(season_name).strip().capitalize()
+    if season_std not in ["Kharif", "Rabi", "Summer"]:
+        season_std = "Kharif"
+
+    area_ha = area_acres / 2.47105
+
+    # Try model prediction
+    if productivity_model is not None and len(productivity_features) > 0:
+        try:
+            input_df = pd.DataFrame({
+                "District_Name": [dist_std if dist_std else "PUNE"],
+                "Crop_Year": [2026],
+                "Season": [season_std],
+                "Crop": [crop_std],
+                "Area": [round(area_ha, 3)],
+                "Rainfall": [float(rainfall_val) if rainfall_val else 800.0],
+                "MaxTemp": [float(temp_val) if temp_val else 30.0]
+            })
+            input_enc = pd.get_dummies(input_df, columns=["District_Name", "Season", "Crop"], drop_first=False)
+            for col in productivity_features:
+                if col not in input_enc.columns:
+                    input_enc[col] = 0
+            input_enc = input_enc[productivity_features]
+            pred = productivity_model.predict(input_enc)[0]
+            pred_acre = round(float(pred) / 2.47105, 2)
+            if 0.2 <= pred_acre <= 50.0:
+                return pred_acre
+        except Exception:
+            pass
+
+    # Baseline benchmarks in Tonnes / Acre in Maharashtra
+    benchmarks = {
+        "sugarcane": 38.0,
+        "banana": 24.0,
+        "papaya": 22.0,
+        "watermelon": 16.0,
+        "muskmelon": 12.0,
+        "grapes": 8.5,
+        "pomegranate": 5.5,
+        "orange": 6.0,
+        "rice": 1.85,
+        "wheat": 1.55,
+        "maize": 2.2,
+        "cotton": 1.1,
+        "soybean": 1.25,
+        "groundnut": 1.1,
+        "chickpea": 0.85,
+        "gram": 0.85,
+        "pigeonpeas": 0.75,
+        "jowar": 1.0,
+        "bajra": 0.95,
+        "mungbean": 0.45,
+        "blackgram": 0.45,
+        "mothbeans": 0.4,
+        "lentil": 0.5,
+        "jute": 1.5,
+        "coffee": 0.8,
+        "coconut": 4.5
+    }
+    return benchmarks.get(crop_name.lower(), 1.2)
+
+
 # =========================================================
 # CROP RECOMMENDATION API
 # =========================================================
@@ -233,182 +403,297 @@ def recommend_crop():
 
 
         # -------------------------------------------------
+        # Validate data types and agricultural boundaries
+        # -------------------------------------------------
+        try:
+            n_val = float(data["N"])
+            p_val = float(data["P"])
+            k_val = float(data["K"])
+            temp_val = float(data["temperature"])
+            humidity_val = float(data["humidity"])
+            ph_val = float(data["ph"])
+            rainfall_val = float(data["rainfall"])
+            area_val = float(data.get("area", data.get("Area", 5.0)))
+            area_unit = str(data.get("area_unit", data.get("areaUnit", "Acres"))).strip().lower()
+            if "ha" in area_unit or "hec" in area_unit:
+                area_acres = round(area_val * 2.47105, 2)
+            else:
+                area_acres = area_val
+
+            district_raw = str(data.get("district", data.get("District_Name", data.get("District", "")))).strip().upper()
+            season_raw = str(data.get("season", data.get("Season", ""))).strip().capitalize()
+            irrigation_raw = str(data.get("irrigation", data.get("water_source", ""))).strip().lower()
+            soil_type_raw = str(data.get("soil_type", data.get("soilType", ""))).strip().lower()
+
+            npk_unit = str(data.get("npk_unit", data.get("unit", "kg/ha"))).strip().lower()
+            # If values were supplied in kg/acre and not pre-normalized, convert to kg/ha (1 ha = 2.47105 acres)
+            if npk_unit in ["kg/acre", "kg/ac", "acre"] and not data.get("is_normalized", False):
+                n_val = n_val * 2.47105
+                p_val = p_val * 2.47105
+                k_val = k_val * 2.47105
+        except (ValueError, TypeError):
+            return jsonify({
+                "success": False,
+                "message": "Invalid numeric values provided."
+            }), 400
+
+        # Agricultural Input Validations:
+        # 1. Soil pH constraint: Standard pH scale ranges from 0.0 to 14.0
+        if ph_val < 0.0 or ph_val > 14.0:
+            return jsonify({
+                "success": False,
+                "field": "ph",
+                "message": "Soil pH must be between 0.0 and 14.0 on the standard pH scale."
+            }), 400
+
+        # 2. Temperature constraint: temperature > 50°C is extreme heat unsuitable for crops
+        if temp_val > 50.0:
+            return jsonify({
+                "success": False,
+                "field": "temperature",
+                "message": "Temperature cannot be more than 50°C as extreme heat prevents crop growth. Recommendation is rejected."
+            }), 400
+
+        # -------------------------------------------------
         # Create input DataFrame
         # -------------------------------------------------
 
         input_data = pd.DataFrame({
-
-            "N": [
-                float(data["N"])
-            ],
-
-            "P": [
-                float(data["P"])
-            ],
-
-            "K": [
-                float(data["K"])
-            ],
-
-            "temperature": [
-                float(data["temperature"])
-            ],
-
-            "humidity": [
-                float(data["humidity"])
-            ],
-
-            "ph": [
-                float(data["ph"])
-            ],
-
-            "rainfall": [
-                float(data["rainfall"])
-            ]
-
+            "N": [n_val],
+            "P": [p_val],
+            "K": [k_val],
+            "temperature": [temp_val],
+            "humidity": [humidity_val],
+            "ph": [ph_val],
+            "rainfall": [rainfall_val]
         })
-
 
         # -------------------------------------------------
         # Arrange columns exactly as during training
         # -------------------------------------------------
 
-        input_data = input_data[
-            recommendation_features
-        ]
-
+        input_data = input_data[recommendation_features]
 
         # -------------------------------------------------
-        # Prediction & Top-3 Candidates
+        # Prediction & Candidate Generation
         # -------------------------------------------------
 
-        top_recommendations = []
+        candidate_crops = []
         if recommendation_model is not None:
-            prediction = recommendation_model.predict(
-                input_data
-            )
-            raw_crop = str(
-                prediction[0]
-            ).strip().capitalize()
-            recommended_crop = raw_crop
-
-            confidence = None
-            if hasattr(
-                recommendation_model,
-                "predict_proba"
-            ):
-                probabilities = (
-                    recommendation_model
-                    .predict_proba(input_data)[0]
-                )
+            if hasattr(recommendation_model, "predict_proba"):
+                probabilities = recommendation_model.predict_proba(input_data)[0]
                 classes = recommendation_model.classes_
                 sorted_indices = np.argsort(probabilities)[::-1]
 
-                for idx in sorted_indices[:5]:
+                for idx in sorted_indices[:10]:
                     c_name = str(classes[idx]).strip().capitalize()
                     c_prob = float(probabilities[idx] * 100)
-                    if c_prob >= 0.5:
-                        top_recommendations.append({
+                    if c_prob >= 0.05:
+                        candidate_crops.append({
                             "crop": c_name,
-                            "confidence": round(c_prob, 1)
+                            "raw_confidence": round(c_prob, 2)
                         })
-
-                if top_recommendations:
-                    confidence = top_recommendations[0]["confidence"]
-                    recommended_crop = top_recommendations[0]["crop"]
-
-                # -------------------------------------------------
-                # Regional Indian Agro-Climatic Calibration:
-                # In the Kaggle 2200-sample dataset, Coffee sits right at
-                # the centroid of generic mid-range numbers (N: 80-110,
-                # P: 25-40, K: 25-40, Temp: 24-26°C, Rainfall: 110-160mm).
-                # In Maharashtra & western/central India, plateau farmers
-                # cultivate Maize, Cotton, Pigeonpeas, Rice or Soybean under
-                # these conditions (Coffee strictly requires high-altitude
-                # shaded hill ranges like Coorg/Nilgiris).
-                # -------------------------------------------------
-                if recommended_crop.lower() == "coffee":
-                    n_val = float(data["N"])
-                    p_val = float(data["P"])
-                    k_val = float(data["K"])
-                    rain_val = float(data["rainfall"])
-                    hum_val = float(data["humidity"])
-
-                    # If coffee confidence is not absolute (>80%) or runner-up is strong:
-                    if len(top_recommendations) > 1 and top_recommendations[1]["confidence"] >= 15.0:
-                        recommended_crop = top_recommendations[1]["crop"]
-                        confidence = top_recommendations[1]["confidence"]
-                    elif rain_val < 115 and n_val >= 65:
-                        recommended_crop = "Maize"
-                        confidence = 82.4
-                        # Insert or elevate Maize in top recommendations
-                        if not any(r["crop"].lower() == "maize" for r in top_recommendations):
-                            top_recommendations.insert(0, {"crop": "Maize", "confidence": 82.4})
-                    elif n_val >= 90 and k_val <= 30 and rain_val <= 100:
-                        recommended_crop = "Cotton"
-                        confidence = 85.0
-                        if not any(r["crop"].lower() == "cotton" for r in top_recommendations):
-                            top_recommendations.insert(0, {"crop": "Cotton", "confidence": 85.0})
-                    elif hum_val < 50:
-                        recommended_crop = "Pigeonpeas"
-                        confidence = 79.5
-                        if not any(r["crop"].lower() == "pigeonpeas" for r in top_recommendations):
-                            top_recommendations.insert(0, {"crop": "Pigeonpeas", "confidence": 79.5})
-                    elif rain_val > 180:
-                        recommended_crop = "Rice"
-                        confidence = 88.0
-                        if not any(r["crop"].lower() == "rice" for r in top_recommendations):
-                            top_recommendations.insert(0, {"crop": "Rice", "confidence": 88.0})
-
+            else:
+                prediction = recommendation_model.predict(input_data)
+                raw_crop = str(prediction[0]).strip().capitalize()
+                candidate_crops.append({"crop": raw_crop, "raw_confidence": 90.0})
         else:
             # Regional agronomic fallback if model binary is missing
-            n_val = float(data["N"])
-            p_val = float(data["P"])
-            k_val = float(data["K"])
-            rain_val = float(data["rainfall"])
-            if rain_val > 1100:
-                recommended_crop = "Rice"
-                top_recommendations = [
-                    {"crop": "Rice", "confidence": 92.0},
-                    {"crop": "Jute", "confidence": 78.0},
-                    {"crop": "Banana", "confidence": 64.0}
+            if rainfall_val > 1100:
+                candidate_crops = [
+                    {"crop": "Rice", "raw_confidence": 75.0},
+                    {"crop": "Jute", "raw_confidence": 60.0},
+                    {"crop": "Banana", "raw_confidence": 45.0}
                 ]
-            elif n_val > 90 and rain_val > 600:
-                recommended_crop = "Sugarcane"
-                top_recommendations = [
-                    {"crop": "Sugarcane", "confidence": 91.0},
-                    {"crop": "Banana", "confidence": 80.0},
-                    {"crop": "Rice", "confidence": 68.0}
+            elif n_val > 90 and rainfall_val > 600:
+                candidate_crops = [
+                    {"crop": "Sugarcane", "raw_confidence": 78.0},
+                    {"crop": "Banana", "raw_confidence": 62.0},
+                    {"crop": "Rice", "raw_confidence": 48.0}
                 ]
             elif n_val > 60 and k_val > 40:
-                recommended_crop = "Cotton"
-                top_recommendations = [
-                    {"crop": "Cotton", "confidence": 89.0},
-                    {"crop": "Maize", "confidence": 76.0},
-                    {"crop": "Soybean", "confidence": 65.0}
+                candidate_crops = [
+                    {"crop": "Cotton", "raw_confidence": 76.0},
+                    {"crop": "Maize", "raw_confidence": 65.0},
+                    {"crop": "Soybean", "raw_confidence": 50.0}
                 ]
             elif p_val > 50:
-                recommended_crop = "Soybean"
-                top_recommendations = [
-                    {"crop": "Soybean", "confidence": 88.0},
-                    {"crop": "Chickpea", "confidence": 75.0},
-                    {"crop": "Pigeonpeas", "confidence": 62.0}
+                candidate_crops = [
+                    {"crop": "Soybean", "raw_confidence": 75.0},
+                    {"crop": "Chickpea", "raw_confidence": 60.0},
+                    {"crop": "Pigeonpeas", "raw_confidence": 45.0}
                 ]
-            elif rain_val < 500:
-                recommended_crop = "Jowar"
-                top_recommendations = [
-                    {"crop": "Jowar", "confidence": 87.0},
-                    {"crop": "Bajra", "confidence": 74.0},
-                    {"crop": "Mothbeans", "confidence": 61.0}
+            elif rainfall_val < 500:
+                candidate_crops = [
+                    {"crop": "Jowar", "raw_confidence": 72.0},
+                    {"crop": "Bajra", "raw_confidence": 62.0},
+                    {"crop": "Mothbeans", "raw_confidence": 48.0}
                 ]
             else:
-                recommended_crop = "Wheat"
-                top_recommendations = [
-                    {"crop": "Wheat", "confidence": 88.5},
-                    {"crop": "Gram", "confidence": 72.0},
-                    {"crop": "Mustard", "confidence": 60.0}
+                candidate_crops = [
+                    {"crop": "Wheat", "raw_confidence": 75.0},
+                    {"crop": "Gram", "raw_confidence": 60.0},
+                    {"crop": "Mustard", "raw_confidence": 45.0}
                 ]
-            confidence = 88.5
+
+        # -------------------------------------------------
+        # Multi-Factor Agronomic Calibration Engine
+        # -------------------------------------------------
+        calibrated_list = []
+
+        # Soil type normalized key
+        st_norm = None
+        if soil_type_raw:
+            if any(k in soil_type_raw for k in ["black", "काळी", "regur"]):
+                st_norm = "black"
+            elif any(k in soil_type_raw for k in ["medium", "मध्यम"]):
+                st_norm = "medium_black"
+            elif any(k in soil_type_raw for k in ["red", "laterite", "तांबडी", "जांभी"]):
+                st_norm = "red_laterite"
+            elif any(k in soil_type_raw for k in ["alluvial", "loam", "गाळाची", "पोयटा"]):
+                st_norm = "alluvial"
+            elif any(k in soil_type_raw for k in ["sandy", "light", "हलकी", "वालुकामय"]):
+                st_norm = "sandy_light"
+
+        for item in candidate_crops:
+            c_name = item["crop"]
+            c_low = c_name.lower()
+            score = item["raw_confidence"]
+
+            season_match = "good"
+            water_match = "good"
+            soil_match = "good"
+            district_match = "good"
+            badges = []
+            reasons = []
+
+            # 1. Season Evaluation
+            if season_raw:
+                s_key = season_raw.lower()
+                season_crops = CROP_SEASON_MAP.get(s_key, [])
+                perennial_crops = CROP_SEASON_MAP.get("whole year", [])
+
+                if c_low in season_crops or c_low in perennial_crops:
+                    score += 26.0
+                    season_match = "ideal"
+                    badges.append(f"{season_raw} हंगाम अनुकूल")
+                else:
+                    if s_key == "rabi" and c_low in ["cotton", "soybean", "rice", "jute"]:
+                        score -= 55.0
+                        season_match = "warning"
+                        reasons.append("रब्बी हंगामात या पिकाची लागवड टाळावी")
+                    elif s_key == "kharif" and c_low in ["wheat", "lentil", "mustard"]:
+                        score -= 55.0
+                        season_match = "warning"
+                        reasons.append("हे पीक हिवाळी (रब्बी) हंगामासाठी आहे")
+                    elif s_key == "summer" and c_low not in CROP_SEASON_MAP.get("summer", []):
+                        score -= 40.0
+                        season_match = "warning"
+                    else:
+                        season_match = "moderate"
+
+            # 2. Water / Irrigation Evaluation
+            if irrigation_raw:
+                is_rainfed = any(w in irrigation_raw for w in ["rainfed", "scarce", "कोरडवाहू", "कमी पाणी", "पावसावर", "मर्यादित"])
+                is_irrigated = any(w in irrigation_raw for w in ["drip", "sprinkler", "irrigated", "बागायत", "ठिबक", "तुषार", "विहीर", "कालवा"])
+
+                if c_low in CROP_WATER_CATEGORY.get("high", []):
+                    if is_rainfed:
+                        if rainfall_val < 1000:
+                            score -= 60.0
+                            water_match = "warning"
+                            reasons.append("पाण्याची जास्त गरज असल्याने कोरडवाहू शेतीत धोका संभवतो")
+                        else:
+                            score -= 15.0
+                            water_match = "moderate"
+                    elif is_irrigated:
+                        score += 15.0
+                        water_match = "ideal"
+                        badges.append("बागायत सिंचनास सुसंगत")
+
+                elif c_low in CROP_WATER_CATEGORY.get("low", []):
+                    if is_rainfed:
+                        score += 25.0
+                        water_match = "ideal"
+                        badges.append("कोरडवाहू शेतीस सर्वोत्तम")
+                    else:
+                        score += 10.0
+                        water_match = "ideal"
+
+                elif c_low in CROP_WATER_CATEGORY.get("medium", []):
+                    if any(w in irrigation_raw for w in ["drip", "sprinkler", "ठिबक", "तुषार"]):
+                        score += 18.0
+                        water_match = "ideal"
+                        badges.append("ठिबक / तुषार सिंचनास योग्य")
+
+            # 3. Soil Type Evaluation
+            if st_norm:
+                if c_low in CROP_SOIL_SUITABILITY.get(st_norm, []):
+                    score += 15.0
+                    soil_match = "ideal"
+                    badges.append("माती प्रकार पोषक")
+                else:
+                    soil_match = "good"
+
+            # 4. District Historical Affinity
+            if district_raw:
+                dist_lookup = district_raw.replace(" ", "").upper()
+                specialties = DISTRICT_AGRO_SPECIALTIES.get(dist_lookup, [])
+                if any(sp.lower() == c_low for sp in specialties):
+                    score += 16.0
+                    district_match = "ideal"
+                    badges.append(f"{district_raw.title()} जिल्ह्यात यशस्वी")
+
+            # 5. Coffee altitude penalty
+            if c_low == "coffee":
+                score -= 35.0
+
+            # 6. Yield Estimation
+            est_yield = estimate_crop_productivity_tonnes_acre(
+                c_name, district_raw, season_raw, area_acres, rainfall_val, temp_val
+            )
+            est_total = round(est_yield * area_acres, 2)
+
+            calibrated_list.append({
+                "crop": c_name,
+                "adjusted_score": max(0.1, score),
+                "expected_yield_acre": est_yield,
+                "expected_total_production": est_total,
+                "badges": badges,
+                "agronomic_factors": {
+                    "season_match": season_match,
+                    "water_match": water_match,
+                    "soil_match": soil_match,
+                    "district_match": district_match,
+                    "reasons": reasons
+                }
+            })
+
+        # Sort by adjusted score
+        calibrated_list.sort(key=lambda x: x["adjusted_score"], reverse=True)
+
+        # Re-scale confidences for top candidates
+        top_recommendations = []
+        if calibrated_list:
+            base_top_score = calibrated_list[0]["adjusted_score"]
+            for i, cand in enumerate(calibrated_list[:5]):
+                if i == 0:
+                    cand_conf = min(96.8, max(88.2, round(cand["adjusted_score"], 1)))
+                else:
+                    ratio = cand["adjusted_score"] / max(base_top_score, 1.0)
+                    cand_conf = round(max(5.0, top_recommendations[0]["confidence"] * ratio * 0.88), 1)
+
+                top_recommendations.append({
+                    "crop": cand["crop"],
+                    "confidence": cand_conf,
+                    "expected_yield_acre": cand["expected_yield_acre"],
+                    "expected_total_production": cand["expected_total_production"],
+                    "badges": cand["badges"],
+                    "agronomic_factors": cand["agronomic_factors"]
+                })
+
+        recommended_crop = top_recommendations[0]["crop"] if top_recommendations else "Soybean"
+        confidence = top_recommendations[0]["confidence"] if top_recommendations else 88.0
 
         # -------------------------------------------------
         # Response
@@ -417,8 +702,18 @@ def recommend_crop():
         return jsonify({
             "success": True,
             "recommended_crop": recommended_crop,
-            "confidence": round(confidence, 1) if confidence is not None else 85.0,
-            "top_recommendations": top_recommendations[:4]
+            "confidence": round(confidence, 1),
+            "top_recommendations": top_recommendations[:4],
+            "area_acres": area_acres,
+            "area_val": area_val,
+            "area_unit": area_unit,
+            "npk_unit": npk_unit,
+            "district": district_raw,
+            "season": season_raw,
+            "irrigation": irrigation_raw,
+            "soil_type": soil_type_raw,
+            "agronomic_factors": top_recommendations[0].get("agronomic_factors", {}) if top_recommendations else {},
+            "suitability_badges": top_recommendations[0].get("badges", []) if top_recommendations else []
         })
 
 
@@ -545,6 +840,22 @@ def predict_productivity():
         crop_input = str(data["Crop"]).strip().capitalize()
 
         # -------------------------------------------------
+        # -------------------------------------------------
+        # Area handling: Farmers in Maharashtra calculate land in Acres
+        # 1 Hectare = 2.47105 Acres -> 1 Acre = 0.404686 Hectares
+        # -------------------------------------------------
+        raw_area = float(data["Area"])
+        area_unit = str(data.get("area_unit", "Acres")).strip().lower()
+
+        # If Area is in Acres (default for KrushiMitra), convert to Hectares for ML features:
+        if "ha" in area_unit or "hectare" in area_unit:
+            area_ha = raw_area
+            area_acres = round(raw_area * 2.47105, 2)
+        else:
+            area_acres = raw_area
+            area_ha = raw_area / 2.47105
+
+        # -------------------------------------------------
         # Create input DataFrame
         # -------------------------------------------------
 
@@ -567,7 +878,7 @@ def predict_productivity():
             ],
 
             "Area": [
-                float(data["Area"])
+                round(area_ha, 3)
             ],
 
             "Rainfall": [
@@ -644,6 +955,10 @@ def predict_productivity():
             rain_factor = min(max(rainfall_val / 800.0, 0.75), 1.25)
             predicted_productivity = round(base * rain_factor, 2)
 
+        # Convert productivity from tonnes/hectare to tonnes/acre
+        # (1 t/ha / 2.47105 = t/acre)
+        predicted_productivity_acre = round(predicted_productivity / 2.47105, 2)
+        total_production = round(predicted_productivity_acre * area_acres, 2)
 
         # -------------------------------------------------
         # Response
@@ -654,10 +969,25 @@ def predict_productivity():
             "success": True,
 
             "predicted_productivity":
-                round(
-                    predicted_productivity,
-                    2
-                )
+                predicted_productivity_acre,
+
+            "predicted_productivity_acre":
+                predicted_productivity_acre,
+
+            "predicted_productivity_ha":
+                round(predicted_productivity, 2),
+
+            "area_acres":
+                area_acres,
+
+            "area_ha":
+                round(area_ha, 2),
+
+            "productivity_unit":
+                "tonnes/acre",
+
+            "total_production":
+                total_production
 
         })
 
@@ -971,12 +1301,21 @@ def login():
                 "message": "Email and password are required"
             }), 400
 
+        existing = database.get_user_by_email(email)
+        if not existing:
+            return jsonify({
+                "success": False,
+                "user_not_found": True,
+                "message": "No account found with this email address. Please create a new account to get your official Kisan ID."
+            }), 404
+
         user = database.authenticate_user(email, password)
 
         if not user:
             return jsonify({
                 "success": False,
-                "message": "Invalid email or password"
+                "user_not_found": False,
+                "message": "Incorrect password. Please verify your password or use 'Forgot Password'."
             }), 401
 
         # Generate cryptographically signed JWT token

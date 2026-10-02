@@ -173,7 +173,7 @@ export default function Settings() {
     },
     {
       q: "पीक उत्पादकता / उत्पन्न अंदाज कसा काढला जातो?",
-      a: "महाराष्ट्रातील विविध जिल्ह्यांच्या शेतीविषयक माहितीच्या आधारे जिल्हा, पीक, हंगाम, क्षेत्रफळ, पाऊस आणि तापमानाचा विचार करून हेक्टरी अंदाजित उत्पादन (टन/हेक्टर) काढले जाते.",
+      a: "महाराष्ट्रातील विविध जिल्ह्यांच्या शेतीविषयक माहितीच्या आधारे जिल्हा, पीक, हंगाम, शेतजमीन क्षेत्र (एकर), पाऊस आणि तापमानाचा विचार करून एकरी अंदाजित उत्पादन (टन/एकर) काढले जाते.",
     },
     {
       q: "अधिकृत शेती PDF अहवाल कसा डाउनलोड करावा?",
@@ -190,7 +190,7 @@ export default function Settings() {
     },
     {
       q: "फसल उपज / उत्पादकता पूर्वानुमान कैसे काम करता है?",
-      a: "महाराष्ट्र के जिलावार कृषि डेटा के आधार पर जिला, फसल, मौसम, बुवाई क्षेत्रफल, वर्षा और तापमान को ध्यान में रखकर अपेक्षित फसल उत्पादन (टन/हेक्टेयर) का अनुमान लगाया जाता है।",
+      a: "महाराष्ट्र के जिलावार कृषि डेटा के आधार पर जिला, फसल, मौसम, बुवाई क्षेत्रफल (एकड़), वर्षा और तापमान को ध्यान में रखकर अपेक्षित फसल उत्पादन (टन/एकड़) का अनुमान लगाया जाता है।",
     },
     {
       q: "आधिकारिक कृषि पीडीएफ रिपोर्ट कैसे डाउनलोड करें?",
@@ -207,7 +207,7 @@ export default function Settings() {
     },
     {
       q: "How does the Crop Productivity / Yield predictor work?",
-      a: "Yield predictions are calculated using regional agricultural datasets across Maharashtra. It takes district name, crop type, year, season, cultivated area, rainfall, and temperature to estimate expected harvest productivity in tonnes per hectare.",
+      a: "Yield predictions are calculated using regional agricultural datasets across Maharashtra. It takes district name, crop type, year, season, cultivated area in acres, rainfall, and temperature to estimate expected harvest productivity in tonnes per acre.",
     },
     {
       q: "How do I export official farm reports in PDF?",

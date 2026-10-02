@@ -731,16 +731,20 @@ const translations = {
     dashboardAdminBannerSub: "Administrator Overview: Monitor ML inference throughput, registered farmers directory, and system health.",
     dashboardWeatherCardSub: "Real-time district weather data, humidity alerts, and customized farming advice for {district}.",
     acresUnit: "Acres",
-    hectaresUnit: "Hectares",
+    hectaresUnit: "Acres",
     completedStatus: "Completed",
     liveBadge: "Live",
+
+    predictions: "Yield Predictions",
+    recommendations: "Crop Recommendations",
+    exportPdf: "Export PDF",
 
     cropPrediction: "Crop Productivity Prediction",
     cropYieldPrediction: "Crop Yield Prediction",
     district: "District",
     cropYear: "Crop Year",
     season: "Season",
-    area: "Area",
+    area: "Area (Acres)",
     rainfall: "Rainfall",
     maximumTemperature: "Maximum Temperature",
     predictProductivity: "Predict Productivity",
@@ -757,9 +761,10 @@ const translations = {
     aiModelPrediction: "AI Model Prediction",
     aboutCropYieldPrediction: "About Crop Yield Prediction",
     cropYieldDescription:
-      "KrushiMitra analyzes regional agricultural, crop, rainfall, temperature, area, and location datasets to estimate expected harvest productivity.",
+      "KrushiMitra analyzes regional agricultural, crop, rainfall, temperature, acreage, and location datasets to estimate expected harvest productivity in tonnes per acre.",
     backToDashboard: "Back to Dashboard",
-    tonnesPerHectare: "tonnes/hectare",
+    tonnesPerHectare: "tonnes/acre",
+    tonnesPerAcre: "tonnes/acre",
     select: "Select",
     fillAllFields: "Please fill all fields.",
     makeSureBackendRunning:
@@ -1061,7 +1066,7 @@ const translations = {
     solutionsHeader: "Smart Tools for Better Farming",
     solutionsSub: "Simple, easy-to-use AI tools to help you pick the best crops, forecast harvest output, and check live weather for your farm.",
     yieldForecastingTitle: "Crop Yield Prediction",
-    yieldForecastingDesc: "Find out how much harvest (in tonnes/hectare) you can expect based on your district, land size, and weather.",
+    yieldForecastingDesc: "Find out how much harvest (in tonnes/acre) you can expect based on your district, land size, and weather.",
     soilAdvisoryTitle: "Soil & Crop Recommendation",
     soilAdvisoryDesc: "Enter your soil test values (N, P, K, pH) to find the most profitable and healthy crop for your field.",
     weatherTelemetryTitle: "Live Weather & Rain Forecast",
@@ -1313,9 +1318,13 @@ const translations = {
     dashboardAdminBannerSub: "प्रशासक अवलोकन: फसल पूर्वानुमान प्रणाली, पंजीकृत किसान निर्देशिका और सिस्टम स्वास्थ्य की निगरानी करें।",
     dashboardWeatherCardSub: "{district} के लिए वास्तविक समय जिला मौसम डेटा, आर्द्रता अलर्ट और अनुकूलित कृषि सलाह।",
     acresUnit: "एकड़",
-    hectaresUnit: "हेक्टेयर",
+    hectaresUnit: "एकड़",
     completedStatus: "पूर्ण",
     liveBadge: "लाइव",
+
+    predictions: "उत्पादन पूर्वानुमान",
+    recommendations: "उचित फसल सलाह",
+    exportPdf: "PDF डाउनलोड करें",
 
     cropPrediction:
       "फसल उत्पादकता पूर्वानुमान",
@@ -1324,7 +1333,7 @@ const translations = {
     district: "जिला",
     cropYear: "फसल वर्ष",
     season: "मौसम",
-    area: "क्षेत्रफल",
+    area: "क्षेत्रफल (एकड़)",
     rainfall: "वर्षा",
     maximumTemperature: "अधिकतम तापमान",
     predictProductivity:
@@ -1349,11 +1358,13 @@ const translations = {
     aboutCropYieldPrediction:
       "फसल उत्पादन पूर्वानुमान के बारे में",
     cropYieldDescription:
-      "KrushiMitra ऐतिहासिक कृषि, फसल, वर्षा, तापमान, क्षेत्रफल और क्षेत्रीय डेटा का विश्लेषण करके अपेक्षित फसल उत्पादकता का अनुमान लगाता है।",
+      "KrushiMitra ऐतिहासिक कृषि, फसल, वर्षा, तापमान, एकड़ रकबा और क्षेत्रीय डेटा का विश्लेषण करके प्रति एकड़ अपेक्षित फसल उत्पादकता का अनुमान लगाता है।",
     backToDashboard:
       "डैशबोर्ड पर वापस जाएं",
     tonnesPerHectare:
-      "टन प्रति हेक्टेयर",
+      "टन प्रति एकड़",
+    tonnesPerAcre:
+      "टन प्रति एकड़",
     select: "चुनें",
     fillAllFields:
       "कृपया सभी फ़ील्ड भरें।",
@@ -1713,7 +1724,7 @@ const translations = {
     solutionsHeader: "बेहतर खेती के लिए आसान और स्मार्ट टूल्स",
     solutionsSub: "अपनी मिट्टी और मौसम के अनुसार सही फसल चुनें, पैदावार का अनुमान लगाएं और बेहतर मुनाफा कमाएं।",
     yieldForecastingTitle: "फसल उत्पादन का अनुमान",
-    yieldForecastingDesc: "अपने जिले, खेत के आकार और मौसम के अनुसार जानें कि आपको कितनी पैदावार (टन/हेक्टेयर) मिल सकती है।",
+    yieldForecastingDesc: "अपने जिले, खेत के आकार (एकड़) और मौसम के अनुसार जानें कि आपको कितनी पैदावार (टन/एकड़) मिल सकती है।",
     soilAdvisoryTitle: "मिट्टी के अनुसार फसल सलाह",
     soilAdvisoryDesc: "अपनी मिट्टी की जांच (N, P, K, pH) के अनुसार जानें कि आपके खेत के लिए कौन सी फसल सबसे फायदेमंद रहेगी।",
     weatherTelemetryTitle: "लाइव मौसम और बारिश की जानकारी",
@@ -1874,614 +1885,620 @@ const translations = {
   mr: {
     dashboard: "डॅशबोर्ड",
     prediction: "पीक उत्पादन अंदाज",
-    recommendation: "पीक शिफारस",
-    weather: "हवामान",
-    reports: "अहवाल",
-    analytics: "कृषी विश्लेषण",
-    history: "इतिहास",
-    plantDoctor: "एआय पीक डॉक्टर",
-    schemes: "शासकीय योजना",
-    profile: "प्रोफाइल",
+    recommendation: "योग्य पीक सल्ला",
+    weather: "हवामान व पाऊस",
+    reports: "शेती अहवाल (PDF)",
+    analytics: "शेती प्रगती व आलेख",
+    history: "मागील नोंदी",
+    plantDoctor: "पीक डॉक्टर (रोग निदान)",
+    schemes: "सरकारी योजना",
+    profile: "माझी शेतकरी माहिती",
     settings: "सेटिंग्ज",
-    admin: "अॅडमिन",
+    admin: "प्रशासक (अ‍ॅडमिन)",
 
     mainMenu: "मुख्य मेनू",
-    account: "खाते",
-    logout: "लॉग आउट",
-    toggleSidebar: "साइडबार बदला",
-    aiAgriculture: "AI कृषी",
+    account: "माझे खाते",
+    logout: "लॉग आउट करा",
+    toggleSidebar: "मेनू उघडा / बंद करा",
+    aiAgriculture: "स्मार्ट शेती",
 
     searchPlaceholder:
-      "पीक, अंदाज, अहवाल शोधा...",
-    notifications: "सूचना",
-    farmer: "शेतकरी",
-    language: "भाषा",
+      "पीक, जिल्हा, अंदाज किंवा अहवाल शोधा...",
+    notifications: "शेती अलर्ट व मेसेज",
+    farmer: "शेतकरी बांधव",
+    language: "भाषा निवडा",
 
     search: "शोधा",
-    save: "जतन करा",
+    save: "सेव्ह करा",
     cancel: "रद्द करा",
-    edit: "संपादित करा",
-    delete: "हटवा",
+    edit: "बदला",
+    delete: "काढून टाका",
     submit: "सबमिट करा",
-    back: "मागे",
-    next: "पुढे",
+    back: "मागे जा",
+    next: "पुढे जा",
     close: "बंद करा",
-    loading: "लोड होत आहे...",
-    noData: "डेटा उपलब्ध नाही",
-    success: "यशस्वी",
-    error: "त्रुटी",
+    loading: "माहिती लोड होत आहे, कृपया थांबा...",
+    noData: "अजून कोणतीही माहिती उपलब्ध नाही",
+    success: "यशस्वी!",
+    error: "काहीतरी चूक झाली",
     tryAgain: "पुन्हा प्रयत्न करा",
-    required: "आवश्यक",
-    reset: "रीसेट",
-    date: "दिनांक",
+    required: "आवश्यक माहिती",
+    reset: "रीसेट करा",
+    date: "तारीख",
     type: "प्रकार",
-    result: "निकाल",
-    actions: "कृती",
-    action: "कृती",
+    result: "अंदाज निकाल",
+    actions: "पर्याय",
+    action: "पर्याय",
     status: "स्थिती",
     view: "पहा",
 
-    welcome: "कृषिमित्रमध्ये आपले स्वागत आहे",
-    goodMorning: "शुभ प्रभात",
+    welcome: "कृषीमित्रवर आपले सहर्ष स्वागत आहे!",
+    goodMorning: "शुभ सकाळ",
     goodAfternoon: "शुभ दुपार",
     goodEvening: "शुभ संध्याकाळ",
     goodNight: "नमस्कार",
     overview:
-      "आपल्या पिकांसाठी योग्य निर्णय घेण्यासाठी AI आधारित अंदाज आणि शिफारसींचा वापर करा.",
-    makePrediction: "पीक उत्पादन अंदाज काढा",
-    totalPredictions: "एकूण अंदाज",
-    soilAdvisories: "माती परीक्षण सल्ला",
-    modelAccuracy: "मॉडेल अचूकता",
-    cropsAnalyzed: "विश्लेषित पिके",
-    estimatedProfit: "सरासरी अंदाजित नफा",
-    recentPredictions: "अलीकडील अंदाज",
-    latestPredictions: "आपल्या शेतासाठी नवीनतम पीक उत्पादन अंदाज",
-    viewAll: "सर्व पहा",
+      "शेतात भरघोस उत्पादन घेण्यासाठी योग्य पीक निवडा, पावसाचा अंदाज घ्या आणि शेती फायदेशीर करा.",
+    makePrediction: "उत्पादन अंदाज काढा",
+    totalPredictions: "केलेले एकूण अंदाज",
+    soilAdvisories: "माती परीक्षण व खत सल्ला",
+    modelAccuracy: "अंदाजांची अचूकता (विश्वसनीयता)",
+    cropsAnalyzed: "तपासलेली पिके",
+    estimatedProfit: "अपेक्षित नफा व उत्पन्न",
+    recentPredictions: "नुकतेच केलेले अंदाज",
+    latestPredictions: "तुमच्या शेतीसाठी नुकतेच काढलेले उत्पादन अंदाज",
+    viewAll: "सर्व नोंदी पहा",
     crop: "पीक",
-    location: "स्थान",
-    yield: "उत्पादन",
-    confidence: "विश्वास पातळी",
+    location: "गाव / जिल्हा",
+    yield: "एकरी अपेक्षित उत्पादन",
+    confidence: "अचूकतेची खात्री",
     averagePredictedYield:
-      "सरासरी अंदाजित उत्पादन",
+      "सरासरी अपेक्षित उत्पादन",
     comparedWithPrevious:
-      "आपल्या मागील अंदाजांच्या तुलनेत",
+      "मागील अंदाजांशी तुलना करता",
     latestRecommendation:
-      "नवीनतम शिफारस",
+      "नुकताच दिलेला पीक सल्ला",
     basedOnSoilWeather:
-      "मातीतील पोषक घटक, पाऊस, आर्द्रता आणि तापमानावर आधारित.",
+      "मातीतील पोषण (नत्र, स्फुरद, पालाश), पाऊस आणि तापमानानुसार.",
     getNewRecommendation:
-      "नवीन शिफारस मिळवा",
-    weatherAdvisory: "शेती हवामान अंदाज",
-    viewWeather: "हवामान व अंदाज पहा",
+      "नवीन पीक सल्ला घ्या",
+    weatherAdvisory: "शेतीसाठी आजचे हवामान व पाऊस",
+    viewWeather: "हवामान व पाऊस पहा",
     currentFarmingRegion:
-      "सध्याचा कृषी प्रदेश",
+      "आपला शेती परिसर / जिल्हा",
     checkWeather:
       "हवामान तपासा",
     noPredictionsFound:
-      "कोणतेही अंदाज सापडले नाहीत.",
+      "अजून कोणताही अंदाज घेतलेला नाही.",
     districtBadgeSuffix: "जिल्हा",
-    farmlandProfileBadge: "शेती प्रोफाईल",
-    registeredFarmerBadge: "नोंदणीकृत शेतकरी",
+    farmlandProfileBadge: "माझी शेतजमीन",
+    registeredFarmerBadge: "नोंदणी केलेले शेतकरी",
     superAdminBadge: "मुख्य प्रशासक",
-    dashboardFarmerBannerSub: "{district} येथील आपल्या शेतीसाठी स्मार्ट कृषी डॅशबोर्ड. त्वरित पीक उत्पादन अंदाज, खत-माती सल्ला आणि हवामान अंदाज मिळवा.",
-    dashboardAdminBannerSub: "प्रशासक नियंत्रण: पीक अंदाज प्रणाली, नोंदणीकृत शेतकरी यादी आणि सिस्टीम स्थितीचे निरीक्षण करा.",
-    dashboardWeatherCardSub: "{district} साठी थेट जिल्हा हवामान माहिती, आर्द्रता सतर्कता आणि विशेष शेती सल्ला.",
+    dashboardFarmerBannerSub: "{district} जिल्ह्यातील आपल्या शेतीसाठी कृषीमित्र! एकरी किती उत्पन्न निघेल, कोणतं पीक सर्वाधिक फायदा देईल आणि पाऊस कसा राहील हे सर्व एकाच ठिकाणी जाणून घ्या.",
+    dashboardAdminBannerSub: "प्रशासक नियंत्रण: पीक अंदाज प्रणाली, शेतकरी यादी आणि सिस्टीम स्थितीचे निरीक्षण करा.",
+    dashboardWeatherCardSub: "{district} मधील आजचे हवामान, पाऊस आणि शेतीची कामे करण्यासाठी उपयुक्त सल्ला.",
     acresUnit: "एकर",
-    hectaresUnit: "हेक्टर",
-    completedStatus: "पूर्ण",
-    liveBadge: "थेट",
+    hectaresUnit: "एकर",
+    completedStatus: "पूर्ण झाले",
+    liveBadge: "थेट (Live)",
+
+    predictions: "उत्पादन अंदाज",
+    recommendations: "योग्य पीक सल्ला",
+    exportPdf: "PDF डाऊनलोड करा",
 
     cropPrediction:
-      "पीक उत्पादकता अंदाज",
+      "पीक उत्पादन अंदाज",
     cropYieldPrediction:
       "पीक उत्पादन अंदाज",
     district: "जिल्हा",
-    cropYear: "पीक वर्ष",
+    cropYear: "वर्ष",
     season: "हंगाम",
-    area: "क्षेत्रफळ",
+    area: "शेतीचे क्षेत्र (एकर)",
     rainfall: "पाऊस",
     maximumTemperature:
       "कमाल तापमान",
     predictProductivity:
-      "उत्पादकतेचा अंदाज घ्या",
+      "उत्पादन अंदाज काढा",
     predictedProductivity:
-      "अंदाजित उत्पादकता",
+      "एकरी अपेक्षित उत्पादन",
     predictionResult:
-      "अंदाजाचा निकाल",
+      "अपेक्षित उत्पादन निकाल",
     enterDetails:
-      "पीक उत्पादकतेचा अंदाज घेण्यासाठी आवश्यक कृषी आणि हवामानाची माहिती भरा.",
+      "शेतात किती पीक येईल हे जाणून घेण्यासाठी खालील माहिती भरा.",
     cropFieldInformation:
-      "पीक आणि शेताची माहिती",
+      "शेती आणि पिकाची माहिती",
     enterFieldDetails:
-      "आपल्या कृषी क्षेत्राची माहिती भरा",
+      "शेताची माहिती निवडा आणि उत्पादन अंदाज मिळवा",
     predictYield:
-      "उत्पादनाचा अंदाज घ्या",
+      "उत्पादन अंदाज काढा",
     predicting:
-      "अंदाज घेतला जात आहे...",
+      "तुमच्या शेतासाठी अंदाज काढत आहे, थोडा वेळ थांबा...",
     predictionFailed:
-      "अंदाज घेता आला नाही",
+      "अंदाज काढता आला नाही. कृपया माहिती पुन्हा तपासून प्रयत्न करा.",
     aiModelPrediction:
-      "AI मॉडेल अंदाज",
+      "अपेक्षित पीक उत्पादन अंदाज",
     aboutCropYieldPrediction:
-      "पीक उत्पादन अंदाजाबद्दल",
+      "उत्पादन अंदाज कसा काढला जातो?",
     cropYieldDescription:
-      "KrushiMitra ऐतिहासिक कृषी, पीक, पाऊस, तापमान, क्षेत्रफळ आणि स्थानिक डेटाचे विश्लेषण करून अपेक्षित पीक उत्पादकतेचा अंदाज देते.",
+      "गेल्या काही वर्षांतील पाऊस, तापमान, तुमचा जिल्हा आणि जमिनीच्या क्षेत्रफळानुसार शेतात किती टन/पोती पीक निघेल याचा शास्त्रीय अंदाज कृषीमित्र देते.",
     backToDashboard:
-      "डॅशबोर्डवर परत जा",
+      "मुख्य पानावर जा (डॅशबोर्ड)",
     tonnesPerHectare:
-      "टन प्रति हेक्टर",
-    select: "निवडा",
+      "टन / एकर",
+    tonnesPerAcre:
+      "टन / एकर",
+    select: "निवडा...",
     fillAllFields:
-      "कृपया सर्व फील्ड भरा.",
+      "कृपया शेतीची सर्व आवश्यक माहिती भरा.",
     makeSureBackendRunning:
-      "Flask बॅकएंड पोर्ट 5000 वर चालू असल्याची खात्री करा.",
+      "कृषीमित्र सर्व्हर पोर्ट 5000 वर सुरू असल्याची खात्री करा.",
     backendConnectionError:
-      "KrushiMitra बॅकएंडशी कनेक्ट करता आले नाही. Flask पोर्ट 5000 वर चालू आहे याची खात्री करा.",
+      "सर्व्हरशी संपर्क होऊ शकला नाही. कृपया बॅकएंड चालू असल्याची खात्री करा.",
 
     aiCropRecommendation:
-      "AI पीक शिफारस",
+      "मातीनुसार योग्य पीक सल्ला",
     cropRecommendation:
-      "पीक शिफारस",
+      "योग्य पीक सल्ला",
     recommendationDescription:
-      "मातीतील पोषक घटक आणि पर्यावरणीय परिस्थितींचे विश्लेषण करून आपल्या शेतासाठी योग्य पीक शोधा.",
+      "जमिनीतील पोषणद्रव्ये (नत्र, स्फुरद, पालाश) आणि परिसरातील हवामानानुसार शेतात कोणते पीक सर्वाधिक फायदेशीर ठरेल ते जाणून घ्या.",
     invalidNumericValues:
-      "कृपया वैध संख्यात्मक मूल्ये भरा.",
+      "कृपया रकान्यांमध्ये योग्य संख्या भरा.",
     recommendationFailed:
-      "पीक शिफारस तयार करता आली नाही.",
+      "पीक सल्ला मिळू शकला नाही. कृपया पुन्हा प्रयत्न करा.",
     soilClimateInformation:
       "माती आणि हवामानाची माहिती",
     enterFarmConditions:
-      "AI विश्लेषणासाठी आपल्या शेतातील परिस्थिती भरा.",
+      "माती परीक्षण अहवालातील आकडे आणि शेताची माहिती भरा.",
     nitrogen:
-      "नायट्रोजन (N)",
+      "नत्र (N) - Nitrogen",
     phosphorus:
-      "फॉस्फरस (P)",
+      "स्फुरद (P) - Phosphorus",
     potassium:
-      "पोटॅशियम (K)",
+      "पालाश (K) - Potash",
     temperature:
-      "तापमान",
+      "तापमान (°C)",
     humidity:
-      "आर्द्रता",
+      "हवेतील आर्द्रता / दमटपणा (%)",
     soilPh:
-      "मातीचा pH",
+      "जमिनीचा सामू (pH)",
     mlRecommendationModel:
-      "माती आणि हवामान सल्ला",
+      "माती व हवामानानुसार शास्त्रोक्त पीक निवड",
     mlRecommendationDescription:
-      "N, P, K, pH आणि हवामानाच्या परिस्थितीचे मूल्यांकन करते.",
+      "नत्र, स्फुरद, पालाश, जमिनीचा सामू (pH) आणि स्थानिक हवामानाचा अभ्यास करून सर्वोत्तम पीक सुचवले जाते.",
     analyzingConditions:
-      "परिस्थितीचे विश्लेषण होत आहे...",
+      "माती व हवामानाची परिस्थिती तपासत आहे...",
     recommendBestCrop:
-      "योग्य पीक शिफारस करा",
+      "सर्वोत्तम पीक सुचवा",
     howKrushiMitraWorks:
-      "कृषिमित्र कसे कार्य करते",
+      "कृषीमित्र कसे काम करते?",
     aiCropSuitabilityAnalysis:
-      "AI आधारित पीक योग्यतेचे विश्लेषण",
+      "तुमच्या शेतासाठी पीक कसे निवडले जाते?",
     soilAnalysis:
-      "मातीचे विश्लेषण",
+      "मातीची तपासणी (Soil Test)",
     soilAnalysisDescription:
-      "N, P, K आणि मातीच्या pH चे मूल्यांकन केले जाते.",
+      "मातीतील नत्र, स्फुरद, पालाश आणि जमिनीचा सामू (pH) बारकाईने तपासला जातो.",
     climateAnalysis:
-      "हवामानाचे विश्लेषण",
+      "हवामानाची तपासणी",
     climateAnalysisDescription:
-      "तापमान, आर्द्रता आणि पावसाचा विचार केला जातो.",
+      "परिसरातील तापमान, हवेतील आर्द्रता आणि अपेक्षित पावसाचे प्रमाण तपासले जाते.",
     aiRecommendation:
-      "पीक उपयुक्तता विश्लेषण",
+      "योग्य पीक निवड",
     aiRecommendationDescription:
-      "मातीतील पोषक घटक आणि स्थानिक हवामानाचे सर्वसमावेशक मूल्यांकन करते.",
+      "मातीची सुपीकता आणि हवामानाशी सुसंगत असलेले सर्वाधिक उत्पादन देणारे पीक निवडले जाते.",
     parameters:
-      "पॅरामीटर्स",
+      "घटक / माहिती",
     aiRecommendationComplete:
-      "माती आणि पीक विश्लेषण पूर्ण",
+      "तुमच्या शेतीसाठी पीक सल्ला तयार आहे!",
     recommendedCrop:
-      "शिफारस केलेले पीक",
+      "शेतासाठी सर्वात योग्य पीक",
     recommendationConfidence:
-      "उपयुक्तता जुळणी",
+      "पिकाची अनुकूलता (खात्री)",
     recommendationResultDescription:
-      "आपण दिलेल्या मातीतील पोषक घटक आणि पर्यावरणीय परिस्थितींवर आधारित हे पीक सर्वात योग्य असल्याचे आढळले आहे.",
+      "माती परीक्षण आणि स्थानिक हवामानाचा विचार करता तुमच्या शेतात या पिकाची लागवड केल्यास भरघोस उत्पादन व चांगला नफा मिळू शकतो.",
     modelConfidenceScore:
-      "उपयुक्तता निर्देशांक",
+      "अंदाजाची खात्री",
     newRecommendation:
-      "नवीन शिफारस",
+      "नवीन पीक सल्ला घ्या",
     soilNutrients:
-      "मातीतील पोषक घटक",
+      "मातीतील मुख्य अन्नद्रव्ये",
     soilNutrientsDescription:
-      "नायट्रोजन, फॉस्फरस आणि पोटॅशियम पीक योग्यतेचे निर्धारण करण्यास मदत करतात.",
+      "नत्र, स्फुरद आणि पालाश ही पिकांच्या निरोगी वाढीसाठी व दाणे भरण्यासाठी आवश्यक मुख्य अन्नद्रव्ये आहेत.",
     climateConditions:
-      "हवामानाच्या परिस्थिती",
+      "हवामानाची परिस्थिती",
     climateConditionsDescription:
-      "तापमान, आर्द्रता आणि पाऊस पीक निवडीवर परिणाम करतात.",
+      "योग्य तापमान, हवेतील दमटपणा आणि वेळेवर पडणारा पाऊस यामुळे पिकाचे नुकसान टळते.",
     machineLearning:
-      "हंगामी योग्यता",
+      "हंगामानुसार निवड",
     machineLearningDescription:
-      "हंगामी पेरणीची वेळ आणि मातीच्या आरोग्यानुसार योग्य पिकाची शिफारस करते.",
+      "हंगाम, पेरणीची वेळ आणि जमिनीच्या प्रकारानुसार योग्य पिकाचा अचूक सल्ला दिला जातो.",
     seasonalSuitability:
-      "हंगामी योग्यता",
+      "हंगामी अनुकूलता",
     seasonalSuitabilityDescription:
-      "हंगामी पेरणीची वेळ आणि मातीच्या आरोग्यानुसार योग्य पिकाची शिफारस करते.",
+      "पेरणीची योग्य वेळ आणि जमिनीनुसार सर्वोत्तम पिकाची शिफारस.",
 
     weatherForecast:
-      "हवामान अंदाज",
+      "हवामान व पावसाचा अंदाज",
     weatherDescription:
-      "चांगले कृषी निर्णय घेण्यासाठी सध्याच्या हवामानाच्या परिस्थितीवर लक्ष ठेवा.",
+      "पेरणी, फवारणी व पाणी देण्याचे योग्य नियोजन करण्यासाठी आजचे हवामान आणि पावसाचा अंदाज पाहा.",
     searchCity:
-      "शहर किंवा जिल्हा शोधा",
+      "तालुका, शहर किंवा जिल्हा शोधा",
     enterCityDistrict:
-      "शहर किंवा जिल्हा भरा उदा. अमरावती",
+      "उदा. बारामती, अमरावती, नाशिक, नागपूर...",
     currentWeather:
-      "सध्याचे हवामान",
+      "आजचे थेट हवामान",
     feelsLike:
-      "जाणवणारे तापमान",
+      "प्रत्यक्षात जाणवणारे तापमान",
     weatherCondition:
       "हवामानाची स्थिती",
     weatherInformation:
       "हवामानाची माहिती",
     weatherDetails:
-      "हवामानाचा तपशील",
+      "हवामानाचे इतर तपशील",
     weatherDetailsDescription:
-      "सध्याच्या वातावरणीय परिस्थिती",
+      "शेतातील आजचे तापमान, पाऊस आणि वाऱ्याची स्थिती",
     weatherConditions:
-      "हवामानाच्या परिस्थिती",
+      "हवामानाची परिस्थिती",
     weatherConditionsDescription:
-      "अतिरिक्त वातावरणीय माहिती",
+      "पिकांची वाढ आणि संरक्षणासाठी उपयुक्त हवामान घटक",
     checkYourLocalWeather:
-      "आपल्या स्थानिक हवामानाची तपासणी करा",
+      "तुमच्या भागातील हवामान पहा",
     weatherEmptyDescription:
-      "तापमान, पाऊस, आर्द्रता, वाऱ्याचा वेग आणि इतर हवामानाची माहिती पाहण्यासाठी शहर किंवा जिल्हा भरा.",
+      "आपल्या परिसरातील तापमान, पाऊस, हवेतील आर्द्रता आणि वाऱ्याचा वेग पाहण्यासाठी तालुका किंवा जिल्हा निवडा.",
     fetchingWeather:
-      "नवीनतम हवामान डेटा मिळवत आहे...",
+      "हवामानाची ताजी माहिती मिळवत आहे, कृपया थांबा...",
     weatherUnavailable:
-      "हवामान मिळवता आले नाही.",
+      "हवामानाची माहिती मिळू शकली नाही.",
     cityRequired:
-      "कृपया शहर किंवा जिल्हा भरा.",
+      "कृपया तालुका किंवा जिल्हा टाका.",
     farmingInsight:
-      "शेतीसाठी हवामान सूचना",
+      "शेतीसाठी आजचा सल्ला",
     farmingInsightDescription:
-      "सध्याच्या परिस्थितीमुळे सिंचन, फवारणी आणि इतर शेतीच्या कामांचे नियोजन करण्यात मदत होऊ शकते. कृषी निर्णय घेण्यापूर्वी स्थानिक परिस्थिती लक्षात घ्या.",
+      "हवामानाची स्थिती पाहून पिकांना पाणी देणे, औषध फवारणी किंवा खते टाकण्याचे योग्य नियोजन करा.",
     relativeHumidity:
-      "सापेक्ष आर्द्रता",
+      "हवेतील आर्द्रता (दमटपणा)",
     rainfallLastHour:
-      "मागील तासातील पाऊस",
+      "गेल्या तासातील पाऊस",
     currentWindSpeed:
-      "सध्याचा वाऱ्याचा वेग",
+      "वाऱ्याचा वेग",
     atmosphericPressure:
-      "वातावरणीय दाब",
+      "हवेचा दाब",
     notAvailable:
-      "उपलब्ध नाही",
+      "माहिती उपलब्ध नाही",
     visibility:
-      "दृश्यता",
+      "दृश्यमानता (धुक्याचे प्रमाण)",
     cloudiness:
-      "ढगाळपणा",
+      "ढगाळ वातावरण (ढगांचे प्रमाण)",
     windSpeed:
       "वाऱ्याचा वेग",
     pressure:
       "हवेचा दाब",
     fieldEnvironment:
-      "शेतातील वातावरण आणि सूक्ष्म हवामान",
+      "शेतातील आजचे वातावरण",
     fieldEnvironmentDescription:
-      "पिकांचे बाष्पीभवन आणि शेती कामांवर परिणाम करणारे वातावरणीय घटक",
+      "पिकांची वाढ आणि फवारणीवर परिणाम करणारे महत्त्वाचे घटक",
     agriculturalAdvisory:
-      "शेतीविषयक कामे आणि पीक सुरक्षा सल्ला",
+      "आजची शेती कामे व सल्ला",
     agriculturalAdvisoryDescription:
-      "फवारणी, सिंचन आणि काढणी सुरक्षेसाठी प्रत्यक्ष मार्गदर्शन",
+      "आजच्या हवामानात औषध फवारणी, पाणी व्यवस्थापन आणि पीक काढणी करावी की नाही याचे मार्गदर्शन",
     dewPoint:
-      "अपेक्षित दव बिंदू",
+      "दव पडण्याचे प्रमाण (दवबिंदू)",
     solarExposure:
-      "सौर प्रकाश पातळी",
+      "ऊन / सूर्यप्रकाश",
     sprayingCondition:
-      "कीटकनाशक फवारणी",
+      "औषध फवारणीसाठी आजची परिस्थिती",
     irrigationSchedule:
-      "सिंचन नियोजन",
+      "पिकांना पाणी देण्याची गरज / वेळ",
     diseaseRisk:
-      "बुरशीजन्य रोग जोखीम",
+      "बुरशीजन्य रोग व कीड येण्याचा धोका",
     harvestSafety:
-      "काढणी आणि शेती कामे",
+      "पीक काढणीसाठी वातावरण",
 
     report:
-      "अहवाल",
+      "शेती अहवाल (PDF)",
     generateReport:
       "अहवाल तयार करा",
     generateNewReport:
       "नवीन अहवाल तयार करा",
     downloadReport:
-      "अहवाल डाउनलोड करा",
+      "अहवाल डाऊनलोड करा",
     download:
-      "डाउनलोड",
+      "डाऊनलोड करा",
     reportSummary:
       "अहवालाचा सारांश",
     totalReports:
-      "एकूण अहवाल",
+      "एकूण तयार अहवाल",
     yieldReports:
-      "उत्पादन अहवाल",
+      "उत्पादन अंदाज अहवाल",
     aiReports:
-      "AI अहवाल",
+      "पीक सल्ला अहवाल",
     availableReports:
-      "उपलब्ध अहवाल",
+      "उपलब्ध शेती अहवाल",
     recentlyGeneratedReports:
-      "आपले अलीकडे तयार केलेले KrushiMitra अहवाल",
+      "तुमच्या शेतीसाठी तयार केलेले छापील अहवाल",
     cropYieldAnalysis:
-      "पीक उत्पादन विश्लेषण",
+      "उत्पादन अंदाज तपशील",
     cropYieldAnalysisDescription:
-      "मासिक पीक उत्पादन अंदाज विश्लेषण",
+      "शेतात एकरी किती उत्पादन निघेल याचे सविस्तर विश्लेषण",
     predictionPerformance:
-      "अंदाज कार्यक्षमता",
+      "अचूकता व विश्वसनीयता",
     predictionPerformanceDescription:
-      "AI मॉडेल अंदाज अचूकता अहवाल",
+      "मागील अंदाजांची खात्री व अचूकतेचा तुलनात्मक अहवाल",
     cropRecommendationReport:
-      "पीक शिफारस",
+      "योग्य पीक सल्ला अहवाल",
     cropRecommendationReportDescription:
-      "शेतातील परिस्थितीनुसार शिफारस केलेली पिके",
+      "माती परीक्षण व हवामानानुसार शेतासाठी सुचवलेल्या फायदेशीर पिकांचा अहवाल",
     yieldReport:
-      "उत्पादन अहवाल",
+      "उत्पादन अंदाज अहवाल",
     aiReport:
-      "AI अहवाल",
+      "पीक सल्ला अहवाल",
     reportType:
-      "अहवाल प्रकार",
+      "अहवालाचा प्रकार",
     period:
       "कालावधी",
     reportGenerationDescription:
-      "आपल्या पीक अंदाज, शिफारसी आणि ऐतिहासिक कृषी डेटावर आधारित सविस्तर अहवाल तयार करा.",
+      "पीक उत्पादन अंदाज, मातीनुसार खत व पीक सल्ला आणि हवामान मार्गदर्शनाचा अधिकृत १-पानाचा PDF अहवाल डाऊनलोड करा.",
 
     predictionHistory:
-      "अंदाजाचा इतिहास",
+      "मागील सर्व अंदाज",
     predictionHistoryDescription:
-      "आपले मागील पीक उत्पादन अंदाज पहा.",
+      "तुम्ही पूर्वी घेतलेले सर्व उत्पादन अंदाज येथे सुरक्षित आहेत.",
     newPrediction:
-      "नवीन अंदाज",
+      "नवीन अंदाज काढा",
     cropsPredicted:
-      "अंदाजित पिके",
+      "तपासलेली पिके",
     avgConfidence:
-      "सरासरी विश्वास पातळी",
+      "सरासरी अचूकता",
     latestPrediction:
-      "नवीनतम अंदाज",
+      "नुकताच केलेला अंदाज",
     today:
       "आज",
     searchHistory:
-      "पीक, जिल्हा, हंगाम किंवा वर्षानुसार शोधा...",
+      "पीक, जिल्हा किंवा हंगामानुसार शोधा...",
     previousPredictions:
       "मागील अंदाज",
     predictionRecords:
-      "आपल्या पीक उत्पादन अंदाजाच्या नोंदी",
+      "मागील अंदाजांच्या नोंदी",
     predictedYield:
-      "अंदाजित उत्पादन",
+      "एकरी अपेक्षित उत्पादन",
     recommendationHistory:
-      "शिफारसींचा इतिहास",
+      "मागील पीक सल्ला नोंदी",
     recommendationRecords:
-      "आपल्या मागील पीक शिफारसी",
+      "यापूर्वी घेतलेले पीक सल्ले",
     noRecommendationsFound:
-      "कोणत्याही शिफारसी सापडल्या नाहीत.",
+      "अजून कोणताही पीक सल्ला घेतलेला नाही.",
     recommendationDate:
-      "शिफारशीची तारीख",
+      "तारीख",
 
     myProfile:
-      "माझे प्रोफाइल",
+      "माझी शेतकरी माहिती",
     personalInformation:
-      "वैयक्तिक माहिती",
+      "शेतकऱ्याचे नाव व संपर्क",
     personalDetails:
-      "वैयक्तिक तपशील",
+      "संपर्क व पत्ता",
     manageAccountDetails:
-      "आपल्या खात्याचा तपशील व्यवस्थापित करा",
+      "तुमची वैयक्तिक माहिती पहा व अद्ययावत करा",
     editProfile:
-      "प्रोफाइल संपादित करा",
+      "माहिती बदला",
     name:
       "नाव",
     fullName:
       "पूर्ण नाव",
     email:
-      "ईमेल",
+      "ईमेल किंवा फोन",
     emailAddress:
       "ईमेल पत्ता",
     phoneNumber:
-      "फोन नंबर",
+      "मोबाईल नंबर (WhatsApp)",
     state:
       "राज्य",
     memberSince:
-      "सदस्यत्व सुरू",
+      "नोंदणी केल्याची तारीख",
     activityStats:
-      "क्रियाकलाप आकडेवारी",
+      "शेती नोंदी",
     reportsGenerated:
       "तयार केलेले अहवाल",
     profileCropsAnalyzed:
-      "विश्लेषित पिके",
+      "तपासलेली पिके",
     profileAvgConfidence:
-      "सरासरी विश्वास पातळी",
+      "सरासरी अचूकता",
     preferredLanguage:
-      "प्राधान्याची भाषा",
+      "वापराची भाषा",
     farmDetails:
-      "शेताची माहिती",
+      "शेतजमीन माहिती",
     enterFarmDetails:
-      "आपल्या शेताची माहिती भरा...",
+      "शेताविषयी माहिती भरा...",
     noFarmDetails:
       "अजून शेताची माहिती जोडलेली नाही.",
     notProvided:
-      "दिलेली नाही",
+      "माहिती दिलेली नाही",
     security:
-      "सुरक्षा",
+      "सुरक्षा व पासवर्ड",
     manageAccountSecurity:
-      "आपल्या खात्याची सुरक्षा व्यवस्थापित करा",
+      "पासवर्ड बदला आणि खाते सुरक्षित ठेवा",
     password:
       "पासवर्ड",
     passwordDescription:
-      "आपला पासवर्ड सुरक्षित आणि अद्ययावत ठेवा.",
+      "खात्याचा पासवर्ड सुरक्षित ठेवा.",
     changePassword:
       "पासवर्ड बदला",
     notifications:
-      "सूचना",
+      "शेती सूचना व मेसेज",
     manageNotificationPreferences:
-      "आपल्या सूचना प्राधान्ये व्यवस्थापित करा",
+      "कोणत्या शेती सूचना हव्या आहेत ते निवडा",
     predictionResults:
-      "अंदाजाचे निकाल",
+      "नवीन उत्पादन अंदाज मेसेज",
     weatherAlerts:
-      "हवामान सूचना",
+      "अतिवृष्टी व हवामान अलर्ट",
     cropRecommendations:
-      "पीक शिफारसी",
+      "पीक व खत सल्ला मेसेज",
     reportUpdates:
-      "अहवाल अपडेट",
+      "शेती अहवाल अपडेट्स",
 
     applicationSettings:
-      "अॅप्लिकेशन सेटिंग्ज",
+      "अ‍ॅप सेटिंग्ज",
     settingsDescription:
-      "आपला KrushiMitra अनुभव सानुकूलित करा",
+      "कृषीमित्रची भाषा आणि रंग बदला",
     appearance:
-      "दिसणे",
+      "रंग व अक्षरे (थीम)",
     privacy:
-      "गोपनीयता",
+      "माहितीची सुरक्षा",
     helpSupport:
-      "मदत आणि समर्थन",
+      "शेतकरी मदत व संपर्क",
     about:
       "आमच्याबद्दल",
     customizeAppearance:
-      "KrushiMitra चे स्वरूप सानुकूलित करा",
+      "अ‍ॅपचा रंग आणि अक्षरांचा आकार बदला",
     theme:
-      "थीम",
+      "स्क्रीन रंग (थीम)",
     light:
-      "लाइट",
+      "पांढरा (लाइट)",
     dark:
-      "डार्क",
+      "गडद / काळा (डार्क)",
     auto:
-      "ऑटो",
+      "फोननुसार (ऑटो)",
     fontSize:
-      "फॉन्ट आकार",
+      "अक्षरांचा आकार",
     small:
-      "लहान",
+      "लहान अक्षरे",
     medium:
-      "मध्यम",
+      "मध्यम अक्षरे",
     large:
-      "मोठा",
+      "मोठी अक्षरे (वाचायला सोपी)",
     saveAppearance:
-      "दिसण्याची सेटिंग जतन करा",
+      "सेटिंग्ज सेव्ह करा",
     selectPreferredLanguage:
-      "आपली प्राधान्याची भाषा निवडा",
+      "तुमची आवडीची भाषा निवडा",
     privacyDescription:
-      "आपली गोपनीयता आणि डेटा प्राधान्ये व्यवस्थापित करा.",
+      "तुमची शेती माहिती पूर्णपणे सुरक्षित ठेवली जाते.",
     dataProtection:
-      "डेटा संरक्षण",
+      "माहितीचे रक्षण",
     dataProtectionDescription:
-      "आपली खाते माहिती सुरक्षितपणे साठवली जाते.",
+      "तुमची सर्व माहिती आणि नोंदी सुरक्षित आहेत.",
     predictionHistoryPrivacy:
-      "अंदाजाचा इतिहास",
+      "मागील नोंदी",
     predictionHistoryPrivacyDescription:
-      "आपले मागील पीक अंदाज आपल्या खात्याशी जोडलेले आहेत.",
+      "तुमचे सर्व मागील अंदाज खात्यात कायम सुरक्षित राहतील.",
     needHelp:
-      "KrushiMitra वापरण्यास मदत हवी आहे?",
+      "कृषीमित्र वापरताना काही अडचण येत आहे का?",
     supportTeam:
-      "KrushiMitra समर्थन",
+      "शेतकरी मदत केंद्र",
     supportDescription:
-      "पीक अंदाज, शिफारस, हवामान किंवा अहवालांबाबत मदतीसाठी आपल्या प्रकल्प समर्थन टीमशी संपर्क साधा.",
+      "अंदाज, पीक सल्ला, हवामान किंवा अहवालाबाबत मदतीसाठी आमच्याशी संपर्क साधा.",
     aboutKrushiMitra:
-      "KrushiMitra बद्दल",
+      "कृषीमित्रविषयी",
     aboutDescription:
-      "KrushiMitra हे AI आधारित कृषी प्लॅटफॉर्म आहे जे पीक अंदाज, पीक शिफारस आणि हवामानाच्या माहितीचा वापर करून शेतकऱ्यांना डेटा आधारित निर्णय घेण्यास मदत करते.",
+      "कृषीमित्र हे महाराष्ट्रातील शेतकरी बांधवांसाठी बनवलेले सोपे शेती मित्र आहे, ज्यातून कोणतं पीक घ्यावं, किती उत्पादन निघेल आणि पाऊस कसा राहील हे अगदी सहज मराठीत समजते.",
     aiAgriculturePlatform:
-      "AI कृषी प्लॅटफॉर्म",
+      "शेतकऱ्यांसाठी स्मार्ट कृषीमित्र",
     appearanceSaved:
-      "दिसण्याच्या सेटिंग्ज जतन केल्या आहेत!",
+      "सेटिंग्ज यशस्वीरित्या सेव्ह झाल्या आहेत!",
 
     adminPanel:
-      "अॅडमिन पॅनेल",
+      "प्रशासक कक्ष",
     adminDescription:
-      "KrushiMitra सिस्टम आणि प्लॅटफॉर्मचा आढावा.",
+      "कृषीमित्र प्रणाली व शेतकरी व्यवस्थापन.",
     systemStatus:
-      "सिस्टम स्थिती",
+      "प्रणाली स्थिती",
     servicesRunning:
-      "KrushiMitra सेवा सामान्यपणे सुरू आहेत.",
+      "कृषीमित्रच्या सर्व सेवा सुरळीत सुरू आहेत.",
     users:
-      "वापरकर्ते",
+      "नोंदणी केलेले शेतकरी",
     registeredUsers:
-      "नोंदणीकृत वापरकर्ते",
+      "नोंदणी केलेले शेतकरी",
     database:
-      "डेटाबेस",
+      "माहिती साठा (डेटाबेस)",
     connected:
-      "कनेक्टेड",
+      "सुरू आहे",
     dataStorage:
-      "डेटा स्टोरेज",
+      "माहिती साठा",
     mlModel:
-      "ML मॉडेल",
+      "स्मार्ट AI मॉडेल",
     ready:
-      "तयार",
-    predictionService:
-      "अंदाज सेवा",
-    system:
-      "सिस्टम",
-    active:
       "सक्रिय",
+    predictionService:
+      "उत्पादन अंदाज सेवा",
+    system:
+      "प्रणाली",
+    active:
+      "सुरू आहे",
     platformStatus:
-      "प्लॅटफॉर्म स्थिती",
+      "प्रणाली स्थिती",
 
     welcomeBack:
-      "पुन्हा स्वागत आहे",
+      "कृषीमित्रवर आपले स्वागत आहे",
     loginToContinue:
-      "KrushiMitra मध्ये पुढे जाण्यासाठी लॉगिन करा",
+      "कृषीमित्र वापरण्यासाठी लॉगिन करा",
     emailLabel:
-      "ईमेल",
+      "ईमेल किंवा फोन",
     passwordLabel:
       "पासवर्ड",
     enterYourEmail:
-      "आपला ईमेल भरा",
+      "आपला ईमेल किंवा फोन टाका",
     enterYourPassword:
-      "आपला पासवर्ड भरा",
+      "आपला पासवर्ड टाका",
     forgotPassword:
       "पासवर्ड विसरलात?",
     login:
-      "लॉगिन",
+      "लॉगिन करा",
     backToLogin:
       "लॉगिनकडे परत जा",
     dontHaveAccount:
-      "खाते नाही?",
+      "नवीन शेतकरी आहात?",
     register:
-      "नोंदणी करा",
+      "मोफत नोंदणी करा",
     aiPoweredAgriculture:
-      "AI आधारित कृषी प्लॅटफॉर्म",
+      "शेतकऱ्यांसाठी स्मार्ट कृषीमित्र",
     rememberMe: "माझे लॉगिन लक्षात ठेवा",
     loginRequired:
-      "कृपया ईमेल आणि पासवर्ड भरा.",
+      "कृपया ईमेल आणि पासवर्ड टाका.",
 
-    landingSolutions: "सुविधा",
-    landingHowItWorks: "कसे कार्य करते",
-    landingSupportedCrops: "समर्थित पिके",
-    landingFarmers: "शेतकरी",
-    landingFaq: "वारंवार विचारले जाणारे प्रश्न",
-    signIn: "साइन इन",
+    landingSolutions: "शेती सुविधा",
+    landingHowItWorks: "कसे वापरावे?",
+    landingSupportedCrops: "मुख्य पिके",
+    landingFarmers: "शेतकरी बांधव",
+    landingFaq: "नेहमी विचारले जाणारे प्रश्न",
+    signIn: "लॉगिन करा",
     getStarted: "सुरू करा",
-    heroBadge: "शेतकऱ्यांसाठी स्मार्ट AI कृषी मार्गदर्शक",
-    heroTitlePart1: "शेतकऱ्यांना सक्षम करणे",
-    heroTitlePart2: "स्मार्ट AI कृषी तंत्रज्ञानाने",
-    heroSubtitle: "मिळवा योग्य पिकाचा सल्ला, उत्पादनाचा अचूक अंदाज, थेट हवामान माहिती आणि सोपे शेती PDF अहवाल.",
-    startFreePrediction: "मोफत अंदाज सुरू करा",
-    quickDemoLogin: "१-क्लिक डेमो लॉगिन",
+    heroBadge: "महाराष्ट्रातील शेतकरी बांधवांसाठी सोपे व स्मार्ट कृषीमित्र",
+    heroTitlePart1: "बळीराजाला समृद्ध करणारा",
+    heroTitlePart2: "स्मार्ट व सोपा कृषीमित्र",
+    heroSubtitle: "कोणतं पीक फायदेशीर ठरेल? एकरी किती उत्पन्न निघेल? आणि पाऊस कसा राहील? सर्व माहिती मिळवा एकाच ठिकाणी, अगदी सहज मराठीत!",
+    startFreePrediction: "उत्पादनाचा अंदाज काढा",
+    quickDemoLogin: "डेमो वापरून पहा",
     yieldForecast: "उत्पादन अंदाज",
-    optimalMatch: "योग्य पीक",
-    sowingWindow: "खरीप पेरणीसाठी योग्य वेळ",
-    solutionsHeader: "उत्तम शेतीसाठी सोपी व स्मार्ट साधने",
-    solutionsSub: "माती आणि हवामानानुसार योग्य पीक निवडा, उत्पादनाचा अंदाज घ्या आणि शेतीचा नफा वाढवा.",
+    optimalMatch: "योग्य पीक सल्ला",
+    sowingWindow: "पेरणीसाठी सर्वोत्तम वेळ",
+    solutionsHeader: "शेतकऱ्यांसाठी अत्यंत सोपी व उपयुक्त साधने",
+    solutionsSub: "आपली माती आणि स्थानिक हवामानानुसार योग्य पीक निवडा, एकरी उत्पादनाचा अचूक अंदाज घ्या आणि शेती तोट्यातून फायद्यात आणा.",
     yieldForecastingTitle: "पीक उत्पादन अंदाज",
-    yieldForecastingDesc: "तुमचा जिल्हा, शेताचे क्षेत्रफळ आणि हवामानानुसार किती उत्पादन (टन/हेक्टर) मिळू शकते ते सहज जाणून घ्या.",
-    soilAdvisoryTitle: "मातीनुसार योग्य पीक शिफारस",
-    soilAdvisoryDesc: "माती परीक्षण घटक (N, P, K, pH) भरून तुमच्या शेतासाठी सर्वात फायदेशीर ठरणारे पीक शोधा.",
+    yieldForecastingDesc: "तुमचा जिल्हा, शेताचे क्षेत्र (एकर) आणि हवामानानुसार एकरी व एकूण किती टन माल निघेल ते पेरणीपूर्वीच जाणून घ्या.",
+    soilAdvisoryTitle: "मातीनुसार योग्य पीक सल्ला",
+    soilAdvisoryDesc: "मातीतील नत्र, स्फुरद, पालाश आणि जमिनीचा सामू (pH) टाकून तुमच्या रानात कोणते पीक सर्वाधिक नफा देईल ते शोधा.",
     weatherTelemetryTitle: "थेट हवामान व पावसाचा अंदाज",
-    weatherTelemetryDesc: "पेरणी आणि पाणी व्यवस्थापनाचे नियोजन करण्यासाठी तुमच्या भागातील थेट तापमान आणि पावसाचा अंदाज पाहा.",
-    pdfDossiersTitle: "शेतीचा PDF अहवाल डाउनलोड करा",
-    pdfDossiersDesc: "बँक कर्ज, पीक विमा किंवा शेतीच्या नोंदींसाठी १-क्लिकमध्ये सोपा व अधिकृत PDF अहवाल मिळवा.",
-    howItWorksHeading: "कृषीमित्र कसे कार्य करते? (३ सोप्या पायऱ्या)",
-    step1Title: "१. शेताची माहिती भरा",
-    step1Desc: "तुमचा जिल्हा, शेताचे क्षेत्रफळ आणि मातीचे घटक निवडा.",
-    step2Title: "२. AI द्वारे जलद विश्लेषण",
-    step2Desc: "आमची स्मार्ट प्रणाली काही सेकंदात योग्य पीक आणि उत्पादनाचा अंदाज काढते.",
-    step3Title: "३. सल्ला व PDF अहवाल मिळवा",
-    step3Desc: "तुमच्या शेतासाठी योग्य सल्ला पाहा आणि फोनवर PDF अहवाल डाउनलोड करा.",
-    supportedCropsHeading: "महाराष्ट्रातील मुख्य समर्थित पिके",
-    supportedCropsSub: "महाराष्ट्रातील प्रमुख पिकांसाठी अचूक आणि खात्रीशीर मार्गदर्शन.",
-    farmerTestimonialsHeading: "शेतकरी बांधवांचा विश्वास",
-    faqHeading: "वारंवार विचारले जाणारे प्रश्न",
-    ctaHeading: "शेतीचे उत्पादन वाढवण्यासाठी तयार आहात का?",
-    ctaSubtitle: "योग्य पीक नियोजन, माती परीक्षण आणि शेती अहवालांसाठी आजच कृषीमित्र वापरा.",
-    createFreeAccount: "मोफत खाते तयार करा",
-    instantDemoAccess: "त्वरित डेमो लॉगिन",
-    platformTools: "प्लॅटफॉर्म टूल्स",
-    farmerSupport: "शेतकरी मदत केंद्र",
-    kisanHelpline: "किसान हेल्पलाइन",
+    weatherTelemetryDesc: "पेरणी, फवारणी आणि खते देण्याचे नियोजन करण्यासाठी आपल्या गावातील थेट तापमान, पाऊस आणि वाऱ्याचा वेग तपासा.",
+    pdfDossiersTitle: "शेतीचा १-पानाचा छापील PDF अहवाल",
+    pdfDossiersDesc: "बँक पीक कर्ज, पीक विमा किंवा शासकीय कामांसाठी संपूर्ण माहितीचा १-पानाचा छापील PDF अहवाल मोफत डाऊनलोड करा.",
+    howItWorksHeading: "कृषीमित्र कसे वापरावे? (३ सोप्या पायऱ्या)",
+    step1Title: "१. शेतीची माहिती भरा किंवा आवाजाने बोला",
+    step1Desc: "आपला जिल्हा, शेतीचे क्षेत्र (एकर) आणि पिकाचे नाव निवडा अथवा आवाजाने सांगा.",
+    step2Title: "२. काही सेकंदात अंदाज मिळवा",
+    step2Desc: "आधुनिक तंत्रज्ञानाद्वारे काही सेकंदातच एकरी अपेक्षित उत्पादन व शेती सल्ला स्क्रीनवर दिसेल.",
+    step3Title: "३. सल्ला पहा व PDF अहवाल मिळवा",
+    step3Desc: "खतांचे प्रमाण व शेतीची कामे समजून घ्या आणि एका क्लिकवर WhatsApp वर शेअर करा किंवा PDF डाऊनलोड करा.",
+    supportedCropsHeading: "महाराष्ट्रातील प्रमुख पिके",
+    supportedCropsSub: "सोयाबीन, कापूस, तूर, हरभरा, मका, ऊस यांसह महाराष्ट्रातील सर्व प्रमुख पिकांचे संपूर्ण मार्गदर्शन.",
+    farmerTestimonialsHeading: "शेतकरी बांधवांचे अनुभव",
+    faqHeading: "नेहमी विचारले जाणारे प्रश्न",
+    ctaHeading: "शेतीत भरघोस उत्पादन व चांगला नफा मिळवण्यासाठी तयार आहात का?",
+    ctaSubtitle: "मातीनुसार योग्य पीक निवड, अचूक उत्पादन अंदाज आणि विश्वासार्ह हवामान सल्ल्यासाठी आजच कृषीमित्र वापरा.",
+    createFreeAccount: "मोफत नोंदणी करा",
+    instantDemoAccess: "डेमो वापरून पहा",
+    platformTools: "शेती साधने",
+    farmerSupport: "शेतकरी सहाय्यता",
+    kisanHelpline: "शेतकरी मदत क्रमांक",
     accountAccess: "खाते लॉगिन",
-    simHeader: "थेट कृषी माहिती आणि पीक अंदाज प्रणाली",
-    simSub: "रिअल-टाइम पीक उत्पादन अंदाज, माती परीक्षण विश्लेषण आणि थेट हवामान सल्ला.",
+    simHeader: "शेती माहिती व उत्पादन अंदाज",
+    simSub: "थेट पीक उत्पादन अंदाज, मातीनुसार योग्य पीक आणि आजचे हवामान.",
     yieldPredictorTab: "उत्पादन अंदाज",
     soilAdvisoryTab: "माती व पीक सल्ला",
     liveWeatherTab: "थेट हवामान",
@@ -2490,123 +2507,123 @@ const translations = {
     selectCrop: "पीक निवडा",
     selectSeason: "हंगाम निवडा",
     selectYear: "वर्ष निवडा",
-    cropArea: "जमीन क्षेत्र (एकर)",
-    estimateHarvestYield: "अंदाजित उत्पन्न काढा",
+    cropArea: "शेतीचे क्षेत्र (एकर)",
+    estimateHarvestYield: "उत्पादन अंदाज काढा",
     findOptimalCrop: "योग्य पीक शोधा",
-    useMyLiveLocation: "📍 माझे थेट स्थान वापरा",
-    locating: "शोधत आहे...",
-    predictedYieldBanner: "अंदाजित पीक उत्पादन",
-    recommendedCropBanner: "शिफारस केलेले पीक",
-    expectedOutput: "अपेक्षित उत्पन्न",
-    totalHarvest: "एकूण शेत उत्पादन",
-    totalHarvestEstimate: "एकूण अंदाजित उत्पादन",
-    suitabilityFactor: "अनुकूलता निकष",
+    useMyLiveLocation: "📍 माझे थेट गाव/शहर निवडा",
+    locating: "स्थान शोधत आहे...",
+    predictedYieldBanner: "अपेक्षित पीक उत्पादन",
+    recommendedCropBanner: "सुचवलेले योग्य पीक",
+    expectedOutput: "एकरी अपेक्षित उत्पादन",
+    totalHarvest: "शेतातील एकूण उत्पादन",
+    totalHarvestEstimate: "अपेक्षित एकूण उत्पादन",
+    suitabilityFactor: "हवामान व जमीन अनुकूलता",
     liveTemperature: "थेट तापमान",
     relativeHumidity: "हवेतील आर्द्रता",
     windVelocity: "वाऱ्याचा वेग",
-    farmingStatus: "शेती सल्ला स्थिती",
-    atmosphericMoisture: "वातावरणातील ओलावा",
+    farmingStatus: "शेतीसाठी आजचा सल्ला",
+    atmosphericMoisture: "हवेतील दमटपणा",
     breezeVelocity: "वाऱ्याचा वेग",
     openWeatherTelemetry: "थेट हवामान माहिती",
-    exploreTool: "टूल वापरा",
+    exploreTool: "वापरून पहा",
     tryStep: "पायरी",
-    tryStepNow: "वापरा",
+    tryStepNow: "सुरू करा",
     allCropsFilter: "🌾 सर्व पिके",
     kharifFilter: "🌧️ खरीप (पावसाळी)",
-    rabiFilter: "❄️ रबी (हिवाळी)",
+    rabiFilter: "❄️ रब्बी (हिवाळी)",
     cashFilter: "💰 नगदी पिके",
     farmerExperiences: "⭐ शेतकरी बांधवांचे अनुभव",
     helpAndAnswers: "❓ मदत आणि उत्तरे",
-    joinFellowFarmers: "प्रगतीशील शेतकरी बांधवांमध्ये सामील व्हा",
+    joinFellowFarmers: "महाराष्ट्रातील शेतकरी बांधवांशी जोडा",
     aboutUsTitle: "🌱 आमच्याबद्दल — कृषीमित्र",
-    aboutUsDesc1: "कृषीमित्र हे एक स्मार्ट कृषी प्लॅटफॉर्म आहे जे शेतकऱ्यांना अचूक माहिती आणि अभ्यासावर आधारित कृषी मार्गदर्शन पुरवण्यासाठी तयार केले आहे. आमचा प्रकल्प शेतकरी बांधवांना माती परीक्षण, हवामान आणि मागील उत्पादनाच्या माहितीचा उपयोग करून योग्य पीक निवड आणि उत्पादनाचा अचूक अंदाज घेण्यास मदत करतो.",
-    aboutUsDesc2: "कृषीमित्र आधुनिक तंत्रज्ञान, स्थानिक हवामान आणि सोप्या मराठी वेब इंटरफेसचा मेळ घालून उपयुक्त कृषी सल्ला देते. किचकट कृषी आकडेवारीचे सोप्या आणि सहज समजणाऱ्या माहितीमध्ये रूपांतर करून तंत्रज्ञान थेट शेतकऱ्यांच्या बांधापर्यंत पोहोचवणे हे आमचे ध्येय आहे.",
+    aboutUsDesc1: "कृषीमित्र हे महाराष्ट्रातील शेतकरी बांधवांसाठी तयार केलेले सोपे कृषी साधन आहे. हवामान, पाऊस, मागील वर्षांतील उत्पादन आणि मातीतील खतांच्या प्रमाणानुसार शेतकऱ्यांना एकरी किती उत्पन्न होईल आणि कोणते पीक फायदेशीर ठरेल याचे अचूक मार्गदर्शन करणे हा याचा मुख्य उद्देश आहे.",
+    aboutUsDesc2: "किचकट आकडेवारीऐवजी शेतकऱ्यांना समजेल अशा साध्या व अस्सल मराठी भाषेत माहिती देणे हे कृषीमित्रचे वैशिष्ट्य आहे. शेतीचा प्रत्येक निर्णय सोपा आणि फायदेशीर व्हावा यासाठी तंत्रज्ञान थेट शेतकऱ्यांच्या बांधापर्यंत आणले आहे.",
 
     // Reports Page Full Localization
-    reportsPageHeading: "शेती अहवाल आणि पीडीएफ डाऊनलोड",
-    reportsPageSub: "आपल्या शेती नोंदींसाठी अधिकृत आणि सुबक कृषी अहवाल पीडीएफ स्वरूपात तयार करा व डाऊनलोड करा.",
+    reportsPageHeading: "शेती अहवाल व PDF डाऊनलोड",
+    reportsPageSub: "बँक पीक कर्ज, विमा दावा किंवा स्वतःच्या नोंदींसाठी शेतीचा अधिकृत १-पानाचा PDF अहवाल डाऊनलोड करा.",
     recordsReady: "नोंदी तयार",
-    pdfReadyBadge: "पीडीएफ तयार",
-    exportBundleBtn: "सर्व अहवाल एकत्र डाऊनलोड करा (बंडल)",
+    pdfReadyBadge: "PDF तयार आहे",
+    exportBundleBtn: "सर्व अहवाल एकत्र डाऊनलोड करा",
     noReportsToExport: "डाऊनलोड करण्यासाठी नोंदी उपलब्ध नाहीत",
-    loggedYieldPredictions: "नोंदणीकृत उत्पादन अंदाज",
+    loggedYieldPredictions: "केलेले उत्पादन अंदाज",
     soilCropTests: "माती व पीक चाचण्या",
     availableFarmDossiers: "उपलब्ध शेती अहवाल",
     dossierUnit: "अहवाल",
     dossiersUnit: "अहवाल",
-    noFarmReportsTitle: "अद्याप कोणतेही शेती अहवाल तयार केलेले नाहीत",
-    noFarmReportsDesc: "तुम्ही अद्याप कोणतीही पीक शिफारस किंवा उत्पादन अंदाज तपासलेला नाही. पहिला अंदाज किंवा माती परीक्षण करताच अधिकृत १-पानांचे शेती अहवाल येथे उपलब्ध होतील.",
-    getSoilCropAdvisoryBtn: "माती परीक्षण व पीक सल्ला मिळवा",
+    noFarmReportsTitle: "अजून कोणतेही शेती अहवाल तयार केलेले नाहीत",
+    noFarmReportsDesc: "तुम्ही अजून कोणताही उत्पादन अंदाज किंवा पीक सल्ला घेतलेला नाही. एकदा अंदाज किंवा सल्ला घेतल्यावर तुमचा शेती अहवाल येथे लगेच उपलब्ध होईल.",
+    getSoilCropAdvisoryBtn: "मातीनुसार योग्य पीक सल्ला घ्या",
     predictHarvestYieldBtn: "पीक उत्पादन अंदाज काढा",
-    availableReportsCatalog: "उपलब्ध पीडीएफ अहवाल सूची",
-    selectReportTypeSub: "आपल्या गरजेनुसार योग्य अहवाल निवडून खालील बटनावर क्लिक करून पीडीएफ डाऊनलोड करा.",
-    yieldReportItemTitle: "पीक उत्पादकता आणि उत्पादन अंदाज अहवाल",
-    yieldReportItemDesc: "आपले उत्पादन अंदाज, जिल्हावार हवामान, पाऊस व तापमानाचा सविस्तर विश्लेषणात्मक पीडीएफ अहवाल.",
-    yieldReportItemType: "उत्पादन विश्लेषण",
-    recReportItemTitle: "माती परीक्षण आणि पीक शिफारस अहवाल",
-    recReportItemDesc: "मातीतील N-P-K अन्नद्रव्ये, सामू आणि हवामानानुसार योग्य पिकांची शिफारस करणारा अधिकृत कृषी सल्ला.",
+    availableReportsCatalog: "उपलब्ध PDF अहवाल",
+    selectReportTypeSub: "खाली दिलेल्या बटनावर क्लिक करून तुमचा PDF अहवाल डाऊनलोड करा.",
+    yieldReportItemTitle: "पीक उत्पादन अंदाज अहवाल (PDF)",
+    yieldReportItemDesc: "जिल्हा, पाऊस, तापमान आणि एकर क्षेत्रफळानुसार किती उत्पादन निघेल याचे संपूर्ण विवरण.",
+    yieldReportItemType: "उत्पादन अहवाल",
+    recReportItemTitle: "माती परीक्षण व पीक सल्ला अहवाल (PDF)",
+    recReportItemDesc: "मातीतील खते (नत्र, स्फुरद, पालाश), जमिनीचा सामू (pH) आणि हवामानानुसार निवडलेल्या पिकांचा अहवाल.",
     recReportItemType: "पीक सल्ला",
-    masterReportItemTitle: "सर्वसमावेशक शेतकरी कृषी सल्ला अहवाल (मास्टर अहवाल)",
-    masterReportItemDesc: "पीक उत्पादन अंदाज, माती परीक्षण शिफारस आणि मॉडेल विश्लेषणाचा एकत्रित संपूर्ण कृषी अहवाल.",
-    masterReportItemType: "सर्वसमावेशक",
+    masterReportItemTitle: "संपूर्ण शेती अहवाल (मास्टर PDF)",
+    masterReportItemDesc: "उत्पादन अंदाज, मातीनुसार पीक सल्ला आणि शेती नियोजनाचा सर्वसमावेशक एकत्रित अहवाल.",
+    masterReportItemType: "संपूर्ण अहवाल",
     recordCountSingular: "नोंद",
     recordCountPlural: "नोंदी",
-    downloadPdfBtn: "पीडीएफ डाऊनलोड करा",
-    officialFarmRecordsTitle: "अधिकृत शेती नोंदी आणि कृषी सल्ला दस्तऐवज",
-    officialFarmRecordsDesc: "कृषीमित्र पीडीएफ अहवाल शेती कर्ज/क्रेडिट अर्ज, पीक विमा पडताळणी किंवा स्थानिक कृषी विज्ञान केंद्र (KVK) तज्ज्ञांशी सल्लामसलत करण्यासाठी प्रमाणित स्वरूपात तयार केलेले आहेत.",
-    reportGeneratedSuccess: "पीडीएफ यशस्वीरित्या तयार झाली आहे!",
+    downloadPdfBtn: "PDF डाऊनलोड करा",
+    officialFarmRecordsTitle: "अधिकृत शेती अहवाल व सल्ला दस्तऐवज",
+    officialFarmRecordsDesc: "हा PDF अहवाल बँक पीक कर्ज, पीक विमा किंवा कृषी अधिकाऱ्यांच्या मार्गदर्शनासाठी अत्यंत उपयुक्त आहे.",
+    reportGeneratedSuccess: "PDF अहवाल यशस्वीरित्या तयार झाला!",
 
     // Profile Page Localization
-    profilePageHeading: "शेतकरी प्रोफाईल आणि शेती नोंदी",
-    profilePageSub: "आपली वैयक्तिक माहिती, संपर्क क्रमांक, शेतजमीन वैशिष्ट्ये आणि सुरक्षा व्यवस्थापित करा.",
-    personalAndFarmInfo: "वैयक्तिक आणि शेती माहिती",
-    securityAndPassword: "सुरक्षा आणि पासवर्ड",
-    notificationAlerts: "सूचना आणि अलर्ट",
-    farmerAgriDetails: "शेतकरी आणि कृषी तपशील",
-    farmerAgriDetailsSub: "फोन नंबर, जिल्हा, मातीचा प्रकार आणि सिंचन पद्धती अपडेट करा.",
-    editProfileDetails: "प्रोफाईल संपादित करा",
-    contactAndIdentity: "१. संपर्क आणि ओळख",
+    profilePageHeading: "माझी शेतकरी माहिती व नोंदी",
+    profilePageSub: "आपले नाव, मोबाईल नंबर, शेतजमीन आणि इतर तपशील येथे तपासा व अद्ययावत करा.",
+    personalAndFarmInfo: "माझी माहिती व शेती तपशील",
+    securityAndPassword: "सुरक्षा व पासवर्ड",
+    notificationAlerts: "शेती अलर्ट व मेसेज",
+    farmerAgriDetails: "शेतकरी व शेती तपशील",
+    farmerAgriDetailsSub: "आपला मोबाईल नंबर, जिल्हा, जमिनीचा प्रकार आणि सिंचनाची सोय अद्ययावत करा.",
+    editProfileDetails: "माहिती बदला",
+    contactAndIdentity: "१. संपर्क व ओळख",
     farmerFullName: "शेतकऱ्याचे संपूर्ण नाव *",
-    phoneMobile: "फोन / व्हॉट्सॲप मोबाइल *",
-    pmKisanIdLabel: "KCC / पीएम-किसान आयडी (ऐच्छिक)",
-    pmKisanIdPlaceholder: "उपलब्ध असल्यास पीएम-किसान / केसीसी आयडी भरा",
-    farmlandProfileHeading: "२. शेतजमीन आणि पीक प्रोफाईल",
+    phoneMobile: "मोबाईल नंबर (WhatsApp) *",
+    pmKisanIdLabel: "KCC / पीएम-किसान किंवा नमो शेतकरी आयडी (ऐच्छिक)",
+    pmKisanIdPlaceholder: "उपलब्ध असल्यास पीएम-किसान / KCC नंबर टाका",
+    farmlandProfileHeading: "२. शेतजमीन व पिकांची माहिती",
     districtMaharashtra: "जिल्हा (महाराष्ट्र)",
-    totalCultivatedLandArea: "एकूण वहितीखालील शेतजमीन क्षेत्र",
-    primarySoilClass: "जमिनीचा / मातीचा मुख्य प्रकार",
+    totalCultivatedLandArea: "एकूण शेतजमीन (एकर)",
+    primarySoilClass: "मातीचा प्रकार",
     selectSoilType: "मातीचा प्रकार निवडा...",
-    irrigationWaterSource: "सिंचन आणि पाण्याचा स्रोत",
-    selectIrrigationSource: "पाण्याचा स्रोत निवडा...",
-    primaryCropsLabel: "नेहमी पिकवली जाणारी प्रमुख पिके",
+    irrigationWaterSource: "पाण्याची सोय (सिंचन)",
+    selectIrrigationSource: "उदा. विहीर, बोअरवेल, कालवा (कॅनॉल), ठिबक सिंचन, तुषार सिंचन",
+    primaryCropsLabel: "तुम्ही सहसा घेता ती पिके",
     primaryCropsPlaceholder: "उदा. कापूस, सोयाबीन, गहू, भात, ऊस",
-    fieldNotesLabel: "शेती नोंदी आणि पीक पद्धती",
-    fieldNotesPlaceholder: "शेताचे स्थान, मातीचा इतिहास, सेंद्रिय शेती नोंदी लिहा...",
-    saveFarmProfile: "शेती प्रोफाईल जतन करा",
+    fieldNotesLabel: "शेतीविषयी इतर नोंदी",
+    fieldNotesPlaceholder: "शेताविषयी काही विशेष माहिती असल्यास येथे लिहा...",
+    saveFarmProfile: "माहिती सेव्ह करा",
     accountSecurityHeading: "खाते सुरक्षा आणि पासवर्ड",
-    accountSecuritySub: "लॉगिन तपशील व्यवस्थापित करा आणि आपली शेती माहिती सुरक्षित ठेवा.",
+    accountSecuritySub: "आपला पासवर्ड बदला आणि शेतकरी खाते सुरक्षित ठेवा.",
     currentPassword: "सध्याचा पासवर्ड",
     newPassword: "नवीन पासवर्ड",
-    confirmNewPassword: "नवीन पासवर्डची खात्री करा",
+    confirmNewPassword: "नवीन पासवर्ड पुन्हा टाका",
     enterCurrentPasswordPlaceholder: "सध्याचा पासवर्ड टाका",
     min6CharsPlaceholder: "किमान ६ अक्षरे",
     reenterNewPasswordPlaceholder: "नवीन पासवर्ड पुन्हा टाका",
     updatePassword: "पासवर्ड बदला",
-    notifAlertsHeading: "सूचना व शेती सल्ला प्राधान्ये",
-    notifAlertsSub: "पीक उत्पादन अंदाज आणि हवामानाशी संबंधित कोणत्या सूचना हव्या आहेत ते निवडा.",
-    notifYieldTitle: "पीक उत्पादन आणि अंदाज सूचना",
-    notifYieldDesc: "नवीन पीक उत्पादन अंदाज तयार झाल्यावर माहिती मिळवा.",
-    notifWeatherTitle: "थेट अतिवृष्टी व हवामान अलर्ट",
-    notifWeatherDesc: "अतिवृष्टी, सोसाट्याचा वारा किंवा तापमान बदलाच्या तातडीच्या सूचना.",
-    notifCropRecTitle: "हंगामी पीक आणि खत शिफारस",
-    notifCropRecDesc: "खरीप आणि रब्बी हंगामासाठी आपल्या जमिनीनुसार पीक सल्ला सूचना.",
-    notifSmsTitle: "मोबाईलवर किसान SMS अलर्ट",
-    notifSmsDesc: "तातडीचा आणि महत्त्वाचा शेती सल्ला थेट आपल्या नोंदणीकृत मोबाईलवर मिळवा.",
-    liveFarmStats: "थेट शेती आकडेवारी",
+    notifAlertsHeading: "शेती सूचना व मेसेज प्राधान्ये",
+    notifAlertsSub: "पीक अंदाज, हवामान आणि खतांचे कोणते अलर्ट हवे आहेत ते निवडा.",
+    notifYieldTitle: "पीक उत्पादन अंदाज मेसेज",
+    notifYieldDesc: "नवीन उत्पादन अंदाज तयार झाल्यावर तात्काळ सूचना मिळवा.",
+    notifWeatherTitle: "अतिवृष्टी व हवामान अलर्ट",
+    notifWeatherDesc: "अतिवृष्टी, गारपीट, वादळी वारे किंवा हवामान बदलाचा तातडीचा इशारा.",
+    notifCropRecTitle: "हंगामी पीक व खत सल्ला",
+    notifCropRecDesc: "खरीप, रब्बी व उन्हाळी हंगामासाठी जमिनीनुसार फायदेशीर पिकांचा सल्ला.",
+    notifSmsTitle: "मोबाईलवर SMS अलर्ट",
+    notifSmsDesc: "महत्त्वाचे कृषी सल्ले व अलर्ट थेट मोबाईलवर SMS द्वारे मिळवा.",
+    liveFarmStats: "माझ्या शेतीची माहिती",
     yieldPredictionsLabel: "उत्पादन अंदाज:",
-    cropRecommendationsLabel: "पीक शिफारसी:",
+    cropRecommendationsLabel: "पीक सल्ला:",
     cropsUnit: "पिके",
-    profileSavedSuccess: "प्रोफाईल आणि शेती तपशील यशस्वीरित्या जतन केले!",
-    passwordUpdatedSuccess: "पासवर्ड यशस्वीरित्या बदलला आहे!",
+    profileSavedSuccess: "माहिती यशस्वीरित्या सेव्ह झाली!",
+    passwordUpdatedSuccess: "पासवर्ड यशस्वीरित्या बदलला!",
     fillPasswordFields: "कृपया पासवर्डचे सर्व रकाने भरा.",
     passwordMinLength: "नवीन पासवर्ड किमान ६ अक्षरांचा असावा.",
     passwordsDoNotMatch: "दोन्ही पासवर्ड जुळत नाहीत.",
@@ -2649,11 +2666,18 @@ export function AppProvider({ children }) {
   });
 
   const [language, setLanguage] = useState(() => {
-    return (
-      localStorage.getItem(
-        "krushimitra_language"
-      ) || "en"
-    );
+    // Default language is ALWAYS Marathi ('mr') as KrushiMitra is tailored for Maharashtra farmers.
+    // If the user actively switches to English or Hindi in the active session, respect that choice.
+    const sessionLang = sessionStorage.getItem("krushimitra_language");
+    if (sessionLang && ["mr", "en", "hi"].includes(sessionLang)) {
+      return sessionLang;
+    }
+    // Only use saved choice if explicitly chosen by the user in the UI
+    const explicitUserLang = localStorage.getItem("krushimitra_explicit_language");
+    if (explicitUserLang && ["mr", "en", "hi"].includes(explicitUserLang)) {
+      return explicitUserLang;
+    }
+    return "mr";
   });
 
   // User-Scoped Prediction and Recommendation Storage Keys
@@ -2690,8 +2714,8 @@ export function AppProvider({ children }) {
           area: 5.0,
           rainfall: 820,
           temperature: 28.5,
-          productivity: 3.42,
-          production: 17.1,
+          productivity: 1.38,
+          production: 6.9,
           confidence: 98.4,
           createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
         },
@@ -2706,8 +2730,8 @@ export function AppProvider({ children }) {
           area: 4.5,
           rainfall: 750,
           temperature: 30.2,
-          productivity: 2.88,
-          production: 12.96,
+          productivity: 1.15,
+          production: 5.18,
           confidence: 96.1,
           createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
         },
@@ -2967,6 +2991,7 @@ export function AppProvider({ children }) {
               user_email: r.user_email,
               crop: r.crop,
               confidence: r.confidence,
+              area: Number(r.area || 5.0),
               nitrogen: r.n_val,
               phosphorus: r.p_val,
               potassium: r.k_val,
@@ -3080,7 +3105,11 @@ export function AppProvider({ children }) {
       });
       const data = await response.json();
       if (!response.ok || !data.success) {
-        return { success: false, message: data.message || "Invalid email or password" };
+        return {
+          success: false,
+          userNotFound: Boolean(data.user_not_found),
+          message: data.message || "Invalid email or password",
+        };
       }
       login(data.user);
       return { success: true, user: data.user };
@@ -3263,6 +3292,11 @@ export function AppProvider({ children }) {
     }
     return usersList;
   };
+
+  // Synchronize live users directly from MySQL on mount and auth changes
+  useEffect(() => {
+    apiFetchAdminUsers();
+  }, [user?.email, user?.role]);
 
   // Real Database Admin User Role Update
   const apiUpdateUserRole = async (userId, newRole) => {
@@ -3586,27 +3620,36 @@ export function AppProvider({ children }) {
 
   const registerUser = (newUser) => {
     const userObj = {
-      id: "usr-" + Date.now().toString().slice(-6),
+      id: newUser.id || "usr-" + Date.now().toString().slice(-6),
       name: newUser.name,
       email: newUser.email,
       password: newUser.password || "password123",
       role: newUser.role || "Farmer",
       district: newUser.district || "Pune",
       phone: newUser.phone || "+91 98000 00000",
-      farmSize: newUser.farmSize || "4.0 Acres",
-      joinedDate: new Date().toLocaleDateString("en-IN", {
+      farm_size: newUser.farm_size || newUser.farmSize || "5.0",
+      farm_unit: newUser.farm_unit || newUser.farmUnit || "Acres",
+      kisan_id: newUser.kisan_id || newUser.kisanId || "",
+      soil_type: newUser.soil_type || newUser.soilType || "",
+      irrigation_type: newUser.irrigation_type || newUser.irrigationType || "",
+      primary_crops: newUser.primary_crops || newUser.primaryCrops || "",
+      member_since: newUser.member_since || newUser.joinedDate || new Date().toLocaleDateString("en-IN", {
         month: "long",
         year: "numeric",
       }),
-      status: "Active",
-      totalPredictions: 0,
+      status: newUser.status || "Active",
+      totalPredictions: newUser.totalPredictions || 0,
+      created_at: newUser.created_at || new Date().toISOString(),
     };
 
     setUsersList((prev) => {
-      const updated = [userObj, ...prev.filter((u) => u.email !== newUser.email)];
+      const updated = [userObj, ...prev.filter((u) => u.email?.toLowerCase() !== newUser.email?.toLowerCase())];
       localStorage.setItem("krushimitra_users_db", JSON.stringify(updated));
       return updated;
     });
+
+    // In the background, also synchronize latest state directly from MySQL backend
+    apiFetchAdminUsers().catch(() => {});
 
     return userObj;
   };
@@ -3796,12 +3839,24 @@ export function AppProvider({ children }) {
     const selectedLanguage =
       validLanguages.includes(newLanguage)
         ? newLanguage
-        : "en";
+        : "mr";
 
     setLanguage(selectedLanguage);
 
     localStorage.setItem(
       "krushimitra_language",
+      selectedLanguage
+    );
+    sessionStorage.setItem(
+      "krushimitra_language",
+      selectedLanguage
+    );
+    localStorage.setItem(
+      "krushimitra_user_lang",
+      selectedLanguage
+    );
+    localStorage.setItem(
+      "krushimitra_explicit_language",
       selectedLanguage
     );
   };
@@ -3854,7 +3909,7 @@ export function AppProvider({ children }) {
 
     addNotification({
       title: `${prediction.crop || "Crop"} Yield Forecast Ready`,
-      desc: `Estimated yield: ${prediction.productivity || "—"} t/ha for ${prediction.district || "your farm"} (${prediction.season || "Season"}).`,
+      desc: `Estimated yield: ${prediction.productivity || "—"} t/acre for ${prediction.district || "your farm"} (${prediction.season || "Season"}).`,
       type: "prediction",
       crop: prediction.crop,
       productivity: prediction.productivity,
@@ -3912,6 +3967,7 @@ export function AppProvider({ children }) {
         user_email: userEmail,
         crop: recommendation.crop,
         confidence: Number(recommendation.confidence || 95.2),
+        area: Number(recommendation.area || 5.0),
         n_val: Number(recommendation.nitrogen || 0),
         p_val: Number(recommendation.phosphorus || 0),
         k_val: Number(recommendation.potassium || 0),
@@ -3922,11 +3978,13 @@ export function AppProvider({ children }) {
       }),
     }).catch(() => {});
 
+    const recArea = recommendation.area || 5;
     addNotification({
-      title: `Recommended Crop: ${recommendation.crop || "Crop"}`,
-      desc: `High match recommendation for your soil N-P-K nutrient & weather levels.`,
+      title: `Recommended Crop: ${recommendation.crop || "Crop"} (${recArea} Acres)`,
+      desc: `High match recommendation for your ${recArea} acre farmland based on soil N-P-K nutrient & weather levels.`,
       type: "recommendation",
       crop: recommendation.crop,
+      area: recArea,
     });
   };
 

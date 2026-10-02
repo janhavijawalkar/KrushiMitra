@@ -542,10 +542,10 @@ export default function VoiceChatbot({ nav, openInstallModal }) {
       ) {
         offlineReply =
           language === "mr"
-            ? "🌾 **पीक अंदाज (Crop Yield Prediction) साधन:**\n\nआपण 'पीक अंदाज' विभागात जाऊन जिल्हा, हंगाम, क्षेत्रफळ आणि माती घटक भरून हेक्टरी उत्पन्नाचा अचूक अंदाज घेऊ शकता."
+            ? "🌾 **पीक अंदाज (Crop Yield Prediction) साधन:**\n\nआपण 'पीक अंदाज' विभागात जाऊन जिल्हा, हंगाम, शेतजमीन क्षेत्र (एकर) आणि हवामान घटक भरून एकरी उत्पन्नाचा (टन/एकर) अचूक अंदाज घेऊ शकता."
             : language === "hi"
-            ? "🌾 **फसल पूर्वानुमान टूल:**\n\nआप 'फसल पूर्वानुमान' पेज पर जाकर जिला, मौसम, रकबा और पोषक तत्व दर्ज कर सटीक उपज का अनुमान पा सकते हैं।"
-            : "🌾 **Crop Yield Prediction Tool:**\n\nNavigate to Yield Prediction to input district, season, area, and soil nutrients for AI-powered yield forecasting.";
+            ? "🌾 **फसल पूर्वानुमान टूल:**\n\nआप 'फसल पूर्वानुमान' पेज पर जाकर जिला, मौसम, खेत का रकबा (एकड़) और मौसम घटक दर्ज कर सटीक प्रति एकड़ उपज (टन/एकड़) का अनुमान पा सकते हैं।"
+            : "🌾 **Crop Yield Prediction Tool:**\n\nNavigate to Yield Prediction to input district, season, area in acres, and climate metrics for AI-powered yield forecasting in tonnes per acre.";
         offlineAction = {
           type: "navigate",
           page: "prediction",

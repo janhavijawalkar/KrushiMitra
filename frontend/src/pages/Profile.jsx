@@ -349,7 +349,7 @@ export default function Profile() {
           (sum, item) => sum + Number(item.productivity || 0),
           0
         ) / totalPreds
-      ).toFixed(2) + " t/ha"
+      ).toFixed(2) + (language === "mr" ? " टन/एकर" : language === "hi" ? " टन/एकड़" : " t/acre")
     : "—";
 
   const initial = form.name ? form.name.charAt(0).toUpperCase() : (currentUser.role === "Admin" ? "A" : "F");

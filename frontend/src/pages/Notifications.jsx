@@ -100,7 +100,7 @@ export default function Notifications({ nav }) {
     const seasonName = item.season ? (tSeason ? tSeason(item.season) : item.season) : "";
     if (language === "mr") {
       if (item.type === "prediction") {
-        return `अंदाजित उत्पादन: ${item.productivity || "—"} टन/हेक्टर (${districtName || "आपले शेत"}, ${seasonName || "हंगाम"}).`;
+        return `अंदाजित उत्पादन: ${item.productivity || "—"} टन/एकर (${districtName || "आपले शेत"}, ${seasonName || "हंगाम"}).`;
       }
       if (item.type === "recommendation") {
         return "आपल्या जमिनीतील N-P-K पोषक घटक आणि हवामानानुसार उच्च अनुकूलता असलेली शिफारस.";
@@ -118,7 +118,7 @@ export default function Notifications({ nav }) {
     }
     if (language === "hi") {
       if (item.type === "prediction") {
-        return `अनुमानित उपज: ${item.productivity || "—"} टन/हेक्टेयर (${districtName || "आपका खेत"}, ${seasonName || "मौसम"}).`;
+        return `अनुमानित उपज: ${item.productivity || "—"} टन/एकड़ (${districtName || "आपका खेत"}, ${seasonName || "मौसम"}).`;
       }
       if (item.type === "recommendation") {
         return "आपकी मिट्टी के N-P-K पोषक तत्वों और जलवायु स्तर के लिए अत्यधिक अनुशंसित फसल।";

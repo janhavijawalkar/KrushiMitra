@@ -119,7 +119,7 @@ export default function History({ nav }) {
 
     return `${(
       total / userPredictions.length
-    ).toFixed(2)} t/ha`;
+    ).toFixed(2)} ${language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}`;
   })();
 
   return (
@@ -410,7 +410,7 @@ export default function History({ nav }) {
                           {Number(
                             item.productivity
                           ).toFixed(2)}{" "}
-                          {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
+                          {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
                         </td>
 
                         <td className="px-5 py-4 text-gray-400 font-medium text-xs">
@@ -517,7 +517,7 @@ export default function History({ nav }) {
                           {Number(
                             item.productivity
                           ).toFixed(2)}{" "}
-                          {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
+                          {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
                         </p>
 
                       </div>
@@ -687,19 +687,23 @@ export default function History({ nav }) {
                           <div className="mt-2 flex flex-wrap gap-2">
 
                             <span className="rounded-full bg-[#F3F8F0] px-2 py-1 text-[9px] font-semibold text-[#2E7D32]">
-                              N: {item.nitrogen}
+                              N: {item.nitrogen} {item.npkUnit === "kg/acre" ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre") : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha")}
                             </span>
 
                             <span className="rounded-full bg-[#F3F8F0] px-2 py-1 text-[9px] font-semibold text-[#2E7D32]">
-                              P: {item.phosphorus}
+                              P: {item.phosphorus} {item.npkUnit === "kg/acre" ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre") : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha")}
                             </span>
 
                             <span className="rounded-full bg-[#F3F8F0] px-2 py-1 text-[9px] font-semibold text-[#2E7D32]">
-                              K: {item.potassium}
+                              K: {item.potassium} {item.npkUnit === "kg/acre" ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre") : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha")}
                             </span>
 
                             <span className="rounded-full bg-[#F3F8F0] px-2 py-1 text-[9px] font-semibold text-[#2E7D32]">
                               pH: {item.ph}
+                            </span>
+
+                            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-1 text-[9px] font-bold text-[#1B5E20]">
+                              📏 {item.area || 5} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "acres"}
                             </span>
 
                           </div>
@@ -788,7 +792,7 @@ export default function History({ nav }) {
                       {t("estimatedYield") || (language === "mr" ? "अंदाजित पीक उत्पादन" : language === "hi" ? "अनुमानित फसल उपज" : "Estimated Crop Productivity")}
                     </p>
                     <div className="mt-1 flex items-baseline justify-between">
-                      <span className="text-3xl font-black">{viewRecord.productivity} <span className="text-sm font-normal">{language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}</span></span>
+                      <span className="text-3xl font-black">{viewRecord.productivity} <span className="text-sm font-normal">{language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}</span></span>
                       <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
                         {t("totalHarvest") || (language === "mr" ? "एकूण उत्पादन" : language === "hi" ? "कुल पैदावार" : "Harvest")}: {viewRecord.production ? `${viewRecord.production} ${language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}` : `${(parseFloat(viewRecord.area || 1) * parseFloat(viewRecord.productivity || 0)).toFixed(2)} ${language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}`}
                       </span>
@@ -807,7 +811,7 @@ export default function History({ nav }) {
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("area") || "Field Area"}</span>
-                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.area ? `${viewRecord.area} ${t("hectaresUnit") || "Hectares"}` : "—"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.area ? `${viewRecord.area} ${t("acresUnit") || (language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres")}` : "—"}</span>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("rainfall") || "Rainfall"}</span>
@@ -864,15 +868,15 @@ export default function History({ nav }) {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("nitrogen") || "Nitrogen (N)"}</span>
-                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.nitrogen || "—"} mg/kg</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.nitrogen || "—"} {viewRecord.npkUnit === "kg/acre" ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre") : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha")}</span>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("phosphorus") || "Phosphorus (P)"}</span>
-                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.phosphorus || "—"} mg/kg</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.phosphorus || "—"} {viewRecord.npkUnit === "kg/acre" ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre") : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha")}</span>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("potassium") || "Potassium (K)"}</span>
-                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.potassium || "—"} mg/kg</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.potassium || "—"} {viewRecord.npkUnit === "kg/acre" ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre") : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha")}</span>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("ph") || "Soil pH"}</span>
@@ -886,9 +890,22 @@ export default function History({ nav }) {
                       <span className="text-gray-400 block text-[10px] font-semibold">{t("humidity") || "Humidity"}</span>
                       <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.humidity ? `${viewRecord.humidity}%` : "—"}</span>
                     </div>
-                    <div className="col-span-2 sm:col-span-3 rounded-xl border border-gray-100 bg-[#F9FBF8] p-3 flex justify-between items-center">
-                      <span className="text-gray-400 text-[10px] font-semibold">{t("rainfall") || "Rainfall"}</span>
-                      <span className="font-bold text-gray-700">{viewRecord.rainfall ? `${viewRecord.rainfall} mm` : "—"}</span>
+                    <div className="rounded-xl border border-gray-100 bg-[#F9FBF8] p-3">
+                      <span className="text-gray-400 block text-[10px] font-semibold">{t("rainfall") || "Rainfall"}</span>
+                      <span className="font-bold text-gray-700 mt-0.5 block">{viewRecord.rainfall ? `${viewRecord.rainfall} mm` : "—"}</span>
+                    </div>
+                    <div className="col-span-2 sm:col-span-2 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 flex justify-between items-center">
+                      <div>
+                        <span className="text-emerald-700 block text-[10px] font-bold">
+                          {language === "mr" ? "शिफारस केलेले क्षेत्र" : language === "hi" ? "अनुशंसित क्षेत्रफल" : "Target Recommended Area"}
+                        </span>
+                        <span className="text-[10px] text-gray-500">
+                          {language === "mr" ? "या क्षेत्रासाठी निविष्ठा व पीक नियोजन" : language === "hi" ? "इस क्षेत्रफल हेतु इनपुट व फसल नियोजन" : "Acreage evaluated for farm scale"}
+                        </span>
+                      </div>
+                      <span className="font-black text-sm text-[#1B5E20] bg-white border border-emerald-200 px-3 py-1 rounded-xl shadow-2xs">
+                        {viewRecord.area || 5} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}
+                      </span>
                     </div>
                   </div>
                 </>

@@ -310,10 +310,10 @@ const getFallbackPlantDiagnosis = (queryKey, lang = "mr") => {
         dosage_200l: "500 ml Neem Oil per 200L barrel",
         instructions:
           lang === "mr"
-            ? "हेक्टरी ५ कामगंध सापळे लावा व अंडी अवस्थेत निंबोळी अर्काची फवारणी करा."
+            ? "एकरी २ ते ३ कामगंध सापळे लावा व अंडी अवस्थेत निंबोळी अर्काची फवारणी करा."
             : lang === "hi"
-            ? "प्रति हेक्टेयर ५ फेरोमोन ट्रैप लगाएं और नीम अर्क का छिड़काव करें।"
-            : "Install 5 pheromone traps per hectare.",
+            ? "प्रति एकड़ २ से ३ फेरोमोन ट्रैप लगाएं और नीम अर्क का छिड़काव करें।"
+            : "Install 2-3 pheromone traps per acre.",
       },
       chemical_remedy: {
         title:

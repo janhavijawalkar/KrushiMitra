@@ -42,14 +42,17 @@ export default function Prediction({ nav, pageParams }) {
     tSeason,
     language,
     addPrediction,
+    user,
   } = useApp();
+
+  const defaultArea = user?.farm_size || user?.farmSize || "5";
 
   const [form, setForm] = useState({
     district: pageParams?.district || "",
     crop: pageParams?.crop || "",
     year: "2026",
     season: pageParams?.season || "",
-    area: pageParams?.area || "",
+    area: pageParams?.area || defaultArea,
     rainfall: pageParams?.rainfall || "",
     temperature: pageParams?.temperature || "",
   });
@@ -61,12 +64,12 @@ export default function Prediction({ nav, pageParams }) {
         district: pageParams.district || prev.district,
         crop: pageParams.crop || prev.crop,
         season: pageParams.season || prev.season,
-        area: pageParams.area || prev.area,
+        area: pageParams.area || prev.area || defaultArea,
         rainfall: pageParams.rainfall || prev.rainfall,
         temperature: pageParams.temperature || prev.temperature,
       }));
     }
-  }, [pageParams]);
+  }, [pageParams, defaultArea]);
 
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -98,10 +101,10 @@ export default function Prediction({ nav, pageParams }) {
     } else {
       setVoiceToast(
         language === "mr"
-          ? `माहिती ओळखता आली नाही: "${transcript}". उदा. 'सोयाबीन, अमरावती, खरीप, ५ हेक्टर, पाऊस ६५०' असे बोला.`
+          ? `माहिती ओळखता आली नाही: "${transcript}". उदा. 'सोयाबीन, अमरावती, खरीप, ५ एकर, पाऊस ६५०' असे बोला.`
           : language === "hi"
-          ? `जानकारी नहीं पहचानी गई: "${transcript}"। उदा. 'सोयाबीन, अमरावती, खरीफ, 5 हेक्टेयर, वर्षा 650' बोलें।`
-          : `No fields detected: "${transcript}". Try saying 'Soybean, Amravati, Kharif, 5 Hectares, Rainfall 650'.`
+          ? `जानकारी नहीं पहचानी गई: "${transcript}"। उदा. 'सोयाबीन, अमरावती, खरीफ, 5 एकड़, वर्षा 650' बोलें।`
+          : `No fields detected: "${transcript}". Try saying 'Soybean, Amravati, Kharif, 5 Acres, Rainfall 650'.`
       );
       setTimeout(() => setVoiceToast(""), 5000);
     }
@@ -194,6 +197,7 @@ export default function Prediction({ nav, pageParams }) {
         Season: form.season,
         Crop: form.crop,
         Area: Number(form.area),
+        area_unit: "Acres",
         Rainfall: Number(form.rainfall),
         MaxTemp: Number(form.temperature),
       };
@@ -218,9 +222,15 @@ export default function Prediction({ nav, pageParams }) {
         );
       }
 
-      const prod = Number(data.predicted_productivity);
+      const prod = Number(
+        data.predicted_productivity_acre !== undefined
+          ? data.predicted_productivity_acre
+          : data.predicted_productivity
+      );
       const areaNum = Number(form.area);
-      const totalProduction = Number((prod * areaNum).toFixed(2));
+      const totalProduction = Number(
+        (data.total_production !== undefined ? data.total_production : prod * areaNum).toFixed(2)
+      );
 
       const prediction = {
         crop: form.crop,
@@ -243,21 +253,21 @@ export default function Prediction({ nav, pageParams }) {
       console.warn("Prediction fetch failed, using offline agricultural benchmark:", err);
 
       const cropBaseYield = {
-        Sugarcane: 82.5,
-        Banana: 48.0,
-        Rice: 3.6,
-        Wheat: 3.2,
-        Maize: 4.1,
-        Soybean: 2.2,
-        Cotton: 1.8,
-        Chickpea: 1.4,
-        Tur: 1.2,
-        Jowar: 1.6,
-        Bajra: 1.5,
-        Groundnut: 2.1,
+        Sugarcane: 35.0,
+        Banana: 20.0,
+        Rice: 1.5,
+        Wheat: 1.3,
+        Maize: 1.6,
+        Soybean: 1.0,
+        Cotton: 0.85,
+        Chickpea: 0.6,
+        Tur: 0.5,
+        Jowar: 0.7,
+        Bajra: 0.6,
+        Groundnut: 0.85,
       };
 
-      const base = cropBaseYield[form.crop] || 2.5;
+      const base = cropBaseYield[form.crop] || 1.0;
       const rainVal = Number(form.rainfall) || 600;
       const rainFactor = rainVal > 800 ? 1.08 : rainVal < 400 ? 0.92 : 1.0;
       const offlineProd = Number((base * rainFactor).toFixed(2));
@@ -299,7 +309,7 @@ export default function Prediction({ nav, pageParams }) {
       crop: "",
       year: "2026",
       season: "",
-      area: "",
+      area: defaultArea,
       rainfall: "",
       temperature: "",
     });
@@ -401,10 +411,10 @@ export default function Prediction({ nav, pageParams }) {
                     </h4>
                     <p className="text-[11px] text-gray-500">
                       {language === "mr"
-                        ? 'उदा. "सोयाबीन, अमरावती, खरीप, ५ हेक्टर, पाऊस ६५०"'
+                        ? 'उदा. "सोयाबीन, अमरावती, खरीप, ५ एकर, पाऊस ६५०"'
                         : language === "hi"
-                        ? 'उदा. "सोयाबीन, अमरावती, खरीफ, 5 हेक्टेयर, वर्षा 650"'
-                        : 'e.g. "Soybean, Amravati, Kharif, 5 Hectares, Rainfall 650"'}
+                        ? 'उदा. "सोयाबीन, अमरावती, खरीफ, 5 एकड़, वर्षा 650"'
+                        : 'e.g. "Soybean, Amravati, Kharif, 5 Acres, Rainfall 650"'}
                     </p>
                   </div>
                 </div>
@@ -484,18 +494,26 @@ export default function Prediction({ nav, pageParams }) {
             />
 
             <Input
-              label={`${t("area")} (${language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "hectares"})`}
+              label={language === "mr" ? "शेतजमीन क्षेत्र (एकर)" : language === "hi" ? "खेत का क्षेत्रफल (एकड़)" : "Farmland Area (Acres)"}
               name="area"
               value={form.area}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("area", val)}
-              placeholder="e.g. 10"
+              placeholder="e.g. 5"
               type="number"
               icon={<Ruler size={15} />}
+              suffix={language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}
+              hint={
+                language === "mr"
+                  ? "✓ शेतजमीन क्षेत्र एकर (Acres) मध्ये मोजा (हेक्टर नाही)"
+                  : language === "hi"
+                  ? "✓ खेत का क्षेत्रफल एकड़ (Acres) में दर्ज करें (हेक्टेयर नहीं)"
+                  : "✓ Farmland area is evaluated in Acres (not Hectares)"
+              }
             />
 
             <Input
-              label={`${t("rainfall")} (mm)`}
+              label={t("rainfall")}
               name="rainfall"
               value={form.rainfall}
               onChange={handleChange}
@@ -503,10 +521,11 @@ export default function Prediction({ nav, pageParams }) {
               placeholder="e.g. 850"
               type="number"
               icon={<CloudRain size={15} />}
+              suffix="mm"
             />
 
             <Input
-              label={`${t("maximumTemperature")} (°C)`}
+              label={t("maximumTemperature")}
               name="temperature"
               value={form.temperature}
               onChange={handleChange}
@@ -514,6 +533,7 @@ export default function Prediction({ nav, pageParams }) {
               placeholder="e.g. 32"
               type="number"
               icon={<Thermometer size={15} />}
+              suffix="°C"
             />
 
             <div className="flex items-end gap-3">
@@ -595,10 +615,22 @@ export default function Prediction({ nav, pageParams }) {
               </h2>
 
               <p className="mt-1 text-sm font-bold text-gray-500">
-                {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"} ({tCrop ? tCrop(result.crop) : result.crop})
+                {language === "mr" ? "टन प्रति एकर" : language === "hi" ? "टन प्रति एकड़" : "tonnes/acre"} ({tCrop ? tCrop(result.crop) : result.crop})
               </p>
 
-              <div className="mt-5 rounded-2xl bg-gradient-to-b from-[#F3F8F0] to-[#EAF5E8] dark:from-[#132218] dark:to-[#0e1a12] p-4 border border-green-200/80 dark:border-[#24402a] shadow-2xs">
+              {/* Explicit Farmland Area Evaluation Badge */}
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-3.5 py-1 text-xs font-black text-[#1B5E20] dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
+                <Ruler size={13} />
+                <span>
+                  {language === "mr"
+                    ? `मोजलेले शेतजमीन क्षेत्र: ${result.area || form.area || 1} एकर`
+                    : language === "hi"
+                    ? `मापा गया खेत का क्षेत्रफल: ${result.area || form.area || 1} एकड़`
+                    : `Evaluated Farmland Area: ${result.area || form.area || 1} Acres`}
+                </span>
+              </div>
+
+              <div className="mt-4 rounded-2xl bg-gradient-to-b from-[#F3F8F0] to-[#EAF5E8] dark:from-[#132218] dark:to-[#0e1a12] p-4 border border-green-200/80 dark:border-[#24402a] shadow-2xs">
 
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500 dark:text-gray-400 font-medium">
@@ -610,7 +642,7 @@ export default function Prediction({ nav, pageParams }) {
                   </span>
                 </div>
 
-                <div className="mt-3 flex justify-between text-xs">
+                <div className="mt-2.5 flex justify-between text-xs">
                   <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {t("season")}
                   </span>
@@ -620,13 +652,24 @@ export default function Prediction({ nav, pageParams }) {
                   </span>
                 </div>
 
-                <div className="mt-3 flex justify-between text-xs">
+                <div className="mt-2.5 flex justify-between text-xs">
                   <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {t("cropYear")}
                   </span>
 
                   <span className="font-bold text-gray-800 dark:text-gray-200">
                     {result.year}
+                  </span>
+                </div>
+
+                {/* Explicit Farmland Area Row in Breakdown */}
+                <div className="mt-2.5 flex justify-between text-xs">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">
+                    {language === "mr" ? "शेतजमीन क्षेत्र" : language === "hi" ? "खेत का क्षेत्रफल" : "Farmland Area"}:
+                  </span>
+
+                  <span className="font-extrabold text-[#1B5E20] dark:text-emerald-400">
+                    {result.area || form.area || 1} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}
                   </span>
                 </div>
 
@@ -667,7 +710,7 @@ export default function Prediction({ nav, pageParams }) {
                       district: tDistrict ? tDistrict(result.district) : result.district,
                       season: tSeason ? tSeason(result.season) : result.season,
                       area: form.area || 1,
-                      areaUnit: language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "Hectares",
+                      areaUnit: language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres",
                       predictedYield: Number(result.productivity).toFixed(2),
                       totalProduction: result.production || (Number(result.productivity) * (parseFloat(form.area) || 1)).toFixed(1),
                       reasonSummary: reasoning?.statusHeadline || "",
@@ -765,6 +808,8 @@ function Input({
   placeholder,
   type = "text",
   icon,
+  suffix,
+  hint,
 }) {
   const handleSingleVoice = (spokenText) => {
     if (onVoiceInput) {
@@ -776,8 +821,8 @@ function Input({
     <div>
       <div className="mb-2 flex items-center justify-between">
         <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200">
-          {icon}
-          {label}
+          <span className="text-[#2E7D32]">{icon}</span>
+          <span>{label}</span>
         </label>
         {onVoiceInput && (
           <VoiceMicButton
@@ -788,16 +833,30 @@ function Input({
         )}
       </div>
 
-      <input
-        type={type}
-        step="any"
-        min="0"
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full rounded-xl border border-[#DCE8D9] bg-white dark:bg-[#132318] dark:border-gray-700 px-4 py-3 text-sm text-gray-800 dark:text-white outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100"
-      />
+      <div className="relative">
+        <input
+          type={type}
+          step="any"
+          min="0"
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={`w-full rounded-xl border border-[#DCE8D9] bg-white dark:bg-[#132318] dark:border-gray-700 px-4 py-3 text-sm text-gray-800 dark:text-white outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100 ${
+            suffix ? "pr-24" : ""
+          }`}
+        />
+        {suffix && (
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-green-100/90 dark:bg-emerald-950 px-2.5 py-1 text-xs font-black text-[#1B5E20] dark:text-emerald-300 border border-green-300 dark:border-emerald-800 select-none shadow-2xs">
+            {suffix}
+          </span>
+        )}
+      </div>
+      {hint && (
+        <p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -927,7 +986,7 @@ function YieldReasoningCard({
         district: tDistrict ? tDistrict(result.district) : result.district,
         season: tSeason ? tSeason(result.season) : result.season,
         area: result.area || 1,
-        areaUnit: language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "Hectares",
+        areaUnit: language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres",
         predictedYield: Number(result.productivity).toFixed(2),
         totalProduction: result.production || (Number(result.productivity) * (parseFloat(result.area) || 1)).toFixed(1),
         reasonSummary: reasoning.statusHeadline,
@@ -1057,7 +1116,7 @@ function YieldReasoningCard({
                 {language === "mr" ? "अंदाज:" : language === "hi" ? "अनुमान:" : "Predicted:"}
               </span>
               <strong className="font-extrabold text-[#1B5E20] dark:text-emerald-400">
-                {Number(result.productivity).toFixed(2)} t/ha
+                {Number(result.productivity).toFixed(2)} {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
               </strong>
             </div>
 
@@ -1068,7 +1127,7 @@ function YieldReasoningCard({
                 {language === "mr" ? "महा. सरासरी:" : language === "hi" ? "राज्य औसत:" : "State Avg:"}
               </span>
               <strong className="font-bold text-gray-700 dark:text-gray-300">
-                {reasoning.baseBenchmark} t/ha
+                {reasoning.baseBenchmark} {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
               </strong>
             </div>
 

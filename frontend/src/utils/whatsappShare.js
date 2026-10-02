@@ -70,6 +70,7 @@ ${advisory || "Monitor soil moisture levels and adjust spray schedules according
  */
 export const formatRecommendationShareText = ({
   crop = "Soybean",
+  area = "",
   nitrogen = "--",
   phosphorus = "--",
   potassium = "--",
@@ -77,15 +78,24 @@ export const formatRecommendationShareText = ({
   confidence = 94,
   advisory = "",
   lang = "mr",
+  npkUnit = "kg/ha",
 }) => {
+  const areaLineMr = area ? `\n📏 *शिफारस केलेले क्षेत्र:* ${area} एकर` : "";
+  const areaLineHi = area ? `\n📏 *अनुशंसित क्षेत्र:* ${area} एकड़` : "";
+  const areaLineEn = area ? `\n📏 *Target Farmland Area:* ${area} Acres` : "";
+
+  const unitMr = npkUnit === "kg/acre" ? "किलो/एकर" : "किलो/हेक्टर";
+  const unitHi = npkUnit === "kg/acre" ? "किग्रा/एकड़" : "किग्रा/हेक्टर";
+  const unitEn = npkUnit;
+
   if (lang === "mr") {
     return `🌱 *कृषीमित्र एआय माती व पीक शिफारस अहवाल*
 ━━━━━━━━━━━━━━━━━━━━
-🌾 *शिफारस केलेले पीक:* *${crop}* (अचूकता: ${confidence}%)
-🧪 *माती विश्लेषण नोंदी:*
- • नत्र (N): ${nitrogen} kg/ha
- • स्फुरद (P): ${phosphorus} kg/ha
- • पालाश (K): ${potassium} kg/ha
+🌾 *शिफारस केलेले पीक:* *${crop}* (अचूकता: ${confidence}%)${areaLineMr}
+🧪 *माती विश्लेषण नोंदी (एकक: ${unitMr}):*
+ • नत्र (N): ${nitrogen} ${unitMr}
+ • स्फुरद (P): ${phosphorus} ${unitMr}
+ • पालाश (K): ${potassium} ${unitMr}
  • सामू (pH): ${ph}
 
 💡 *खत व शेती सल्ला:*
@@ -97,11 +107,11 @@ ${advisory || "सेंद्रिय खतांचा वापर वा�
   if (lang === "hi") {
     return `🌱 *कृषि-मित्र एआई मृदा एवं फसल सिफारिश रिपोर्ट*
 ━━━━━━━━━━━━━━━━━━━━
-🌾 *सर्वोत्तम अनुशंसित फसल:* *${crop}* (सटीकता: ${confidence}%)
-🧪 *मिट्टी पोषक तत्व:*
- • नाइट्रोजन (N): ${nitrogen} kg/ha
- • फास्फोरस (P): ${phosphorus} kg/ha
- • पोटाश (K): ${potassium} kg/ha
+🌾 *सर्वोत्तम अनुशंसित फसल:* *${crop}* (सटीकता: ${confidence}%)${areaLineHi}
+🧪 *मिट्टी पोषक तत्व (इकाई: ${unitHi}):*
+ • नाइट्रोजन (N): ${nitrogen} ${unitHi}
+ • फास्फोरस (P): ${phosphorus} ${unitHi}
+ • पोटाश (K): ${potassium} ${unitHi}
  • पीएच (pH): ${ph}
 
 💡 *उर्वरक एवं कृषि सलाह:*
@@ -112,11 +122,11 @@ ${advisory || "जैविक खादों का प्रयोग बढ�
 
   return `🌱 *KrushiMitra AI Soil & Crop Advisory Report*
 ━━━━━━━━━━━━━━━━━━━━
-🌾 *Optimal Recommended Crop:* *${crop}* (${confidence}% Confidence)
-🧪 *Soil Chemistry:*
- • Nitrogen (N): ${nitrogen} kg/ha
- • Phosphorus (P): ${phosphorus} kg/ha
- • Potassium (K): ${potassium} kg/ha
+🌾 *Optimal Recommended Crop:* *${crop}* (${confidence}% Confidence)${areaLineEn}
+🧪 *Soil Chemistry (Unit: ${unitEn}):*
+ • Nitrogen (N): ${nitrogen} ${unitEn}
+ • Phosphorus (P): ${phosphorus} ${unitEn}
+ • Potassium (K): ${potassium} ${unitEn}
  • Soil pH: ${ph}
 
 💡 *Agronomist Guidance:*
@@ -145,7 +155,7 @@ export const formatPredictionShareText = ({
 ━━━━━━━━━━━━━━━━━━━━
 🌾 *पीक:* ${crop} | *जिल्हा:* ${district}
 🗓️ *हंगाम:* ${season} | *क्षेत्र:* ${area} ${areaUnit}
-📈 *अंदाजित उत्पादकता:* *${predictedYield} टन/हेक्टर*
+📈 *अंदाजित उत्पादकता:* *${predictedYield} टन/एकर*
 💰 *एकूण अंदाजित उत्पादन:* *~${totalProduction} टन*
 ${reasonSummary ? `\n💡 *उत्पादन कारण (विश्लेषण):*\n${reasonSummary}\n` : ""}${advisory ? `\n🌱 *शेतकरी कृषी सल्ला:*\n${advisory}\n` : ""}
 🌱 *कृषीमित्र — शेतकऱ्यांचा डिजिटल मित्र*`;
@@ -156,7 +166,7 @@ ${reasonSummary ? `\n💡 *उत्पादन कारण (विश्ल�
 ━━━━━━━━━━━━━━━━━━━━
 🌾 *फसल:* ${crop} | *जिला:* ${district}
 🗓️ *मौसम:* ${season} | *रकबा:* ${area} ${areaUnit}
-📈 *अनुमानित पैदावार:* *${predictedYield} टन/हेक्टेयर*
+📈 *अनुमानित पैदावार:* *${predictedYield} टन/एकड़*
 💰 *कुल अनुमानित उत्पादन:* *~${totalProduction} टन*
 ${reasonSummary ? `\n💡 *पैदावार कारण (विश्लेषण):*\n${reasonSummary}\n` : ""}${advisory ? `\n🌱 *किसान कृषि सलाह:*\n${advisory}\n` : ""}
 🌱 *कृषि-मित्र — किसानों का डिजिटल साथी*`;
@@ -166,7 +176,7 @@ ${reasonSummary ? `\n💡 *पैदावार कारण (विश्ल�
 ━━━━━━━━━━━━━━━━━━━━
 🌾 *Crop:* ${crop} | *District:* ${district}
 🗓️ *Season:* ${season} | *Farmland Area:* ${area} ${areaUnit}
-📈 *Predicted Yield:* *${predictedYield} tonnes/hectare*
+📈 *Predicted Yield:* *${predictedYield} tonnes/acre*
 💰 *Estimated Production:* *~${totalProduction} Tonnes*
 ${reasonSummary ? `\n💡 *Agronomic Rationale (Why this yield):*\n${reasonSummary}\n` : ""}${advisory ? `\n🌱 *Farm Advisory:*\n${advisory}\n` : ""}
 🌱 *KrushiMitra — Farmer's Digital Companion*`;

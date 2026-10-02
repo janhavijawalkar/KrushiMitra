@@ -117,10 +117,10 @@ export default function Landing({ nav }) {
   const [simCrop, setSimCrop] = useState("Soybean");
   const [simArea, setSimArea] = useState(3.5);
   const [simYieldResult, setSimYieldResult] = useState({
-    yieldPerHa: 3.42,
-    totalProduction: 11.97,
-    status: "+18% Regional Calibration",
-    confidence: "High Compatibility",
+    yieldPerAcre: 1.38,
+    totalProduction: 4.83,
+    status: "+18% प्रादेशिक अचूकता",
+    confidence: "उच्च अनुकूलता",
   });
 
   // Dynamic Simulator State: Soil Advisory
@@ -129,22 +129,32 @@ export default function Landing({ nav }) {
   const [soilK, setSoilK] = useState(43);
   const [soilPh, setSoilPh] = useState(6.8);
   const [soilRecResult, setSoilRecResult] = useState({
-    crop: "Rice (Paddy)",
-    confidence: "Optimal",
-    suitability: "High Nitrogen & Moisture Match",
+    crop: "Rice",
+    confidence: language === "mr" ? "योग्य" : language === "hi" ? "उपयुक्त" : "Optimal",
+    suitability: language === "mr" ? "नायट्रोजन आणि ओलाव्यासाठी उत्तम" : language === "hi" ? "नाइट्रोजन और नमी के लिए सर्वोत्तम" : "High Nitrogen & Moisture Match",
   });
 
   // Dynamic Simulator State: Live Location Weather
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherData, setWeatherData] = useState({
-    location: "Pune, MH",
+    location: language === "mr" ? "पुणे, महाराष्ट्र" : language === "hi" ? "पुणे, महाराष्ट्र" : "Pune, MH",
     temp: 28.5,
-    condition: "Optimal Skies",
+    condition: language === "mr" ? "निरभ्र आकाश" : language === "hi" ? "साफ मौसम" : "Optimal Skies",
     humidity: 78,
     wind: 12,
-    advice: "Optimal Kharif Sowing Window",
+    advice: language === "mr" ? "खरीप पेरणीसाठी सर्वोत्तम वेळ" : language === "hi" ? "खरीफ बुवाई के लिए उत्तम समय" : "Optimal Kharif Sowing Window",
     isLiveGps: false,
   });
+
+  // Ensure default language is Marathi ('mr') when opening the landing page website,
+  // unless user explicitly selected another language (English/Hindi) during this session.
+  useEffect(() => {
+    const sessionLang = sessionStorage.getItem("krushimitra_language");
+    const explicitLang = localStorage.getItem("krushimitra_explicit_language");
+    if (!sessionLang && !explicitLang && language !== "mr") {
+      setLanguage("mr");
+    }
+  }, []);
 
   // Multi-lingual Core Supported Crops
   const supportedModelCrops = [
@@ -157,7 +167,7 @@ export default function Landing({ nav }) {
       icon: "🌱",
       season: language === "mr" ? "खरीप (पावसाळी)" : language === "hi" ? "खरीफ (मानसून)" : "Kharif (Monsoon)",
       soil: language === "mr" ? "काळी चिकणमाती जमीन" : language === "hi" ? "काली चिकनी मिट्टी" : "Black Clayey Regur Soil",
-      yieldRange: "2.8 - 3.8 t/ha",
+      yieldRange: language === "mr" ? "१.१ - १.५ टन/एकर" : language === "hi" ? "1.1 - 1.5 टन/एकड़" : "1.1 - 1.5 t/acre",
       badge: language === "mr" ? "तेलबिया पीक" : language === "hi" ? "तिलहन फसल" : "Oilseed Crop",
     },
     {
@@ -169,7 +179,7 @@ export default function Landing({ nav }) {
       icon: "☁️",
       season: language === "mr" ? "खरीप हंगाम" : language === "hi" ? "खरीफ मौसम" : "Kharif Season",
       soil: language === "mr" ? "सुपीक काळी जमीन" : language === "hi" ? "उपजाऊ गहरी काली मिट्टी" : "Deep Black Loam",
-      yieldRange: "2.2 - 3.2 t/ha",
+      yieldRange: language === "mr" ? "०.९ - १.३ टन/एकर" : language === "hi" ? "0.9 - 1.3 टन/एकड़" : "0.9 - 1.3 t/acre",
       badge: language === "mr" ? "नगदी कापूस" : language === "hi" ? "नकदी रेशा" : "Cash Fiber",
     },
     {
@@ -181,7 +191,7 @@ export default function Landing({ nav }) {
       icon: "🎋",
       season: language === "mr" ? "वार्षिक / बागायती" : language === "hi" ? "वार्षिक / बारहमासी" : "Perennial / Annual",
       soil: language === "mr" ? "गाळाची ओलसर जमीन" : language === "hi" ? "दोमट और कछारी मिट्टी" : "Alluvial & Canal Basin",
-      yieldRange: "85 - 110 t/ha",
+      yieldRange: language === "mr" ? "३५ - ४५ टन/एकर" : language === "hi" ? "35 - 45 टन/एकड़" : "35 - 45 t/acre",
       badge: language === "mr" ? "उच्च उत्पन्न नगदी" : language === "hi" ? "उच्च उपज नकदी" : "High Yield Cash",
     },
     {
@@ -193,7 +203,7 @@ export default function Landing({ nav }) {
       icon: "🌾",
       season: language === "mr" ? "रब्बी (हिवाळी)" : language === "hi" ? "रबी (सर्दियां)" : "Rabi (Winter)",
       soil: language === "mr" ? "पाण्याचा निचरा होणारी जमीन" : language === "hi" ? "अच्छे जल निकास वाली दोमट" : "Well-Drained Loam",
-      yieldRange: "3.2 - 4.5 t/ha",
+      yieldRange: language === "mr" ? "१.३ - १.८ टन/एकर" : language === "hi" ? "1.3 - 1.8 टन/एकड़" : "1.3 - 1.8 t/acre",
       badge: language === "mr" ? "हिवाळी अन्नधान्य" : language === "hi" ? "शीतकालीन अनाज" : "Winter Cereal",
     },
     {
@@ -205,7 +215,7 @@ export default function Landing({ nav }) {
       icon: "🥔",
       season: language === "mr" ? "रब्बी (हिवाळी)" : language === "hi" ? "रबी (सर्दियां)" : "Rabi (Winter)",
       soil: language === "mr" ? "हलकी ते मध्यम काळी जमीन" : language === "hi" ? "रेतीली दोमट मिट्टी" : "Sandy Clay Loam",
-      yieldRange: "1.6 - 2.4 t/ha",
+      yieldRange: language === "mr" ? "०.६ - १.० टन/एकर" : language === "hi" ? "0.6 - 1.0 टन/एकड़" : "0.6 - 1.0 t/acre",
       badge: language === "mr" ? "कडधान्य डाळ" : language === "hi" ? "दलहन फसल" : "Protein Pulse",
     },
     {
@@ -217,7 +227,7 @@ export default function Landing({ nav }) {
       icon: "🌿",
       season: language === "mr" ? "खरीप हंगाम" : language === "hi" ? "खरीफ मौसम" : "Kharif Season",
       soil: language === "mr" ? "मध्यम काळी जमीन" : language === "hi" ? "मध्यम गहरी काली मिट्टी" : "Medium Deep Black Soil",
-      yieldRange: "1.5 - 2.2 t/ha",
+      yieldRange: language === "mr" ? "०.६ - ०.९ टन/एकर" : language === "hi" ? "0.6 - 0.9 टन/एकड़" : "0.6 - 0.9 t/acre",
       badge: language === "mr" ? "नायट्रोजन समृद्ध" : language === "hi" ? "नाइट्रोजन युक्त" : "Nitrogen Fixing",
     },
     {
@@ -229,7 +239,7 @@ export default function Landing({ nav }) {
       icon: "🌾",
       season: language === "mr" ? "खरीप हंगाम" : language === "hi" ? "खरीफ मौसम" : "Kharif Season",
       soil: language === "mr" ? "दलदलीची ओलसर जमीन" : language === "hi" ? "चिकनी नम मिट्टी" : "Clayey Moist Basin",
-      yieldRange: "3.8 - 5.2 t/ha",
+      yieldRange: language === "mr" ? "१.५ - २.१ टन/एकर" : language === "hi" ? "1.5 - 2.1 टन/एकड़" : "1.5 - 2.1 t/acre",
       badge: language === "mr" ? "प्रमुख अन्नधान्य" : language === "hi" ? "प्रमुख खाद्यान्न" : "Primary Staple",
     },
   ];
@@ -260,23 +270,23 @@ export default function Landing({ nav }) {
   // Dynamic Yield Calculator on simulator change
   useEffect(() => {
     const yieldRates = {
-      Soybean: { Pune: 3.42, Nagpur: 2.89, Nashik: 3.15, Kolhapur: 3.65, Solapur: 2.75, Amravati: 2.95, Aurangabad: 3.05 },
-      Cotton: { Pune: 2.45, Nagpur: 3.12, Nashik: 2.60, Kolhapur: 2.35, Solapur: 2.50, Amravati: 3.18, Aurangabad: 2.85 },
-      Sugarcane: { Pune: 98.5, Nagpur: 82.0, Nashik: 88.5, Kolhapur: 104.2, Solapur: 91.0, Amravati: 79.5, Aurangabad: 85.0 },
-      Wheat: { Pune: 3.80, Nagpur: 3.25, Nashik: 4.10, Kolhapur: 3.60, Solapur: 3.10, Amravati: 3.35, Aurangabad: 3.70 },
-      Gram: { Pune: 2.10, Nagpur: 1.95, Nashik: 2.25, Kolhapur: 1.85, Solapur: 1.90, Amravati: 2.05, Aurangabad: 2.15 },
-      Tur: { Pune: 1.90, Nagpur: 2.15, Nashik: 1.80, Kolhapur: 1.75, Solapur: 1.85, Amravati: 2.20, Aurangabad: 2.00 },
-      Rice: { Pune: 4.60, Nagpur: 4.20, Nashik: 4.80, Kolhapur: 5.10, Solapur: 3.60, Amravati: 3.90, Aurangabad: 4.10 },
+      Soybean: { Pune: 1.38, Nagpur: 1.17, Nashik: 1.27, Kolhapur: 1.48, Solapur: 1.11, Amravati: 1.19, Aurangabad: 1.23 },
+      Cotton: { Pune: 0.99, Nagpur: 1.26, Nashik: 1.05, Kolhapur: 0.95, Solapur: 1.01, Amravati: 1.29, Aurangabad: 1.15 },
+      Sugarcane: { Pune: 39.86, Nagpur: 33.18, Nashik: 35.81, Kolhapur: 42.17, Solapur: 36.83, Amravati: 32.17, Aurangabad: 34.40 },
+      Wheat: { Pune: 1.54, Nagpur: 1.32, Nashik: 1.66, Kolhapur: 1.46, Solapur: 1.25, Amravati: 1.36, Aurangabad: 1.50 },
+      Gram: { Pune: 0.85, Nagpur: 0.79, Nashik: 0.91, Kolhapur: 0.75, Solapur: 0.77, Amravati: 0.83, Aurangabad: 0.87 },
+      Tur: { Pune: 0.77, Nagpur: 0.87, Nashik: 0.73, Kolhapur: 0.71, Solapur: 0.75, Amravati: 0.89, Aurangabad: 0.81 },
+      Rice: { Pune: 1.86, Nagpur: 1.70, Nashik: 1.94, Kolhapur: 2.06, Solapur: 1.46, Amravati: 1.58, Aurangabad: 1.66 },
     };
 
-    const rate = (yieldRates[simCrop] && yieldRates[simCrop][simDistrict]) || 3.25;
+    const rate = (yieldRates[simCrop] && yieldRates[simCrop][simDistrict]) || 1.32;
     const totalProd = (rate * Number(simArea)).toFixed(2);
 
-    const statusLabel = language === "mr" ? `+${(rate * 5.2).toFixed(0)}% प्रादेशिक अचूकता` : language === "hi" ? `+${(rate * 5.2).toFixed(0)}% क्षेत्रीय सटीकता` : `+${(rate * 5.2).toFixed(0)}% Regional Calibration`;
+    const statusLabel = language === "mr" ? `+${(rate * 12.8).toFixed(0)}% प्रादेशिक अचूकता` : language === "hi" ? `+${(rate * 12.8).toFixed(0)}% क्षेत्रीय सटीकता` : `+${(rate * 12.8).toFixed(0)}% Regional Calibration`;
     const confLabel = language === "mr" ? "उच्च अनुकूलता" : language === "hi" ? "उच्च अनुकूलता" : "High Compatibility";
 
     setSimYieldResult({
-      yieldPerHa: rate,
+      yieldPerAcre: rate,
       totalProduction: totalProd,
       status: statusLabel,
       confidence: confLabel,
@@ -401,7 +411,7 @@ export default function Landing({ nav }) {
     {
       icon: TrendingUp,
       title: t("yieldForecastingTitle") || "Crop Yield Prediction",
-      desc: t("yieldForecastingDesc") || "Find out how much harvest (in tonnes/hectare) you can expect based on your district, land size, and weather.",
+      desc: t("yieldForecastingDesc") || (language === "mr" ? "तुमचा जिल्हा, शेतजमीन क्षेत्र (एकर) आणि हवामानाच्या आधारे अपेक्षित पीक उत्पादन (टन/एकर) किती मिळेल ते जाणून घ्या." : language === "hi" ? "अपने जिले, खेत के क्षेत्रफल (एकड़) और मौसम के आधार पर अनुमानित फसल उपज (टन/एकड़) जानें।" : "Find out how much harvest (in tonnes/acre) you can expect based on your district, land size, and weather."),
       tag: language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "पैदावार अनुमान" : "Harvest Forecast",
       bg: "bg-emerald-50 dark:bg-emerald-950/60",
       accent: "text-emerald-700 dark:text-[#4ADE80]",
@@ -953,7 +963,7 @@ export default function Landing({ nav }) {
                     <div>
                       <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("yieldForecast") || (language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "पैदावार अनुमान" : "Yield Forecast")}</p>
                       <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-                        3.42 t/ha <span className="text-[10px] text-gray-400 font-normal">({tCrop ? tCrop("Soybean") : "Soybean"})</span>
+                        1.38 {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"} <span className="text-[10px] text-gray-400 font-normal">({tCrop ? tCrop("Soybean") : "Soybean"})</span>
                       </p>
                     </div>
                   </div>
@@ -1117,12 +1127,12 @@ export default function Landing({ nav }) {
 
                     <div>
                       <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
-                        {language === "mr" ? "शेती क्षेत्र" : language === "hi" ? "खेत का क्षेत्रफल" : "Cultivated Land"}: {simArea} {language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "ha"}
+                        {language === "mr" ? "शेतजमीन क्षेत्र" : language === "hi" ? "खेत का क्षेत्रफल" : "Cultivated Land"}: {simArea} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}
                       </label>
                       <input
                         type="range"
                         min="1.0"
-                        max="10.0"
+                        max="25.0"
                         step="0.5"
                         value={simArea}
                         onChange={(e) => setSimArea(e.target.value)}
@@ -1145,10 +1155,10 @@ export default function Landing({ nav }) {
 
                   <div className="space-y-1">
                     <p className="text-3xl sm:text-4xl font-black text-white">
-                      {simYieldResult.yieldPerHa} {language === "mr" ? "टन/हेक्टर" : language === "hi" ? "टन/हेक्टेयर" : "t/ha"}
+                      {simYieldResult.yieldPerAcre || simYieldResult.yieldPerHa} {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"}
                     </p>
                     <p className="text-xs text-green-100">
-                      {t("totalHarvest") || (language === "mr" ? "एकूण शेत उत्पादन" : language === "hi" ? "कुल खेत पैदावार" : "Total Farm Harvest")}: <span className="font-extrabold text-white">{simYieldResult.totalProduction} {language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span> ({language === "mr" ? "क्षेत्र" : language === "hi" ? "क्षेत्रफल" : "across"} {simArea} {language === "mr" ? "हेक्टर" : language === "hi" ? "हेक्टेयर" : "ha"})
+                      {t("totalHarvest") || (language === "mr" ? "एकूण शेत उत्पादन" : language === "hi" ? "कुल खेत पैदावार" : "Total Farm Harvest")}: <span className="font-extrabold text-white">{simYieldResult.totalProduction} {language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}</span> ({language === "mr" ? "क्षेत्र" : language === "hi" ? "क्षेत्रफल" : "across"} {simArea} {language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"})
                     </p>
                   </div>
 
@@ -1231,8 +1241,8 @@ export default function Landing({ nav }) {
                     </div>
                     <input
                       type="range"
-                      min="5.0"
-                      max="8.5"
+                      min="0.0"
+                      max="14.0"
                       step="0.1"
                       value={soilPh}
                       onChange={(e) => setSoilPh(Number(e.target.value))}

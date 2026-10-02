@@ -257,6 +257,37 @@ export function parseSpokenSoilData(transcript) {
                    clean.match(/(\d+(?:\.\d+)?)\s*(?:%|टक्के)?\s*(?:humidity|आर्द्रता|नमी)/i);
   if (humMatch) data.humidity = humMatch[1];
 
+  // Extract Area: "क्षेत्र ५", "५ एकर", "5 acres", "क्षेत्रफळ ५"
+  const areaMatch = clean.match(/(?:area|क्षेत्रफळ|क्षेत्र|एकर|एकड़|acres?)\s*[:=]?\s*(\d+(?:\.\d+)?)/i) ||
+                    clean.match(/(\d+(?:\.\d+)?)\s*(?:एकड़|एकर|acres?)/i);
+  if (areaMatch) data.area = areaMatch[1];
+
+  // Extract N-P-K Unit if mentioned
+  if (
+    clean.includes("kg/acre") ||
+    clean.includes("kg per acre") ||
+    clean.includes("किलो एकर") ||
+    clean.includes("प्रति एकर") ||
+    clean.includes("किलो/एकर") ||
+    clean.includes("किग्रा एकर") ||
+    clean.includes("किग्रा/एकड़") ||
+    clean.includes("प्रति एकड़")
+  ) {
+    data.npkUnit = "kg/acre";
+  } else if (
+    clean.includes("kg/ha") ||
+    clean.includes("kg per ha") ||
+    clean.includes("kg per hectare") ||
+    clean.includes("किलो हेक्टर") ||
+    clean.includes("प्रति हेक्टर") ||
+    clean.includes("किलो/हेक्टर") ||
+    clean.includes("किग्रा हेक्टर") ||
+    clean.includes("किग्रा/हेक्टर") ||
+    clean.includes("प्रति हेक्टेयर")
+  ) {
+    data.npkUnit = "kg/ha";
+  }
+
   return data;
 }
 

@@ -188,16 +188,18 @@ def execute_query(sql, params=(), fetch_mode="none"):
             return [_serialize_row(r) for r in rows]
 
         elif fetch_mode == "insert":
-            if engine == "sqlite":
+            try:
                 conn.commit()
-                last_id = cursor.lastrowid
-            else:
-                last_id = cursor.lastrowid
+            except Exception:
+                pass
+            last_id = cursor.lastrowid
             return last_id
 
         else:
-            if engine == "sqlite":
+            try:
                 conn.commit()
+            except Exception:
+                pass
             return True
 
     finally:
@@ -278,6 +280,7 @@ def init_db():
             humidity DOUBLE NOT NULL,
             ph DOUBLE NOT NULL,
             rainfall DOUBLE NOT NULL,
+            area DECIMAL(10,2) DEFAULT 5.00,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_rec_user (user_email)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -386,6 +389,7 @@ def init_db():
             humidity REAL,
             ph REAL,
             rainfall REAL,
+            area REAL DEFAULT 5.0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
@@ -680,9 +684,11 @@ def create_user(name, email, password, role="Farmer", district="Pune", phone="",
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (name, email.strip().lower(), password_hash, role, district, phone, farm_size, kisan_id, member_since))
         
-        return get_user_by_id(user_id)
+        created = get_user_by_id(user_id)
+        print(f"[DATABASE] User stored successfully in {_active_engine or 'DB'}: ID={user_id}, Email={email.strip().lower()}", flush=True)
+        return created
     except Exception as e:
-        print(f"[DB ERROR in create_user]: {e}")
+        print(f"[DB ERROR in create_user]: {e}", flush=True)
         return None
 
 def authenticate_user(email, password):
@@ -830,19 +836,20 @@ def get_prediction_history(user_email=None):
 def save_recommendation_record(data):
     record_id = execute_insert("""
     INSERT INTO recommendation_history (
-        user_email, crop, confidence, n_val, p_val, k_val, temperature, humidity, ph, rainfall
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        user_email, crop, confidence, n_val, p_val, k_val, temperature, humidity, ph, rainfall, area
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get("user_email", "guest"),
         data.get("crop", ""),
         float(data.get("confidence", 0)),
-        float(data.get("n_val", 0)),
-        float(data.get("p_val", 0)),
-        float(data.get("k_val", 0)),
+        float(data.get("n_val", data.get("nitrogen", 0))),
+        float(data.get("p_val", data.get("phosphorus", 0))),
+        float(data.get("k_val", data.get("potassium", 0))),
         float(data.get("temperature", 0)),
         float(data.get("humidity", 0)),
         float(data.get("ph", 0)),
-        float(data.get("rainfall", 0))
+        float(data.get("rainfall", 0)),
+        float(data.get("area", data.get("Area", 5.0)))
     ))
     return record_id
 
@@ -974,7 +981,7 @@ def create_user_by_admin(data):
         name, email, pw_hash, phone, role, district, farm_size, farm_unit,
         soil_type, irrigation_type, primary_crops, kisan_id, datetime.now().strftime("%B %Y")
     ))
-    
+    print(f"[DATABASE] Admin user created successfully in {_active_engine or 'DB'}: ID={user_id}, Email={email}", flush=True)
     return user_id, None
 
 def update_user_full_by_admin(user_id, data):

@@ -15,6 +15,7 @@ import {
   Loader2,
   Share2,
   TrendingUp,
+  MapPin,
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
@@ -47,7 +48,7 @@ const QUICK_PRESETS = [
     id: "chickpea",
     name: { en: "Gram (Harbhara)", mr: "हरभरा (Chickpea)", hi: "चना (Chickpea)" },
     icon: "🥔",
-    values: { nitrogen: "40", phosphorus: "68", potassium: "80", temperature: "19", humidity: "17", ph: "7.3", rainfall: "80" },
+    values: { nitrogen: "40", phosphorus: "68", potassium: "80", temperature: "19", humidity: "17", ph: "6.8", rainfall: "80" },
   },
   {
     id: "pigeonpeas",
@@ -75,8 +76,136 @@ const QUICK_PRESETS = [
   },
 ];
 
+const CROP_AREA_PLANNING = {
+  soybean: {
+    yieldAcre: 1.25,
+    seedRate: 30,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.5,
+    ureaBagsPerAcre: 1.0,
+    spacing: { en: "45 x 5 cm", mr: "४५ x ५ सेंमी", hi: "45 x 5 सेमी" },
+  },
+  cotton: {
+    yieldAcre: 1.10,
+    seedRate: 2,
+    seedUnit: { en: "packets (450g)", mr: "पाकिटे (४५० ग्रॅम)", hi: "पैकेट (450g)" },
+    dapBagsPerAcre: 1.5,
+    ureaBagsPerAcre: 2.0,
+    spacing: { en: "90 x 60 cm", mr: "९० x ६० सेंमी", hi: "90 x 60 सेमी" },
+  },
+  sugarcane: {
+    yieldAcre: 38.0,
+    seedRate: 25000,
+    seedUnit: { en: "eye buds", mr: "डोळे / टिपरी", hi: "आंखें / टुकड़े" },
+    dapBagsPerAcre: 3.0,
+    ureaBagsPerAcre: 6.0,
+    spacing: { en: "4-5 ft ridges", mr: "४-५ फूट सरी", hi: "4-5 फीट नाली" },
+  },
+  wheat: {
+    yieldAcre: 1.55,
+    seedRate: 40,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.5,
+    ureaBagsPerAcre: 2.0,
+    spacing: { en: "22.5 cm rows", mr: "२२.५ सेंमी ओळीत", hi: "22.5 सेमी कतार" },
+  },
+  rice: {
+    yieldAcre: 1.85,
+    seedRate: 15,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.5,
+    ureaBagsPerAcre: 2.0,
+    spacing: { en: "20 x 15 cm", mr: "२० x १५ सेंमी", hi: "20 x 15 सेमी" },
+  },
+  chickpea: {
+    yieldAcre: 0.85,
+    seedRate: 25,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.0,
+    ureaBagsPerAcre: 0.5,
+    spacing: { en: "30 x 10 cm", mr: "३० x १० सेंमी", hi: "30 x 10 सेमी" },
+  },
+  gram: {
+    yieldAcre: 0.85,
+    seedRate: 25,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.0,
+    ureaBagsPerAcre: 0.5,
+    spacing: { en: "30 x 10 cm", mr: "३० x १० सेंमी", hi: "30 x 10 सेमी" },
+  },
+  pigeonpeas: {
+    yieldAcre: 0.75,
+    seedRate: 5,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.0,
+    ureaBagsPerAcre: 0.5,
+    spacing: { en: "90 x 20 cm", mr: "९० x २० सेंमी", hi: "90 x 20 सेमी" },
+  },
+  tur: {
+    yieldAcre: 0.75,
+    seedRate: 5,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.0,
+    ureaBagsPerAcre: 0.5,
+    spacing: { en: "90 x 20 cm", mr: "९० x २० सेंमी", hi: "90 x 20 सेमी" },
+  },
+  maize: {
+    yieldAcre: 2.20,
+    seedRate: 8,
+    seedUnit: { en: "kg", mr: "कि.ग्रॅ.", hi: "किग्रा" },
+    dapBagsPerAcre: 1.5,
+    ureaBagsPerAcre: 2.5,
+    spacing: { en: "60 x 20 cm", mr: "६० x २० सेंमी", hi: "60 x 20 सेमी" },
+  },
+  banana: {
+    yieldAcre: 22.0,
+    seedRate: 1200,
+    seedUnit: { en: "plantlets", mr: "रोपे", hi: "पौधे" },
+    dapBagsPerAcre: 2.0,
+    ureaBagsPerAcre: 4.0,
+    spacing: { en: "1.5 x 1.5 m", mr: "१.५ x १.५ मी", hi: "1.5 x 1.5 मी" },
+  },
+  grapes: {
+    yieldAcre: 8.5,
+    seedRate: 900,
+    seedUnit: { en: "vines", mr: "कलमे / रोपे", hi: "पौधे" },
+    dapBagsPerAcre: 2.0,
+    ureaBagsPerAcre: 3.0,
+    spacing: { en: "9 x 5 ft", mr: "९ x ५ फूट", hi: "9 x 5 फीट" },
+  },
+  watermelon: {
+    yieldAcre: 15.0,
+    seedRate: 350,
+    seedUnit: { en: "grams", mr: "ग्रॅम", hi: "ग्राम" },
+    dapBagsPerAcre: 1.5,
+    ureaBagsPerAcre: 2.0,
+    spacing: { en: "2 m beds", mr: "२ मीटर गादीवाफे", hi: "2 मीटर क्यारी" },
+  },
+  orange: {
+    yieldAcre: 6.5,
+    seedRate: 110,
+    seedUnit: { en: "grafts", mr: "कलमे", hi: "कलमें" },
+    dapBagsPerAcre: 2.0,
+    ureaBagsPerAcre: 3.0,
+    spacing: { en: "6 x 6 m", mr: "६ x ६ मी", hi: "6 x 6 मी" },
+  },
+  papaya: {
+    yieldAcre: 25.0,
+    seedRate: 1000,
+    seedUnit: { en: "seedlings", mr: "रोपे", hi: "पौधे" },
+    dapBagsPerAcre: 2.0,
+    ureaBagsPerAcre: 3.5,
+    spacing: { en: "2.1 x 2.1 m", mr: "२.१ x २.१ मी", hi: "2.1 x 2.1 मी" },
+  },
+};
+
 export default function Recommendation({ nav }) {
-  const { addRecommendation, language, t, tCrop } = useApp();
+  const { addRecommendation, language, t, tCrop, user } = useApp();
+
+  const defaultArea = user?.farm_size || user?.farmSize || "5";
+
+  const [npkUnit, setNpkUnit] = useState("kg/ha"); // 'kg/ha' | 'kg/acre'
+  const [unitToast, setUnitToast] = useState("");
 
   const [form, setForm] = useState({
     nitrogen: "",
@@ -86,6 +215,7 @@ export default function Recommendation({ nav }) {
     humidity: "",
     ph: "",
     rainfall: "",
+    area: defaultArea,
   });
 
   const [result, setResult] = useState(null);
@@ -93,8 +223,93 @@ export default function Recommendation({ nav }) {
   const [error, setError] = useState("");
   const [voiceToast, setVoiceToast] = useState("");
 
+  // Convert N-P-K measurement unit between kg/ha (standard) and kg/acre
+  // Conversion constant: 1 hectare = 2.47105 acres
+  // kg/ha -> kg/acre: value / 2.47105
+  // kg/acre -> kg/ha: value * 2.47105
+  const handleNpkUnitChange = (newUnit) => {
+    if (newUnit === npkUnit) return;
+
+    setForm((prev) => {
+      const convert = (val) => {
+        if (val === "" || val === undefined || val === null || isNaN(val)) return val;
+        const num = Number(val);
+        if (newUnit === "kg/acre") {
+          return String(Math.round((num / 2.47105) * 10) / 10);
+        } else {
+          return String(Math.round(num * 2.47105));
+        }
+      };
+
+      const hasValues = prev.nitrogen !== "" || prev.phosphorus !== "" || prev.potassium !== "";
+      if (hasValues) {
+        setUnitToast(
+          newUnit === "kg/acre"
+            ? (language === "mr" ? "🔄 N-P-K मूल्ये किलो/एकर मध्ये रूपांतरित केली!" : language === "hi" ? "🔄 N-P-K मान किग्रा/एकड़ में परिवर्तित किए गए!" : "🔄 N-P-K converted to kg/acre!")
+            : (language === "mr" ? "🔄 N-P-K मूल्ये किलो/हेक्टर मध्ये रूपांतरित केली!" : language === "hi" ? "🔄 N-P-K मान किग्रा/हेक्टर में परिवर्तित किए गए!" : "🔄 N-P-K converted to kg/ha!")
+        );
+        setTimeout(() => setUnitToast(""), 3500);
+      }
+
+      return {
+        ...prev,
+        nitrogen: convert(prev.nitrogen),
+        phosphorus: convert(prev.phosphorus),
+        potassium: convert(prev.potassium),
+      };
+    });
+
+    setNpkUnit(newUnit);
+    if (result) setResult(null);
+  };
+
+  const phVal = form.ph !== "" ? Number(form.ph) : null;
+  const tempVal = form.temperature !== "" ? Number(form.temperature) : null;
+
+  const phError = phVal !== null && !isNaN(phVal) && (phVal < 0.0 || phVal > 14.0);
+  const tempError = tempVal !== null && !isNaN(tempVal) && tempVal > 50.0;
+  const hasValidationError = phError || tempError;
+
+  const phWarningMessage = useMemo(() => {
+    if (!phError) return "";
+    if (language === "mr") {
+      return "⚠️ मातीचा सामू (pH) ० ते १४ दरम्यान असावा. ० ते १४ च्या बाहेरील मूल्य अमान्य आहे.";
+    }
+    if (language === "hi") {
+      return "⚠️ मिट्टी का pH मान 0 से 14 के बीच होना चाहिए। 0 से 14 के बाहर का मान अमान्य है।";
+    }
+    return "⚠️ Soil pH must be between 0 and 14 on the standard pH scale.";
+  }, [phError, language]);
+
+  const tempWarningMessage = useMemo(() => {
+    if (!tempError) return "";
+    if (language === "mr") {
+      return "⚠️ तापमान ५०°C पेक्षा जास्त असू नये. अति उष्णतेमुळे पिकांची वाढ थांबते, त्यामुळे पीक शिफारस अनुमत नाही.";
+    }
+    if (language === "hi") {
+      return "⚠️ तापमान 50°C से अधिक नहीं होना चाहिए। अत्यधिक गर्मी फसलों के विकास को रोकती है, अतः सिफारिश अनुमत नहीं है।";
+    }
+    return "⚠️ Temperature cannot be more than 50°C as extreme heat prevents crop growth. Recommendation is not allowed.";
+  }, [tempError, language]);
+
   const applyPreset = (preset) => {
-    setForm(preset.values);
+    let n = preset.values.nitrogen;
+    let p = preset.values.phosphorus;
+    let k = preset.values.potassium;
+
+    if (npkUnit === "kg/acre") {
+      n = String(Math.round((Number(n) / 2.47105) * 10) / 10);
+      p = String(Math.round((Number(p) / 2.47105) * 10) / 10);
+      k = String(Math.round((Number(k) / 2.47105) * 10) / 10);
+    }
+
+    setForm((prev) => ({
+      ...preset.values,
+      nitrogen: n,
+      phosphorus: p,
+      potassium: k,
+      area: prev.area || defaultArea,
+    }));
     setError("");
     if (result) setResult(null);
   };
@@ -107,11 +322,19 @@ export default function Recommendation({ nav }) {
   const handleVoiceSoilAutoFill = (transcript) => {
     const extracted = parseSpokenSoilData(transcript);
     if (Object.keys(extracted).length > 0) {
+      if (extracted.npkUnit && extracted.npkUnit !== npkUnit) {
+        setNpkUnit(extracted.npkUnit);
+      }
+      const dataToApply = { ...extracted };
+      delete dataToApply.npkUnit;
+
       setForm((prev) => ({
         ...prev,
-        ...extracted,
+        ...dataToApply,
       }));
-      const keysCount = Object.keys(extracted).length;
+      if (result) setResult(null);
+      if (error) setError("");
+      const keysCount = Object.keys(dataToApply).length;
       setVoiceToast(
         language === "mr"
           ? `✅ व्हॉइस इनपुटवरून ${keysCount} घटक भरले गेले!`
@@ -137,6 +360,8 @@ export default function Recommendation({ nav }) {
       ...prev,
       [field]: val,
     }));
+    if (result) setResult(null);
+    if (error) setError("");
   };
 
   const handleChange = (e) => {
@@ -178,17 +403,58 @@ export default function Recommendation({ nav }) {
       return;
     }
 
+    const phNum = Number(form.ph);
+    const tempNum = Number(form.temperature);
+    const areaNum = Number(form.area);
+
+    if (!areaNum || isNaN(areaNum) || areaNum <= 0) {
+      setError(
+        language === "mr"
+          ? "कृपया योग्य शेतजमीन क्षेत्र (एकर) टाका (उदा. ५ एकर)."
+          : language === "hi"
+          ? "कृपया मान्य खेत का क्षेत्रफल (एकड़) दर्ज करें (उदा. ५ एकड़)।"
+          : "Please enter a valid farmland area in acres (e.g. 5 acres)."
+      );
+      return;
+    }
+
+    // Strict Agricultural Boundaries Validation:
+    // If pH < 0 or pH > 14 or Temperature > 50, block recommendation completely!
+    if (phNum < 0.0 || phNum > 14.0) {
+      setResult(null);
+      setError(phWarningMessage);
+      return;
+    }
+
+    if (tempNum > 50.0) {
+      setResult(null);
+      setError(tempWarningMessage);
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Normalize N, P, K to standard kg/ha for the RandomForest ML Model:
+      // (The agronomic ML model expects kg/ha benchmarks, where 1 ha = 2.47105 acres)
+      const normN = npkUnit === "kg/acre" ? Math.round(Number(form.nitrogen) * 2.47105) : Number(form.nitrogen);
+      const normP = npkUnit === "kg/acre" ? Math.round(Number(form.phosphorus) * 2.47105) : Number(form.phosphorus);
+      const normK = npkUnit === "kg/acre" ? Math.round(Number(form.potassium) * 2.47105) : Number(form.potassium);
+
       const requestData = {
-        N: Number(form.nitrogen),
-        P: Number(form.phosphorus),
-        K: Number(form.potassium),
-        temperature: Number(form.temperature),
+        N: normN,
+        P: normP,
+        K: normK,
+        raw_n: Number(form.nitrogen),
+        raw_p: Number(form.phosphorus),
+        raw_k: Number(form.potassium),
+        npk_unit: npkUnit,
+        is_normalized: true,
+        temperature: tempNum,
         humidity: Number(form.humidity),
-        ph: Number(form.ph),
+        ph: phNum,
         rainfall: Number(form.rainfall),
+        area: areaNum,
       };
 
       const response = await fetch(
@@ -205,22 +471,30 @@ export default function Recommendation({ nav }) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
+        const err = new Error(
           data.message ||
             t("recommendationFailed")
         );
+        err.status = response.status;
+        err.field = data.field;
+        throw err;
       }
 
       const recommendation = {
         crop: data.recommended_crop,
         confidence: data.confidence || 88.0,
         topRecommendations: data.top_recommendations || [],
+        area: areaNum,
+        npkUnit: npkUnit,
         nitrogen: Number(form.nitrogen),
         phosphorus: Number(form.phosphorus),
         potassium: Number(form.potassium),
-        temperature: Number(form.temperature),
+        nitrogenKgHa: normN,
+        phosphorusKgHa: normP,
+        potassiumKgHa: normK,
+        temperature: tempNum,
         humidity: Number(form.humidity),
-        ph: Number(form.ph),
+        ph: phNum,
         rainfall: Number(form.rainfall),
       };
 
@@ -228,13 +502,24 @@ export default function Recommendation({ nav }) {
 
       addRecommendation(recommendation);
     } catch (err) {
+      // If validation rejection from server or agricultural constraint violated:
+      // strictly do NOT recommend any crop!
+      if (err.status === 400 || phNum < 0.0 || phNum > 14.0 || tempNum > 50.0) {
+        setResult(null);
+        setError(err.message || (phNum < 0.0 || phNum > 14.0 ? phWarningMessage : tempWarningMessage));
+        return;
+      }
+
       console.warn("Recommendation fetch failed, using offline soil agronomy rules:", err);
 
-      const n = Number(form.nitrogen) || 50;
-      const p = Number(form.phosphorus) || 50;
-      const k = Number(form.potassium) || 50;
+      const rawN = Number(form.nitrogen) || (npkUnit === "kg/acre" ? 20 : 50);
+      const rawP = Number(form.phosphorus) || (npkUnit === "kg/acre" ? 20 : 50);
+      const rawK = Number(form.potassium) || (npkUnit === "kg/acre" ? 20 : 50);
+      const n = npkUnit === "kg/acre" ? Math.round(rawN * 2.47105) : rawN;
+      const p = npkUnit === "kg/acre" ? Math.round(rawP * 2.47105) : rawP;
+      const k = npkUnit === "kg/acre" ? Math.round(rawK * 2.47105) : rawK;
       const rain = Number(form.rainfall) || 600;
-      const ph = Number(form.ph) || 6.5;
+      const ph = phNum || 6.5;
 
       let offlineCrop = "Wheat";
       if (rain > 1000 && n > 70) {
@@ -262,10 +547,15 @@ export default function Recommendation({ nav }) {
           { crop: "Soybean", confidence: 72.0 },
           { crop: "Maize", confidence: 60.0 }
         ],
-        nitrogen: n,
-        phosphorus: p,
-        potassium: k,
-        temperature: Number(form.temperature) || 28,
+        area: areaNum,
+        npkUnit: npkUnit,
+        nitrogen: rawN,
+        phosphorus: rawP,
+        potassium: rawK,
+        nitrogenKgHa: n,
+        phosphorusKgHa: p,
+        potassiumKgHa: k,
+        temperature: tempNum || 28,
         humidity: Number(form.humidity) || 65,
         ph: ph,
         rainfall: rain,
@@ -295,11 +585,17 @@ export default function Recommendation({ nav }) {
       humidity: "",
       ph: "",
       rainfall: "",
+      area: defaultArea,
     });
 
+    setUnitToast("");
     setResult(null);
     setError("");
   };
+
+  const npkUnitSuffix = npkUnit === "kg/acre"
+    ? (language === "mr" ? "किलो/एकर" : language === "hi" ? "किग्रा/एकड़" : "kg/acre")
+    : (language === "mr" ? "किलो/हेक्टर" : language === "hi" ? "किग्रा/हेक्टर" : "kg/ha");
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -345,26 +641,30 @@ export default function Recommendation({ nav }) {
       {/* ERROR */}
 
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 animate-fade-in shadow-sm">
 
           <AlertCircle
-            size={20}
+            size={22}
             className="mt-0.5 shrink-0 text-red-500"
           />
 
           <div>
 
             <p className="text-sm font-bold text-red-700">
-              {t("error")}
+              {(error.includes("7.0") || error.includes("50") || error.includes("अल्कधर्मी") || error.includes("क्षारीय") || error.includes("उष्णतेमुळे") || error.includes("गर्मी") || error.includes("alkaline") || error.includes("Extreme heat"))
+                ? (language === "mr" ? "⚠️ शेती नियम मर्यादा उल्लंघन / शिफारस रोखली" : language === "hi" ? "⚠️ कृषि नियम सीमा उल्लंघन / सिफारिश रोकी गई" : "⚠️ Agricultural Boundary Violation / Recommendation Blocked")
+                : t("error")}
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-red-600">
+            <p className="mt-1 text-xs leading-5 text-red-600 font-semibold">
               {error}
             </p>
 
-            <p className="mt-2 text-[11px] leading-5 text-red-500">
-              {t("makeSureBackendRunning")}
-            </p>
+            {!(error.includes("7.0") || error.includes("50") || error.includes("अल्कधर्मी") || error.includes("क्षारीय") || error.includes("उष्णतेमुळे") || error.includes("गर्मी") || error.includes("alkaline") || error.includes("Extreme heat") || error.includes("📴")) && (
+              <p className="mt-2 text-[11px] leading-5 text-red-500">
+                {t("makeSureBackendRunning")}
+              </p>
+            )}
 
           </div>
 
@@ -423,7 +723,10 @@ export default function Recommendation({ nav }) {
               </div>
               <div className="flex flex-wrap gap-2">
                 {QUICK_PRESETS.map((p) => {
-                  const isSelected = form.nitrogen === p.values.nitrogen && form.rainfall === p.values.rainfall;
+                  const expectedN = npkUnit === "kg/acre"
+                    ? String(Math.round((Number(p.values.nitrogen) / 2.47105) * 10) / 10)
+                    : p.values.nitrogen;
+                  const isSelected = form.nitrogen === expectedN && form.rainfall === p.values.rainfall;
                   return (
                     <button
                       key={p.id}
@@ -458,10 +761,10 @@ export default function Recommendation({ nav }) {
                     </h4>
                     <p className="text-[11px] text-gray-500">
                       {language === "mr"
-                        ? 'उदा. "नायट्रोजन ५०, फॉस्फरस ३०, पोटॅशियम ४०, पाऊस १२०, सामू ६.५"'
+                        ? 'उदा. "नायट्रोजन ५०, फॉस्फरस ३०, पोटॅशियम ४०, पाऊस १२०, सामू ६.५, ५ एकर"'
                         : language === "hi"
-                        ? 'उदा. "नाइट्रोजन 50, फास्फोरस 30, पोटाश 40, वर्षा 120, पीएच 6.5"'
-                        : 'e.g. "Nitrogen 50, Phosphorus 30, Potassium 40, Rainfall 120, pH 6.5"'}
+                        ? 'उदा. "नाइट्रोजन 50, फास्फोरस 30, पोटाश 40, वर्षा 120, पीएच 6.5, 5 एकड़"'
+                        : 'e.g. "Nitrogen 50, Phosphorus 30, Potassium 40, Rainfall 120, pH 6.5, 5 acres"'}
                     </p>
                   </div>
                 </div>
@@ -473,37 +776,121 @@ export default function Recommendation({ nav }) {
               )}
             </div>
 
+            {/* N-P-K MEASUREMENT UNIT SELECTOR (kg/ha vs kg/acre) */}
+            <div className="col-span-1 sm:col-span-2 rounded-2xl border border-emerald-300/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/40 to-white p-4 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-[#1B5E20] text-white shadow-xs text-base">
+                    ⚖️
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-xs font-black text-emerald-950">
+                        {language === "mr"
+                          ? "माती पोषण मोजण्याचे एकक (N-P-K Unit)"
+                          : language === "hi"
+                          ? "मृदा पोषक तत्व मापन इकाई (N-P-K Unit)"
+                          : "Soil Nutrient Measurement Unit (N-P-K)"}
+                      </h4>
+                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        {npkUnit === "kg/acre" ? "kg/acre (किलो / एकर)" : "kg/ha (किलो / हेक्टर)"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      {language === "mr"
+                        ? "माती परीक्षण कार्डानुसार निवडा. एकक बदलल्यास भरलेली मूल्ये आपोआप रूपांतरित होतात (१ हेक्टर = २.४७ एकर)"
+                        : language === "hi"
+                        ? "मृदा कार्ड अनुसार इकाई चुनें। बदलने पर प्रविष्ट मान स्वतः परिवर्तित होते हैं (1 हेक्टेयर = 2.47 एकड़)"
+                        : "Choose according to your soil card. Values auto-convert on switch (1 ha = 2.471 acres)"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2-BUTTON SEGMENTED SWITCH */}
+                <div className="flex items-center p-1 rounded-xl bg-white border border-emerald-300 shadow-2xs self-start sm:self-center shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleNpkUnitChange("kg/ha")}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      npkUnit === "kg/ha"
+                        ? "bg-[#2E7D32] text-white shadow-xs"
+                        : "text-gray-600 hover:text-emerald-800 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <span>🌾</span>
+                    <span>{language === "mr" ? "किलो / हेक्टर" : language === "hi" ? "किग्रा / हेक्टर" : "kg / ha"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleNpkUnitChange("kg/acre")}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      npkUnit === "kg/acre"
+                        ? "bg-[#2E7D32] text-white shadow-xs"
+                        : "text-gray-600 hover:text-emerald-800 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <span>📐</span>
+                    <span>{language === "mr" ? "किलो / एकर" : language === "hi" ? "किग्रा / एकड़" : "kg / acre"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {unitToast && (
+                <div className="mt-2.5 rounded-xl bg-emerald-100/90 border border-emerald-300 p-2 text-xs font-bold text-emerald-900 animate-fade-in flex items-center gap-2">
+                  <span>{unitToast}</span>
+                </div>
+              )}
+            </div>
+
             <NumberInput
-              label={t("nitrogen")}
+              label={
+                language === "mr"
+                  ? `नायट्रोजन (नत्र - N) [${npkUnitSuffix}]`
+                  : language === "hi"
+                  ? `नाइट्रोजन (नत्र - N) [${npkUnitSuffix}]`
+                  : `Nitrogen (N) [${npkUnit}]`
+              }
               name="nitrogen"
               value={form.nitrogen}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("nitrogen", val)}
-              placeholder="e.g. 40 - 120"
+              placeholder={npkUnit === "kg/acre" ? "उदा. 15 - 50" : "उदा. 40 - 120"}
               icon={<Activity size={15} />}
-              suffix="kg/ha"
+              suffix={npkUnitSuffix}
             />
 
             <NumberInput
-              label={t("phosphorus")}
+              label={
+                language === "mr"
+                  ? `फॉस्फरस (स्फुरद - P) [${npkUnitSuffix}]`
+                  : language === "hi"
+                  ? `फास्फोरस (स्फुरद - P) [${npkUnitSuffix}]`
+                  : `Phosphorus (P) [${npkUnit}]`
+              }
               name="phosphorus"
               value={form.phosphorus}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("phosphorus", val)}
-              placeholder="e.g. 20 - 90"
+              placeholder={npkUnit === "kg/acre" ? "उदा. 8 - 35" : "उदा. 20 - 90"}
               icon={<Activity size={15} />}
-              suffix="kg/ha"
+              suffix={npkUnitSuffix}
             />
 
             <NumberInput
-              label={t("potassium")}
+              label={
+                language === "mr"
+                  ? `पोटॅशियम (पालाश - K) [${npkUnitSuffix}]`
+                  : language === "hi"
+                  ? `पोटाश (पालाश - K) [${npkUnitSuffix}]`
+                  : `Potassium (K) [${npkUnit}]`
+              }
               name="potassium"
               value={form.potassium}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("potassium", val)}
-              placeholder="e.g. 15 - 100"
+              placeholder={npkUnit === "kg/acre" ? "उदा. 6 - 40" : "उदा. 15 - 100"}
               icon={<Activity size={15} />}
-              suffix="kg/ha"
+              suffix={npkUnitSuffix}
             />
 
             <NumberInput
@@ -512,10 +899,12 @@ export default function Recommendation({ nav }) {
               value={form.temperature}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("temperature", val)}
-              placeholder="e.g. 18 - 35"
+              placeholder="e.g. 18 - 35 (max 50°C)"
               icon={<Thermometer size={15} />}
               suffix="°C"
               step="0.1"
+              max="50"
+              error={tempWarningMessage}
             />
 
             <NumberInput
@@ -536,10 +925,13 @@ export default function Recommendation({ nav }) {
               value={form.ph}
               onChange={handleChange}
               onVoiceInput={(val) => handleSingleFieldVoice("ph", val)}
-              placeholder="e.g. 5.5 - 7.5"
+              placeholder="e.g. 5.5 - 8.5 (0 - 14)"
               icon={<FlaskConical size={15} />}
               suffix="pH"
               step="0.01"
+              min="0"
+              max="14.0"
+              error={phWarningMessage}
             />
 
             <NumberInput
@@ -554,31 +946,42 @@ export default function Recommendation({ nav }) {
               step="0.1"
             />
 
-            <div className="flex items-end">
-
-              <div className="w-full rounded-2xl border border-dashed border-[#CFE1CB] bg-[#F8FBF7] p-4">
-
-                <div className="flex items-center gap-2 text-[#2E7D32]">
-                  <Sparkles size={15} />
-
-                  <span className="text-[11px] font-bold">
-                    {t("mlRecommendationModel")}
-                  </span>
-                </div>
-
-                <p className="mt-1 text-[10px] leading-4 text-gray-400">
-                  {t("mlRecommendationDescription")}
-                </p>
-
-              </div>
-
-            </div>
+            <NumberInput
+              label={
+                language === "mr"
+                  ? "शेतजमीन क्षेत्र (एकर)"
+                  : language === "hi"
+                  ? "खेत का क्षेत्रफल (एकड़)"
+                  : "Farmland Area (Acres)"
+              }
+              name="area"
+              value={form.area}
+              onChange={handleChange}
+              onVoiceInput={(val) => handleSingleFieldVoice("area", val)}
+              placeholder="e.g. 5"
+              icon={<MapPin size={15} />}
+              suffix={language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}
+              step="0.5"
+            />
 
             <div className="flex gap-3 pt-2 sm:col-span-2">
               <button
                 type="submit"
-                disabled={loading}
-                className="btn-shimmer btn-glow group flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2E7D32] to-[#10B981] px-5 py-3.5 text-xs font-bold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+                disabled={loading || hasValidationError}
+                title={
+                  hasValidationError
+                    ? (language === "mr"
+                        ? "अवैध इनपुट: मातीचा सामू (pH) ० ते १४ आणि तापमान ≤ ५०°C असणे आवश्यक आहे"
+                        : language === "hi"
+                        ? "अमान्य इनपुट: मिट्टी का pH 0 से 14 और तापमान ≤ 50°C होना आवश्यक है"
+                        : "Invalid inputs: Soil pH must be 0 to 14 and Temperature must be ≤ 50°C")
+                    : ""
+                }
+                className={`btn-shimmer btn-glow group flex flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-xs font-bold text-white shadow-md transition duration-300 ${
+                  hasValidationError
+                    ? "bg-gray-400 cursor-not-allowed opacity-75 shadow-none"
+                    : "bg-gradient-to-r from-[#2E7D32] to-[#10B981] hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+                }`}
               >
                 {loading ? (
                   <>
@@ -672,27 +1075,34 @@ export default function Recommendation({ nav }) {
                 {t("parameters")}
               </p>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
 
                 <MiniStat
-                  label="N"
-                  value={form.nitrogen || "--"}
+                  label={`N (${npkUnit})`}
+                  value={form.nitrogen ? `${form.nitrogen} ${npkUnit}` : "--"}
                 />
 
                 <MiniStat
-                  label="P"
-                  value={form.phosphorus || "--"}
+                  label={`P (${npkUnit})`}
+                  value={form.phosphorus ? `${form.phosphorus} ${npkUnit}` : "--"}
                 />
 
                 <MiniStat
-                  label="K"
-                  value={form.potassium || "--"}
+                  label={`K (${npkUnit})`}
+                  value={form.potassium ? `${form.potassium} ${npkUnit}` : "--"}
                 />
 
                 <MiniStat
                   label="pH"
                   value={form.ph || "--"}
                 />
+
+                <div className="col-span-2 sm:col-span-2">
+                  <MiniStat
+                    label={language === "mr" ? "शेतजमीन क्षेत्र" : language === "hi" ? "खेत का क्षेत्रफल" : "Target Area"}
+                    value={form.area ? `${form.area} ${language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}` : "--"}
+                  />
+                </div>
 
               </div>
 
@@ -742,6 +1152,30 @@ export default function Recommendation({ nav }) {
                 {t("recommendationResultDescription")}
               </p>
 
+              <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold text-white border border-white/25">
+                  <MapPin size={14} className="text-yellow-300" />
+                  <span>
+                    {language === "mr"
+                      ? `शिफारस केलेले शेतजमीन क्षेत्र: ${result.area || form.area || 5} एकर`
+                      : language === "hi"
+                      ? `अनुशंसित खेत का क्षेत्रफल: ${result.area || form.area || 5} एकड़`
+                      : `Recommended Farmland Area: ${result.area || form.area || 5} Acres`}
+                  </span>
+                </div>
+
+                <div className="inline-flex items-center gap-2 rounded-full bg-black/25 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold text-green-100 border border-white/20">
+                  <span>⚖️</span>
+                  <span>
+                    {language === "mr"
+                      ? `माती पोषण: N ${result.nitrogen ?? form.nitrogen} | P ${result.phosphorus ?? form.phosphorus} | K ${result.potassium ?? form.potassium} (${result.npkUnit === "kg/acre" ? "किलो/एकर" : "किलो/हेक्टर"})`
+                      : language === "hi"
+                      ? `मृदा पोषक: N ${result.nitrogen ?? form.nitrogen} | P ${result.phosphorus ?? form.phosphorus} | K ${result.potassium ?? form.potassium} (${result.npkUnit === "kg/acre" ? "किग्रा/एकड़" : "किग्रा/हेक्टर"})`
+                      : `Nutrients: N ${result.nitrogen ?? form.nitrogen} | P ${result.phosphorus ?? form.phosphorus} | K ${result.potassium ?? form.potassium} (${result.npkUnit || "kg/ha"})`}
+                  </span>
+                </div>
+              </div>
+
             </div>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -761,6 +1195,7 @@ export default function Recommendation({ nav }) {
                 };
                 const cropKey = (result.crop || "").toLowerCase().trim();
                 const mappedCrop = YIELD_PREDICTION_CROPS[cropKey];
+                const targetArea = Number(result.area || form.area || 5);
 
                 if (mappedCrop) {
                   return (
@@ -772,6 +1207,7 @@ export default function Recommendation({ nav }) {
                           crop: mappedCrop,
                           rainfall: form.rainfall || "",
                           temperature: form.temperature || "",
+                          area: targetArea,
                         })
                       }
                       className="btn-shimmer flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-gray-950 px-5 py-3 text-xs font-black shadow-lg transition hover:-translate-y-0.5 active:scale-95 cursor-pointer border border-amber-200"
@@ -779,10 +1215,10 @@ export default function Recommendation({ nav }) {
                       <TrendingUp size={15} className="text-gray-900" />
                       <span>
                         {language === "mr"
-                          ? `📈 ${tCrop ? tCrop(result.crop) : result.crop}चे हेक्टरी उत्पादन (Yield) मोजा`
+                          ? `📈 ${tCrop ? tCrop(result.crop) : result.crop}चे ${targetArea} एकरासाठी उत्पादन मोजा`
                           : language === "hi"
-                          ? `📈 ${tCrop ? tCrop(result.crop) : result.crop} का उत्पादन (Yield) मापें`
-                          : `📈 Predict ${tCrop ? tCrop(result.crop) : result.crop} Harvest Yield`}
+                          ? `📈 ${tCrop ? tCrop(result.crop) : result.crop} का ${targetArea} एकड़ हेतु उत्पादन मापें`
+                          : `📈 Predict ${tCrop ? tCrop(result.crop) : result.crop} Yield for ${targetArea} Acres`}
                       </span>
                       <ArrowRight size={14} />
                     </button>
@@ -806,12 +1242,14 @@ export default function Recommendation({ nav }) {
                   openWhatsAppShare(
                     formatRecommendationShareText({
                       crop: tCrop ? tCrop(result.crop) : result.crop,
-                      nitrogen: form.nitrogen || "--",
-                      phosphorus: form.phosphorus || "--",
-                      potassium: form.potassium || "--",
-                      ph: form.ph || "--",
+                      nitrogen: result.nitrogen ?? form.nitrogen ?? "--",
+                      phosphorus: result.phosphorus ?? form.phosphorus ?? "--",
+                      potassium: result.potassium ?? form.potassium ?? "--",
+                      ph: result.ph ?? form.ph ?? "--",
+                      area: result.area || form.area || 5,
                       confidence: result.confidence ? Math.round(result.confidence) : 95,
                       lang: language,
+                      npkUnit: result.npkUnit || npkUnit,
                     })
                   )
                 }
@@ -823,6 +1261,103 @@ export default function Recommendation({ nav }) {
               </button>
 
             </div>
+
+            {/* FARM SCALE AGRONOMIC PLANNING CARD FOR TARGET ACREAGE */}
+            {(() => {
+              const cropKey = (result.crop || "").toLowerCase().trim();
+              const plan = CROP_AREA_PLANNING[cropKey];
+              const targetArea = Number(result.area || form.area || 5);
+
+              if (!plan || targetArea <= 0) return null;
+
+              const totalYield = (plan.yieldAcre * targetArea).toFixed(1);
+              const totalSeed = (plan.seedRate * targetArea).toLocaleString();
+              const seedUnitText = plan.seedUnit[language] || plan.seedUnit.en;
+              const dapBags = (plan.dapBagsPerAcre * targetArea).toFixed(1);
+              const ureaBags = (plan.ureaBagsPerAcre * targetArea).toFixed(1);
+              const spacingText = plan.spacing[language] || plan.spacing.en;
+
+              return (
+                <div className="mt-6 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 p-5 sm:p-6 text-white shadow-inner animate-fade-in">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/15">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📐</span>
+                      <div>
+                        <h3 className="text-sm font-black tracking-tight flex items-center gap-2">
+                          <span>
+                            {language === "mr"
+                              ? `शेत नियोजन: ${targetArea} एकर क्षेत्रासाठी लागणारे निविष्ठा व उत्पादन`
+                              : language === "hi"
+                              ? `फार्म प्लानिंग: ${targetArea} एकड़ क्षेत्र हेतु इनपुट व उपज गणना`
+                              : `Farm Planning: Inputs & Harvest for ${targetArea} Acres`}
+                          </span>
+                        </h3>
+                        <p className="text-[11px] text-green-100/80">
+                          {language === "mr"
+                            ? "कृषी विद्यापीठ व पॅकेज ऑफ प्रॅक्टिसवर आधारित अचूक अंदाज"
+                            : language === "hi"
+                            ? "कृषि विश्वविद्यालय मानकों पर आधारित सटीक अनुमान"
+                            : "Calibrated to Maharashtra SAU Package of Practices"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="self-start sm:self-center px-3 py-1 rounded-full bg-yellow-400 text-gray-950 text-xs font-black shadow-xs">
+                      {targetArea} {language === "mr" ? "एकर क्षेत्र" : language === "hi" ? "एकड़ क्षेत्र" : "Acres"}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-xl bg-black/20 p-3 border border-white/10">
+                      <span className="text-[10px] text-green-200 uppercase font-bold block">
+                        {language === "mr" ? "अंदाजित एकूण उत्पादन" : language === "hi" ? "कुल अनुमानित उपज" : "Estimated Harvest"}
+                      </span>
+                      <span className="text-base sm:text-lg font-black text-yellow-300 block mt-0.5">
+                        ~{totalYield} {language === "mr" ? "टन" : language === "hi" ? "टन" : "Tonnes"}
+                      </span>
+                      <span className="text-[9.5px] text-white/70 block mt-0.5">
+                        ({plan.yieldAcre} {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"})
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl bg-black/20 p-3 border border-white/10">
+                      <span className="text-[10px] text-green-200 uppercase font-bold block">
+                        {language === "mr" ? "आवश्यक बियाणे / रोपे" : language === "hi" ? "बीज / पौधे की मात्रा" : "Total Seed Needed"}
+                      </span>
+                      <span className="text-base sm:text-lg font-black text-white block mt-0.5">
+                        {totalSeed} {seedUnitText}
+                      </span>
+                      <span className="text-[9.5px] text-white/70 block mt-0.5">
+                        ({plan.seedRate} {seedUnitText}/acre)
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl bg-black/20 p-3 border border-white/10">
+                      <span className="text-[10px] text-green-200 uppercase font-bold block">
+                        {language === "mr" ? "रासायनिक खते (बॅग)" : language === "hi" ? "उर्वरक आवश्यकता (बैग)" : "Fertilizers (Bags)"}
+                      </span>
+                      <span className="text-sm sm:text-base font-black text-white block mt-0.5">
+                        DAP: {dapBags} | Urea: {ureaBags}
+                      </span>
+                      <span className="text-[9.5px] text-white/70 block mt-0.5">
+                        {language === "mr" ? "DAP व युरिया बॅग्स" : language === "hi" ? "डीएपी व यूरिया बैग्स" : "DAP & Urea Bags"}
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl bg-black/20 p-3 border border-white/10">
+                      <span className="text-[10px] text-green-200 uppercase font-bold block">
+                        {language === "mr" ? "शिफारस केलेले अंतर" : language === "hi" ? "अनुशंसित दूरी" : "Plant Spacing"}
+                      </span>
+                      <span className="text-sm sm:text-base font-black text-cyan-200 block mt-0.5">
+                        {spacingText}
+                      </span>
+                      <span className="text-[9.5px] text-white/70 block mt-0.5">
+                        {language === "mr" ? "ओळ व रोपांतील अंतर" : language === "hi" ? "कतार व पौधों की दूरी" : "Row x Plant distance"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* TOP ALTERNATIVE CROP CANDIDATES WITH PROBABILITY BARS */}
             {result.topRecommendations && result.topRecommendations.length > 1 && (
@@ -915,10 +1450,10 @@ export default function Recommendation({ nav }) {
                           : "Perennial Orchard & Horticulture Crop:"}
                       </strong>{" "}
                       {language === "mr"
-                        ? "या पिकाचे उत्पादन झाडाचे वय, छाटणी व मशागतीवर अवलंबून असते. महाराष्ट्र शासनाचे सांख्यिकी मॉडेल ७ प्रमुख वार्षिक अन्नधान्य व नगदी पिकांच्या (कापूस, सोयाबीन, ऊस, गहू, भात, हरभरा, तूर) हेक्टरी उत्पादनासाठी विशेष तयार केलेले आहे."
+                        ? "या पिकाचे उत्पादन झाडाचे वय, छाटणी व मशागतीवर अवलंबून असते. महाराष्ट्र शासनाचे सांख्यिकी मॉडेल ७ प्रमुख वार्षिक अन्नधान्य व नगदी पिकांच्या (कापूस, सोयाबीन, ऊस, गहू, भात, हरभरा, तूर) एकरी उत्पादनासाठी विशेष तयार केलेले आहे."
                         : language === "hi"
-                        ? "इस फसल की उपज वृक्ष की आयु, छंटाई एवं छत्र प्रबंधन पर निर्भर है। महाराष्ट्र राज्य सांख्यिकी मॉडल 7 प्रमुख वार्षिक नकदी व खाद्यान्न फसलों (कपास, सोयाबीन, गन्ना, गेहूं, धान, चना, अरहर) के उपज अनुमान हेतु विशेष रूप से प्रशिक्षित है।"
-                        : "Yield for orchard/fruit crops depends on tree maturity, pruning, and canopy management. The state econometric regression engine specifically calibrates metric yield (t/ha) for Maharashtra's 7 primary annual staple and commercial cash crops."}
+                        ? "इस फसल की उपज वृक्ष की आयु, छंटाई एवं छत्र प्रबंधन पर निर्भर है। महाराष्ट्र राज्य सांख्यिकी मॉडल 7 प्रमुख वार्षिक नकदी व खाद्यान्न फसलों (कपास, सोयाबीन, गन्ना, गेहूं, धान, चना, अरहर) के एकड़ उपज अनुमान हेतु विशेष रूप से प्रशिक्षित है।"
+                        : "Yield for orchard/fruit crops depends on tree maturity, pruning, and canopy management. The state econometric regression engine specifically calibrates metric yield (tonnes/acre) for Maharashtra's 7 primary annual staple and commercial cash crops."}
                     </div>
                   </div>
                 );
@@ -1094,6 +1629,8 @@ function NumberInput({
   icon,
   suffix,
   step = "1",
+  max,
+  error,
 }) {
   const handleSingleVoice = (spokenText) => {
     const clean = convertDevanagariDigits(spokenText);
@@ -1103,14 +1640,18 @@ function NumberInput({
     }
   };
 
+  const hasError = Boolean(error);
+
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
         <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-          <span className="text-[#2E7D32]">
+          <span className={hasError ? "text-red-500 font-bold" : "text-[#2E7D32]"}>
             {icon}
           </span>
-          {label}
+          <span className={hasError ? "text-red-700 font-bold" : ""}>
+            {label}
+          </span>
         </label>
         {onVoiceInput && (
           <VoiceMicButton onTranscript={handleSingleVoice} size="sm" />
@@ -1121,18 +1662,32 @@ function NumberInput({
         <input
           type="number"
           min="0"
+          max={max}
           step={step}
           name={name}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-[#DCE8D9] bg-white px-4 py-3 pr-20 text-sm text-gray-800 outline-none transition duration-200 placeholder:text-gray-400 focus:border-[#2E7D32] focus:ring-4 focus:ring-green-50"
+          className={`w-full rounded-xl border bg-white px-4 py-3 pr-20 text-sm text-gray-800 outline-none transition duration-200 placeholder:text-gray-400 ${
+            hasError
+              ? "border-red-500 bg-red-50/20 text-red-900 ring-2 ring-red-100 focus:border-red-600 focus:ring-4 focus:ring-red-100"
+              : "border-[#DCE8D9] focus:border-[#2E7D32] focus:ring-4 focus:ring-green-50"
+          }`}
         />
 
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-gray-500">
+        <span className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold ${
+          hasError ? "text-red-600 font-bold" : "text-gray-500"
+        }`}>
           {suffix}
         </span>
       </div>
+
+      {hasError && (
+        <div className="mt-1.5 flex items-start gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 animate-fade-in shadow-xs">
+          <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }

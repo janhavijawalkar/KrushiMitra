@@ -14,7 +14,7 @@ import { useApp } from "../context/AppContext";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function Login({ nav }) {
-  const { login, apiLogin, apiGoogleAuth, addNotification, t, language, changeLanguage } = useApp();
+  const { login, apiLogin, apiRegister, apiGoogleAuth, addNotification, t, language, changeLanguage } = useApp();
 
   const [form, setForm] = useState(() => ({
     email: (typeof window !== "undefined" ? localStorage.getItem("krushimitra_remembered_email") : "") || "",
@@ -23,6 +23,8 @@ export default function Login({ nav }) {
   }));
 
   const [error, setError] = useState("");
+  const [userNotFound, setUserNotFound] = useState(false);
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,12 +37,14 @@ export default function Login({ nav }) {
 
     if (error) {
       setError("");
+      setUserNotFound(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setUserNotFound(false);
 
     if (!form.email || !form.password) {
       setError(t("loginRequired") || "Please enter email and password.");
@@ -61,7 +65,60 @@ export default function Login({ nav }) {
       }
       nav("dashboard");
     } else {
+      if (result.userNotFound) {
+        setUserNotFound(true);
+      }
       setError(result.message || "Invalid credentials. Please verify your email and password.");
+    }
+  };
+
+  const handleQuickRegister = async () => {
+    if (!form.email || !form.password) return;
+    if (form.password.length < 6) {
+      setError(
+        language === "mr"
+          ? "पासवर्ड किमान ६ अक्षरांचा असावा."
+          : language === "hi"
+          ? "पासवर्ड कम से कम ६ अक्षरों का होना चाहिए।"
+          : "Password must be at least 6 characters long."
+      );
+      return;
+    }
+
+    setIsAutoCreating(true);
+    setError("");
+
+    // Derive a clean farmer name from the email (e.g., "sachin.patil@..." -> "Sachin Patil")
+    const cleanPrefix = form.email.split("@")[0].replace(/[._0-9-]/g, " ").trim();
+    const derivedName = cleanPrefix
+      ? cleanPrefix
+          .split(" ")
+          .filter(Boolean)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(" ")
+      : "Farmer";
+
+    const res = await apiRegister({
+      name: derivedName,
+      email: form.email.trim(),
+      password: form.password,
+      district: "Pune",
+      role: "Farmer",
+    });
+
+    setIsAutoCreating(false);
+
+    if (res.success) {
+      if (addNotification) {
+        addNotification(
+          "Welcome to KrushiMitra! 🌾",
+          `Welcome ${derivedName}! Your official KrushiMitra Kisan account is active and a welcome email has been sent to ${form.email.trim()}.`,
+          "system"
+        );
+      }
+      nav("dashboard");
+    } else {
+      setError(res.message || "Registration failed. Please try the full registration form.");
     }
   };
 
@@ -143,11 +200,55 @@ export default function Login({ nav }) {
             </p>
           </div>
 
-          {/* ERROR ALERT */}
+          {/* ERROR ALERT / ACCOUNT NOT FOUND HELPER */}
           {error && (
-            <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-xs sm:text-sm font-medium text-red-700">
-              <span className="h-2 w-2 rounded-full bg-red-500" />
-              <span>{error}</span>
+            <div className={`mb-5 rounded-2xl p-4 text-xs sm:text-sm border transition-all ${
+              userNotFound
+                ? "border-amber-300 bg-amber-50/95 text-amber-900 shadow-sm"
+                : "border-red-200 bg-red-50/90 text-red-700"
+            }`}>
+              <div className="flex items-start gap-2.5">
+                <span className={`mt-1 h-2 w-2 rounded-full shrink-0 ${userNotFound ? "bg-amber-500" : "bg-red-500"}`} />
+                <div className="flex-1">
+                  <p className="font-semibold">{error}</p>
+
+                  {userNotFound && (
+                    <div className="mt-3 space-y-2 border-t border-amber-200/70 pt-3">
+                      <p className="text-xs text-amber-800">
+                        {language === "mr"
+                          ? "या ईमेलवर अद्याप कोणतेही खाते नाही. आपण लगेच नवीन खाते तयार करू शकता:"
+                          : language === "hi"
+                          ? "इस ईमेल पर अभी कोई खाता नहीं है। आप तुरंत नया खाता बना सकते हैं:"
+                          : "No farmer account exists with this email yet. You can create it instantly with one click:"}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleQuickRegister}
+                          disabled={isAutoCreating}
+                          className="btn-shimmer flex items-center gap-1.5 rounded-xl bg-[#2E7D32] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1B5E20] cursor-pointer"
+                        >
+                          <Sparkles size={13} className={isAutoCreating ? "animate-spin" : ""} />
+                          <span>
+                            {isAutoCreating
+                              ? (language === "mr" ? "खाते तयार करत आहे..." : language === "hi" ? "खाता बना रहे हैं..." : "Creating Account...")
+                              : (language === "mr" ? "✨ हेच खाते तयार करा आणि लॉगिन व्हा" : language === "hi" ? "✨ यह खाता बनाएं और लॉगिन करें" : "✨ Create Account & Sign In Now")}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => nav("register")}
+                          className="key-cap rounded-xl px-3 py-2 text-xs font-bold text-gray-700 hover:text-[#2E7D32] cursor-pointer"
+                        >
+                          <span>{language === "mr" ? "📝 संपूर्ण नोंदणी फॉर्म भरा →" : language === "hi" ? "📝 पूरा पंजीकरण फॉर्म भरें →" : "📝 Full Registration Form →"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

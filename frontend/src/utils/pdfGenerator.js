@@ -23,15 +23,15 @@ const PDF_TRANSLATIONS = {
     totalPredictions: "Total Predictions",
     avgPredictedYield: "Avg. Predicted Yield",
     totalLandArea: "Total Land Area",
-    tonnesPerHa: "tonnes/ha",
-    hectares: "ha",
+    tonnesPerHa: "tonnes/acre",
+    hectares: "acres",
 
     // Table Columns
     colSr: "#",
     colCrop: "Crop",
     colDistrict: "District",
     colSeason: "Season",
-    colArea: "Area (ha)",
+    colArea: "Area (Acres)",
     colRainfall: "Rainfall (mm)",
     colTemp: "Temp (°C)",
     colYield: "Predicted Yield",
@@ -58,7 +58,7 @@ const PDF_TRANSLATIONS = {
     compReportSubtitle: "Consolidated multi-module report: Crop Yield Predictions, AI Recommendations & Field Analytics",
     section1Title: "1. Crop Yield & Productivity Predictions",
     section2Title: "2. Soil Nutrient & Crop Recommendations",
-    colNPK: "N-P-K Profile (kg/ha)",
+    colNPK: "N-P-K Profile",
     colClimate: "Climate Profile",
 
     // Advisory Notes
@@ -90,15 +90,15 @@ const PDF_TRANSLATIONS = {
     totalPredictions: "एकूण अंदाज नोंदी",
     avgPredictedYield: "सरासरी अंदाजित उत्पादन",
     totalLandArea: "एकूण शेत क्षेत्रफळ",
-    tonnesPerHa: "टन/हेक्टर",
-    hectares: "हेक्टर",
+    tonnesPerHa: "टन/एकर",
+    hectares: "एकर",
 
     // Table Columns
     colSr: "क्र.",
     colCrop: "पीक",
     colDistrict: "जिल्हा",
     colSeason: "हंगाम",
-    colArea: "क्षेत्र (हेक्टर)",
+    colArea: "क्षेत्र (एकर)",
     colRainfall: "पाऊस (मिमी)",
     colTemp: "तापमान (°C)",
     colYield: "अंदाजित उत्पादन",
@@ -125,7 +125,7 @@ const PDF_TRANSLATIONS = {
     compReportSubtitle: "एकत्रित कृषी अहवाल: पीक उत्पादन अंदाज, माती परीक्षण शिफारस आणि हवामान मार्गदर्शन",
     section1Title: "१. पीक उत्पादकता अंदाज नोंदी",
     section2Title: "२. माती परीक्षण आणि योग्य पीक शिफारसी",
-    colNPK: "N-P-K प्रमाण (किग्रॅ/हे)",
+    colNPK: "N-P-K पोषण प्रमाण",
     colClimate: "हवामान स्थिती",
 
     // Advisory Notes
@@ -157,15 +157,15 @@ const PDF_TRANSLATIONS = {
     totalPredictions: "कुल पूर्वानुमान",
     avgPredictedYield: "औसत अनुमानित उपज",
     totalLandArea: "कुल खेत का क्षेत्रफल",
-    tonnesPerHa: "टन/हेक्टेयर",
-    hectares: "हेक्टेयर",
+    tonnesPerHa: "टन/एकड़",
+    hectares: "एकड़",
 
     // Table Columns
     colSr: "क्र.",
     colCrop: "फसल",
     colDistrict: "जिला",
     colSeason: "मौसम",
-    colArea: "क्षेत्रफल (हेक्टेयर)",
+    colArea: "क्षेत्रफल (एकड़)",
     colRainfall: "वर्षा (मिमी)",
     colTemp: "तापमान (°C)",
     colYield: "अनुमानित उपज",
@@ -192,7 +192,7 @@ const PDF_TRANSLATIONS = {
     compReportSubtitle: "समेकित कृषि रिपोर्ट: फसल उत्पादन पूर्वानुमान, मृदा परीक्षण सिफारिश और मौसम सलाह",
     section1Title: "१. फसल उत्पादन एवं पैदावार पूर्वानुमान",
     section2Title: "२. मृदा पोषक तत्व एवं फसल सिफारिश",
-    colNPK: "N-P-K अनुपात (किग्रा/हे)",
+    colNPK: "N-P-K पोषक तत्व",
     colClimate: "मौसम की स्थिति",
 
     // Advisory Notes
@@ -522,9 +522,10 @@ export async function generateRecommendationReportPDF(recommendations = [], user
     <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f7fbf6'}; border-bottom: 1px solid #e2ece0;">
       <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #555;">${idx + 1}</td>
       <td style="padding: 9px 8px; font-weight: bold; color: #1B5E20; font-size: 12.5px;">${localizeCrop(item.crop, lang)}</td>
-      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #2D3748;">${item.nitrogen || 0}</td>
-      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #2D3748;">${item.phosphorus || 0}</td>
-      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #2D3748;">${item.potassium || 0}</td>
+      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #1B5E20;">${item.area || 5} ${t.hectares || 'acres'}</td>
+      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #2D3748;">${item.nitrogen || 0} <span style="font-size: 8.5px; color: #718096; display: block;">${item.npkUnit || 'kg/ha'}</span></td>
+      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #2D3748;">${item.phosphorus || 0} <span style="font-size: 8.5px; color: #718096; display: block;">${item.npkUnit || 'kg/ha'}</span></td>
+      <td style="padding: 9px 8px; text-align: center; font-weight: bold; color: #2D3748;">${item.potassium || 0} <span style="font-size: 8.5px; color: #718096; display: block;">${item.npkUnit || 'kg/ha'}</span></td>
       <td style="padding: 9px 8px; text-align: center; font-weight: 800; color: #319795;">${item.ph || 0}</td>
       <td style="padding: 9px 8px; text-align: center; color: #4A5568;">${item.temperature || 0} °C</td>
       <td style="padding: 9px 8px; text-align: center; color: #4A5568;">${item.humidity || 0}%</td>
@@ -579,6 +580,7 @@ export async function generateRecommendationReportPDF(recommendations = [], user
             <tr style="background: #2E7D32; color: #ffffff;">
               <th style="padding: 10px 6px; font-weight: bold; text-align: center; width: 28px;">${t.colSr}</th>
               <th style="padding: 10px 8px; font-weight: bold; text-align: left;">${t.colRecommendation}</th>
+              <th style="padding: 10px 6px; font-weight: bold; text-align: center;">${t.colArea}</th>
               <th style="padding: 10px 6px; font-weight: bold; text-align: center;">${t.colN}</th>
               <th style="padding: 10px 6px; font-weight: bold; text-align: center;">${t.colP}</th>
               <th style="padding: 10px 6px; font-weight: bold; text-align: center;">${t.colK}</th>
@@ -639,7 +641,7 @@ export async function generateComprehensiveFarmReportPDF(predictions = [], recom
     <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f7fbf6'}; border-bottom: 1px solid #e2ece0;">
       <td style="padding: 7px 8px; text-align: center; font-weight: bold; color: #555;">${idx + 1}</td>
       <td style="padding: 7px 8px; font-weight: bold; color: #1B5E20;">${localizeCrop(item.crop, lang)}</td>
-      <td style="padding: 7px 8px; text-align: center; color: #333;">N:${item.nitrogen} P:${item.phosphorus} K:${item.potassium}</td>
+      <td style="padding: 7px 8px; text-align: center; color: #333;">N:${item.nitrogen} P:${item.phosphorus} K:${item.potassium} <span style="font-size: 8.5px; color: #718096;">(${item.npkUnit || 'kg/ha'})</span></td>
       <td style="padding: 7px 8px; text-align: center; font-weight: bold; color: #319795;">pH ${item.ph}</td>
       <td style="padding: 7px 8px; text-align: center; color: #333;">${item.temperature}°C / ${item.rainfall}mm</td>
     </tr>
