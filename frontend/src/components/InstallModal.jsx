@@ -19,6 +19,7 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
   const { isInstallable, promptInstall } = useOnlineStatus();
   const [activeTab, setActiveTab] = useState("desktop");
   const [installSuccess, setInstallSuccess] = useState(false);
+  const [showManualGuide, setShowManualGuide] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -56,6 +57,8 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
         return;
       }
     }
+    // If browser prompt is already dismissed or handled by address bar:
+    setShowManualGuide(true);
     setInstallSuccess(true);
     setTimeout(() => setInstallSuccess(false), 3500);
   };
@@ -124,7 +127,7 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
               }`}
             >
               <Monitor size={14} className={activeTab === "desktop" ? "!text-white" : "!text-purple-600 dark:!text-purple-400"} />
-              <span>PC / Laptop (EXE)</span>
+              <span>PC / Laptop</span>
             </button>
 
             <button
@@ -160,102 +163,91 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           {/* ===================== TAB 1: DESKTOP / PC ===================== */}
           {activeTab === "desktop" && (
             <>
-              {/* OPTION 1: DIRECT WINDOWS EXE DOWNLOAD */}
-              <a
-                href="/downloads/KrushiMitra-Setup.exe"
-                download="KrushiMitra-Setup.exe"
-                className="btn-shimmer group flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline transition"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
-                    <Download size={21} className="!text-white" />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
-                      {language === "mr"
-                        ? "💻 KrushiMitra-Setup.exe डाऊनलोड करा"
-                        : language === "hi"
-                        ? "💻 KrushiMitra-Setup.exe डाउनलोड करें"
-                        : "💻 Download KrushiMitra-Setup.exe"}
-                    </p>
-                    <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
-                      {language === "mr"
-                        ? "Windows संगणकासाठी थेट इन्स्टॉलर (.exe फाईल)"
-                        : language === "hi"
-                        ? "Windows कंप्यूटर हेतु सीधी इंस्टॉलर (.exe फ़ाइल)"
-                        : "Direct Windows installer for PC and Laptop"}
-                    </p>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
-                  .EXE File
-                </span>
-              </a>
-
-              {/* OPTION 2: 1-CLICK PWA APP INSTALL */}
+              {/* PRIMARY ACTION: 1-CLICK DESKTOP APP INSTALL */}
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="group w-full flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer transition text-left"
+                className="btn-shimmer group w-full flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer text-left transition"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-200 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
-                    <LayoutGrid size={19} />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
+                    <Monitor size={21} className="!text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-black leading-tight text-gray-900 dark:text-white">
+                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
                       {installSuccess
                         ? language === "mr"
-                          ? "✓ अ‍ॅप इन्स्टॉल झाले!"
+                          ? "✓ इन्स्टॉल प्रक्रिया सुरू झाली!"
                           : language === "hi"
-                          ? "✓ ऐप इंस्टॉल हो गया!"
-                          : "✓ Installed Successfully!"
+                          ? "✓ इंस्टॉल प्रक्रिया शुरू हो गई!"
+                          : "✓ Installation Launched!"
                         : language === "mr"
-                        ? "🖥️ १-क्लिक थेट ॲप इन्स्टॉल (Chrome / Edge)"
+                        ? "🖥️ संगणकावर १-क्लिक इन्स्टॉल करा"
                         : language === "hi"
-                        ? "🖥️ १-क्लिक सीधा ऐप इंस्टॉल (Chrome / Edge)"
-                        : "🖥️ 1-Click Direct Install (Chrome / Edge)"}
+                        ? "🖥️ कंप्यूटर पर १-क्लिक इंस्टॉल करें"
+                        : "🖥️ 1-Click Install to Desktop"}
                     </p>
-                    <p className="text-[10.5px] text-gray-600 dark:text-emerald-300 font-medium truncate mt-0.5">
+                    <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
                       {language === "mr"
-                        ? "थेट कॉम्प्युटरच्या डेस्कटॉप स्क्रीनवर ॲप जोडले जाईल"
+                        ? "Windows स्क्रीनवर स्वतंत्र ॲप म्हणून इन्स्टॉल होते"
                         : language === "hi"
-                        ? "सीधे कंप्यूटर स्क्रीन पर ऐप जुड़ जाएगा"
+                        ? "Windows स्क्रीन पर स्वतंत्र ऐप के रूप में इंस्टॉल होता है"
                         : "Installs directly to your Windows desktop & start menu"}
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-lg bg-emerald-200/80 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
-                  1-Click PWA
+                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
+                  1-Click App
                 </span>
               </button>
 
-              {/* BROWSER URL BAR 2-STEP GUIDE */}
-              <div className="rounded-2xl border border-gray-200 dark:border-[#24402A] bg-gray-50/80 dark:bg-[#162A1D] p-3 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-gray-800 dark:text-emerald-100 font-bold">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-[10px] font-black">
-                    १
-                  </span>
+              {/* CLEAR 2-STEP BROWSER VISUAL GUIDE */}
+              <div className="rounded-2xl border border-gray-200 dark:border-[#24402A] bg-gray-50/80 dark:bg-[#162A1D] p-3.5 text-xs space-y-2.5">
+                <p className="font-black text-gray-900 dark:text-emerald-200 text-xs flex items-center gap-1.5">
+                  <Monitor size={15} className="text-[#1B5E20] dark:text-[#4ADE80]" />
                   <span>
                     {language === "mr"
-                      ? "वर दिलेल्या 'KrushiMitra-Setup.exe' बटनावर क्लिक करून फाईल चालवा"
+                      ? "ब्राउझरमधून थेट इन्स्टॉल करण्याची सोपी पद्धत:"
                       : language === "hi"
-                      ? "ऊपर दिए गए 'KrushiMitra-Setup.exe' बटन पर क्लिक करके फ़ाइल चलाएं"
-                      : "Download and run KrushiMitra-Setup.exe or click 1-Click Install"}
+                      ? "ब्राउज़र से सीधा इंस्टॉल करने का आसान तरीका:"
+                      : "Direct Browser 1-Click Installation:"}
                   </span>
+                </p>
+
+                <div className="rounded-xl bg-white dark:bg-[#1A3322] p-2.5 border border-gray-200 dark:border-emerald-800/80 space-y-2">
+                  <div className="flex items-start gap-2.5 text-gray-800 dark:text-emerald-100 font-bold">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-xs font-black">
+                      १
+                    </span>
+                    <span className="leading-snug">
+                      {language === "mr"
+                        ? "ब्राउझरच्या सर्वात वरील ॲड्रेस बारमध्ये (URL) उजव्या बाजूला दिसणाऱ्या '🖥️' किंवा 'Install' चिन्हावर क्लिक करा."
+                        : language === "hi"
+                        ? "ब्राउज़र के सबसे ऊपर एड्रेस बार (URL) में दाईं ओर दिख रहे '🖥️' या 'Install' आइकन पर क्लिक करें।"
+                        : "Click the '🖥️' or 'Install' icon at the right end of your browser's top address bar."}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 text-gray-800 dark:text-emerald-100 font-bold">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-xs font-black">
+                      २
+                    </span>
+                    <span className="leading-snug">
+                      {language === "mr"
+                        ? "'Install' वर क्लिक करा — KrushiMitra चे स्वतंत्र ॲप तुमच्या डेस्कटॉपवर लगेच तयार होईल ✓"
+                        : language === "hi"
+                        ? "'Install' चुनें — KrushiMitra का स्वतंत्र ऐप आपके डेस्कटॉप पर तुरंत तैयार हो जाएगा ✓"
+                        : "Click 'Install' — KrushiMitra is added directly to your Windows desktop and Start Menu ✓"}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-gray-800 dark:text-emerald-100 font-bold">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-[10px] font-black">
-                    २
-                  </span>
-                  <span>
-                    {language === "mr"
-                      ? "किंवा Chrome / Edge च्या ॲड्रेस बारमधील (🖥️ किंवा ⊕) इन्स्टॉल चिन्ह दाबा ✓"
-                      : language === "hi"
-                      ? "या Chrome / Edge के एड्रेस बार में (🖥️ या ⊕) आइकन दबाएं ✓"
-                      : "Or click the (🖥️ / ⊕) Install icon in Chrome / Edge address bar ✓"}
-                  </span>
+                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold leading-relaxed">
+                  {language === "mr"
+                    ? "💡 टीप: Chrome मध्ये वर उजव्या बाजूला ३ डॉट्स (⋮) दाबा ➔ 'Save and share' ➔ 'Install KrushiMitra' असाही पर्याय आहे."
+                    : language === "hi"
+                    ? "💡 सुझाव: Chrome में ऊपर दाईं ओर ३ डॉट्स (⋮) दबाएं ➔ 'Save and share' ➔ 'Install KrushiMitra' भी चुन सकते हैं।"
+                    : "💡 Tip: In Chrome, click 3 dots (⋮) top right ➔ 'Save and share' ➔ 'Install KrushiMitra'."}
                 </div>
               </div>
             </>
