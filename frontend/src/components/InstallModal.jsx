@@ -133,10 +133,10 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
               <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
               <span>
                 {language === "mr"
-                  ? "१००% सुरक्षित • कोणत्याही ३ऱ्या पार्टी ॲपची गरज नाही"
+                  ? "⚡ १००% मोफत • शेतात ऑफलाइन चालणारे अ‍ॅप"
                   : language === "hi"
-                  ? "१००% सुरक्षित • किसी तीसरे (3rd-party) ऐप की जरूरत नहीं"
-                  : "100% Safe & Direct • Zero 3rd-Party Apps Needed"}
+                  ? "⚡ १००% मुफ्त • खेत में ऑफलाइन काम करता है"
+                  : "⚡ 100% Free • Works Offline in Fields"}
               </span>
             </p>
           </div>
@@ -191,27 +191,6 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           {/* ===================== TAB 1: DESKTOP / PC ===================== */}
           {activeTab === "desktop" && (
             <>
-              {/* CLEAR FARMER REASSURANCE BADGE */}
-              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-[#162A1D] p-3 text-xs flex items-start gap-2.5">
-                <ShieldCheck size={18} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-black text-[#1B5E20] dark:text-[#4ADE80] leading-snug">
-                    {language === "mr"
-                      ? "कोणत्याही ३ऱ्या पार्टी सॉफ्टवेअर (Emulator) ची गरज नाही!"
-                      : language === "hi"
-                      ? "किसी भी तीसरे (3rd-party) सॉफ़्टवेयर या एमुलेटर की ज़रूरत नहीं!"
-                      : "No 3rd-Party Software or Emulators Required!"}
-                  </p>
-                  <p className="text-[11px] text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {language === "mr"
-                      ? "संगणकावर APK चालत नाही व त्यासाठी कोणतेही अनोळखी ॲप डाऊनलोड करू नका. खालील बटणाने थेट KrushiMitra तुमच्या डेस्कटॉपवर चालवा."
-                      : language === "hi"
-                      ? "कंप्यूटर पर APK नहीं चलता और इसके लिए कोई अज्ञात ऐप डाउनलोड न करें। नीचे दिए बटन से सीधा KrushiMitra अपने डेस्कटॉप पर चलाएं।"
-                      : "APK files only run on Android. Do NOT install unknown emulators. Use direct 1-click install or desktop shortcut below."}
-                  </p>
-                </div>
-              </div>
-
               {/* PRIMARY ACTION 1: 1-CLICK PWA INSTALL */}
               <button
                 type="button"

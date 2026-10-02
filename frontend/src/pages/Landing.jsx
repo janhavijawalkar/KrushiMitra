@@ -1783,10 +1783,10 @@ export default function Landing({ nav }) {
 
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
               {language === "mr"
-                ? "कोणत्याही ३ऱ्या पार्टी ॲप किंवा एमुलेटरशिवाय १-क्लिक थेट इन्स्टॉल. १००% मोफत व शेतात ऑफलाइन चालणारे तंत्रज्ञान."
+                ? "थेट १-क्लिक इन्स्टॉल. १००% मोफत व शेतात इंटरनेट नसतानाही पूर्ण कार्य करणारे तंत्रज्ञान."
                 : language === "hi"
-                ? "बिना किसी तीसरे सॉफ़्टवेयर या एमुलेटर के सीधा १-क्लिक इंस्टॉल। १००% मुफ्त और ऑफलाइन काम करता है।"
-                : "1-Click Direct Install with ZERO 3rd-party emulators. 100% Free & Works Offline."}
+                ? "सीधा १-क्लिक इंस्टॉल। १००% मुफ्त और खेत में ऑफलाइन काम करने वाली तकनीक।"
+                : "1-Click Direct Install. 100% Free & Works Offline in Fields."}
             </p>
 
             {/* ACTION BUTTONS & PLATFORM SELECTOR (UPSIDE) */}
@@ -1895,10 +1895,10 @@ export default function Landing({ nav }) {
               <span>
                 {isDesktopUser
                   ? language === "mr"
-                    ? "✅ १००% थेट इन्स्टॉल • कोणत्याही ३ऱ्या पार्टी ॲप किंवा एमुलेटरची गरज नाही • सुरक्षित"
+                    ? "✅ १००% थेट इन्स्टॉल • सुरक्षित व मोफत"
                     : language === "hi"
-                    ? "✅ १००% सीधा इंस्टॉल • किसी भी तीसरे ऐप या एमुलेटर की बिल्कुल आवश्यकता नहीं • सुरक्षित"
-                    : "✅ 100% Direct Install • ZERO 3rd-party emulators or software required • Safe & Free"
+                    ? "✅ १००% सीधा इंस्टॉल • सुरक्षित व मुफ्त"
+                    : "✅ 100% Direct Install • Safe & Free"
                   : language === "mr"
                   ? "⚡ १००% मोफत • शेतात इंटरनेट नसतानाही पूर्ण कार्य करते"
                   : language === "hi"
@@ -2160,10 +2160,10 @@ export default function Landing({ nav }) {
                   <ShieldCheck size={16} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0" />
                   <span className="text-[11px] text-gray-700 dark:text-gray-300 font-semibold">
                     {language === "mr"
-                      ? "कोणत्याही ३ऱ्या पार्टी सॉफ्टवेअरची (उदा. BlueStacks, एमुलेटर) गरज नाही. थेट संगणकावर चालते."
+                      ? "थेट संगणकावर स्वतंत्र ॲपप्रमाणे जलद कार्य करते."
                       : language === "hi"
-                      ? "किसी भी तीसरे सॉफ़्टवेयर (जैसे BlueStacks, एमुलेटर) की जरूरत नहीं। सीधे कंप्यूटर पर चलता है।"
-                      : "No 3rd-party emulators (like BlueStacks) required. Runs directly on your PC."}
+                      ? "सीधे कंप्यूटर पर स्वतंत्र ऐप की तरह तेज़ी से काम करता है।"
+                      : "Runs directly on your PC as a fast, standalone desktop app."}
                   </span>
                 </div>
 

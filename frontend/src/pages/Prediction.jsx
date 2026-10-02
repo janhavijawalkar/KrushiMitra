@@ -503,13 +503,6 @@ export default function Prediction({ nav, pageParams }) {
               type="number"
               icon={<Ruler size={15} />}
               suffix={language === "mr" ? "एकर" : language === "hi" ? "एकड़" : "Acres"}
-              hint={
-                language === "mr"
-                  ? "✓ शेतजमीन क्षेत्र एकर (Acres) मध्ये मोजा (हेक्टर नाही)"
-                  : language === "hi"
-                  ? "✓ खेत का क्षेत्रफल एकड़ (Acres) में दर्ज करें (हेक्टेयर नहीं)"
-                  : "✓ Farmland area is evaluated in Acres (not Hectares)"
-              }
             />
 
             <Input
