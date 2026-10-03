@@ -207,54 +207,25 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                 </span>
               </button>
 
-              {/* CLEAR 2-STEP BROWSER VISUAL GUIDE */}
-              <div className="rounded-2xl border border-gray-200 dark:border-[#24402A] bg-gray-50/80 dark:bg-[#162A1D] p-3.5 text-xs space-y-2.5">
-                <p className="font-black text-gray-900 dark:text-emerald-200 text-xs flex items-center gap-1.5">
-                  <Monitor size={15} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+              {/* ZERO CONFIG INSTANT SETUP BADGE */}
+              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#162A1D] p-3.5 text-center">
+                <p className="text-xs font-black text-emerald-900 dark:text-emerald-200 flex items-center justify-center gap-1.5">
+                  <ShieldCheck size={16} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0" />
                   <span>
                     {language === "mr"
-                      ? "ब्राउझरमधून थेट इन्स्टॉल करण्याची सोपी पद्धत:"
+                      ? "⚡ कोणत्याही इतर सॉफ्टवेअरची गरज नाही • १००% मोफत आणि सुरक्षित"
                       : language === "hi"
-                      ? "ब्राउज़र से सीधा इंस्टॉल करने का आसान तरीका:"
-                      : "Direct Browser 1-Click Installation:"}
+                      ? "⚡ किसी अन्य सॉफ़्टवेयर की आवश्यकता नहीं • १००% सुरक्षित व मुफ्त"
+                      : "⚡ No 3rd-party software needed • 100% Free & Safe"}
                   </span>
                 </p>
-
-                <div className="rounded-xl bg-white dark:bg-[#1A3322] p-2.5 border border-gray-200 dark:border-emerald-800/80 space-y-2">
-                  <div className="flex items-start gap-2.5 text-gray-800 dark:text-emerald-100 font-bold">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-xs font-black">
-                      १
-                    </span>
-                    <span className="leading-snug">
-                      {language === "mr"
-                        ? "ब्राउझरच्या सर्वात वरील ॲड्रेस बारमध्ये (URL) उजव्या बाजूला दिसणाऱ्या '🖥️' किंवा 'Install' चिन्हावर क्लिक करा."
-                        : language === "hi"
-                        ? "ब्राउज़र के सबसे ऊपर एड्रेस बार (URL) में दाईं ओर दिख रहे '🖥️' या 'Install' आइकन पर क्लिक करें।"
-                        : "Click the '🖥️' or 'Install' icon at the right end of your browser's top address bar."}
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 text-gray-800 dark:text-emerald-100 font-bold">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-xs font-black">
-                      २
-                    </span>
-                    <span className="leading-snug">
-                      {language === "mr"
-                        ? "'Install' वर क्लिक करा — KrushiMitra चे स्वतंत्र ॲप तुमच्या डेस्कटॉपवर लगेच तयार होईल ✓"
-                        : language === "hi"
-                        ? "'Install' चुनें — KrushiMitra का स्वतंत्र ऐप आपके डेस्कटॉप पर तुरंत तैयार हो जाएगा ✓"
-                        : "Click 'Install' — KrushiMitra is added directly to your Windows desktop and Start Menu ✓"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold leading-relaxed">
+                <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-1 font-medium">
                   {language === "mr"
-                    ? "💡 टीप: Chrome मध्ये वर उजव्या बाजूला ३ डॉट्स (⋮) दाबा ➔ 'Save and share' ➔ 'Install KrushiMitra' असाही पर्याय आहे."
+                    ? "वरील १-क्लिक बटण दाबताच KrushiMitra ॲप तुमच्या संगणकावर चालू होईल."
                     : language === "hi"
-                    ? "💡 सुझाव: Chrome में ऊपर दाईं ओर ३ डॉट्स (⋮) दबाएं ➔ 'Save and share' ➔ 'Install KrushiMitra' भी चुन सकते हैं।"
-                    : "💡 Tip: In Chrome, click 3 dots (⋮) top right ➔ 'Save and share' ➔ 'Install KrushiMitra'."}
-                </div>
+                    ? "ऊपर दिया १-क्लिक बटन दबाते ही KrushiMitra ऐप आपके कंप्यूटर पर शुरू हो जाएगा।"
+                    : "Click the 1-click button above to launch KrushiMitra directly on your PC."}
+                </p>
               </div>
             </>
           )}
@@ -332,32 +303,18 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                 </span>
               </button>
 
-              {/* 2-STEP ANDROID INSTRUCTIONS */}
-              <div className="rounded-2xl border border-emerald-100 dark:border-[#24402A] bg-emerald-50/40 dark:bg-[#162A1D] p-3 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-gray-800 dark:text-emerald-100 font-bold">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-[10px] font-black">
-                    १
-                  </span>
+              {/* ANDROID REASSURANCE BADGE */}
+              <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-[#162A1D] p-3 text-center">
+                <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1.5">
+                  <ShieldCheck size={16} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0" />
                   <span>
                     {language === "mr"
-                      ? "वर दिलेल्या 'KrushiMitra.apk' फाईलवर क्लिक करून इन्स्टॉल करा"
+                      ? "⚡ १००% सुरक्षित • शेतात इंटरनेट नसतानाही पूर्ण चालते"
                       : language === "hi"
-                      ? "ऊपर दी गई 'KrushiMitra.apk' फ़ाइल पर क्लिक करके इंस्टॉल करें"
-                      : "Download the APK file or tap 1-Click Install"}
+                      ? "⚡ १००% सुरक्षित • खेत में इंटरनेट के बिना भी चलता है"
+                      : "⚡ 100% Safe • Works Completely Offline in Fields"}
                   </span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-800 dark:text-emerald-100 font-bold">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-[#1B5E20] dark:text-[#4ADE80] text-[10px] font-black">
-                    २
-                  </span>
-                  <span>
-                    {language === "mr"
-                      ? "किंवा Chrome च्या मेनू (⋮) मधून 'Install app' निवडा ✓"
-                      : language === "hi"
-                      ? "या Chrome मेनू (⋮) से 'Install app' चुनें ✓"
-                      : "Or tap (⋮) in Chrome and select 'Install app' ✓"}
-                  </span>
-                </div>
+                </p>
               </div>
             </>
           )}

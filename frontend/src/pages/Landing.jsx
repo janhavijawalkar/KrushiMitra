@@ -103,7 +103,6 @@ export default function Landing({ nav }) {
   const [modalPlatform, setModalPlatform] = useState(null);
   const [downloadPlatformTab, setDownloadPlatformTab] = useState("all");
   const [installSuccessToast, setInstallSuccessToast] = useState(false);
-  const [showAddressBarHint, setShowAddressBarHint] = useState(false);
   const [isDesktopUser, setIsDesktopUser] = useState(() => {
     if (typeof navigator === "undefined") return false;
     const ua = navigator.userAgent || navigator.vendor || window.opera || "";
@@ -111,14 +110,14 @@ export default function Landing({ nav }) {
   });
 
   const handleDirectDesktopInstall = async () => {
-    // On mobile devices, open the platform-specific mobile download/install guidance
+    // On mobile devices, open the platform-specific mobile download/install modal
     if (!isDesktopUser) {
       setModalPlatform(null);
       setShowInstallModal(true);
       return;
     }
 
-    // On Desktop: directly trigger browser's native PWA installation dialog
+    // On Desktop: directly trigger browser's 1-click native installation dialog
     if (promptInstall) {
       try {
         const accepted = await promptInstall();
@@ -132,11 +131,9 @@ export default function Landing({ nav }) {
       }
     }
 
-    // If native prompt has already fired or is accessible via address bar:
-    setShowAddressBarHint(true);
-    setModalPlatform("desktop");
-    setShowInstallModal(true);
-    setTimeout(() => setShowAddressBarHint(false), 8000);
+    // If already installed or handled by browser:
+    setInstallSuccessToast(true);
+    setTimeout(() => setInstallSuccessToast(false), 4500);
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -2152,27 +2149,11 @@ export default function Landing({ nav }) {
                   </h3>
                   <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
                     {language === "mr"
-                      ? "ब्राऊजरच्या अ‍ॅड्रेस बारमधील डाऊनलोड आयकॉनवर क्लिक करा. स्वतंत्र विंडोज अ‍ॅप प्रमाणे जलद कार्य करते."
+                      ? "फक्त एका क्लिकवर KrushiMitra चे स्वतंत्र अ‍ॅप तुमच्या संगणकाच्या डेस्कटॉपवर थेट उपलब्ध होते."
                       : language === "hi"
-                      ? "ब्राउज़र के एड्रेस बार में डाउनलोड आइकन पर क्लिक करें। स्वतंत्र डेस्कटॉप ऐप की तरह कार्य करता है।"
-                      : "Click the Install icon in Chrome/Edge address bar. Operates as a fast, standalone desktop app."}
+                      ? "सिर्फ एक क्लिक में KrushiMitra का स्वतंत्र ऐप आपके कंप्यूटर स्क्रीन पर सीधे उपलब्ध हो जाता है।"
+                      : "Add KrushiMitra directly to your computer screen with just one click."}
                   </p>
-                </div>
-
-                {/* 3-STEP QUICK GUIDE */}
-                <div className="rounded-2xl bg-purple-50/60 dark:bg-purple-950/40 p-3 text-xs space-y-1.5 border border-purple-100 dark:border-purple-900/50">
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 font-black text-[10px]">१</span>
-                    <span>{language === "mr" ? "Chrome किंवा Edge मध्ये KrushiMitra उघडा" : language === "hi" ? "Chrome या Edge में KrushiMitra खोलें" : "Open KrushiMitra in Chrome/Edge"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 font-black text-[10px]">२</span>
-                    <span>{language === "mr" ? "अ‍ॅड्रेस बारमधील कॉम्प्युटर/डाऊनलोड आयकॉन दाबा" : language === "hi" ? "एड्रेस बार में डाउनलोड आइकन पर क्लिक करें" : "Click Install icon in address bar"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 font-black text-[10px]">३</span>
-                    <span>{language === "mr" ? "'Install' वर क्लिक करून स्वतंत्र विंडोज अ‍ॅप वापरा" : language === "hi" ? "'Install' पर क्लिक करके स्वतंत्र डेस्कटॉप ऐप चलाएं" : "Launch as full-screen desktop window"}</span>
-                  </div>
                 </div>
 
                 {/* REASSURANCE BADGE */}
@@ -2422,38 +2403,6 @@ export default function Landing({ nav }) {
         }}
         initialPlatform={modalPlatform}
       />
-
-      {/* 1-CLICK DESKTOP ADDRESS BAR POINTER BANNER */}
-      {showAddressBarHint && (
-        <div className="fixed top-4 right-4 sm:right-12 z-[999999] max-w-sm rounded-2xl bg-[#1B5E20] text-white p-4 shadow-2xl border-2 border-emerald-300 animate-bounce">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">↗️</span>
-            <div>
-              <p className="text-xs font-black">
-                {language === "mr"
-                  ? "ब्राउझरच्या वरच्या ॲड्रेस बारमध्ये 🖥️ किंवा 'Install' वर क्लिक करा!"
-                  : language === "hi"
-                  ? "ब्राउज़र के ऊपर एड्रेस बार में 🖥️ या 'Install' पर क्लिक करें!"
-                  : "Click 🖥️ or 'Install' in your top address bar!"}
-              </p>
-              <p className="text-[11px] text-emerald-100 mt-1">
-                {language === "mr"
-                  ? "१ सेकंदात KrushiMitra चे स्वतंत्र ॲप तुमच्या डेस्कटॉपवर येईल."
-                  : language === "hi"
-                  ? "१ सेकंड में KrushiMitra का ऐप आपके डेस्कटॉप पर आ जाएगा।"
-                  : "KrushiMitra will be added directly to your Windows desktop screen."}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowAddressBarHint(false)}
-              className="text-white hover:text-emerald-200 text-xs font-bold p-1 cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 1-CLICK DESKTOP SUCCESS TOAST */}
       {installSuccessToast && (
