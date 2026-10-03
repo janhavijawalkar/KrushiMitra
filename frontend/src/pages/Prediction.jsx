@@ -83,6 +83,16 @@ export default function Prediction({ nav, pageParams }) {
 
   const handleVoiceYieldAutoFill = (transcript) => {
     const extracted = parseSpokenYieldData(transcript);
+    if (extracted.temperature && Number(extracted.temperature) > 50) {
+      delete extracted.temperature;
+      setVoiceToast(
+        language === "mr"
+          ? "⚠️ तापमान ५०°C पेक्षा जास्त असल्याने वगळण्यात आले."
+          : language === "hi"
+          ? "⚠️ तापमान 50°C से अधिक होने के कारण छोड़ दिया गया।"
+          : "⚠️ Temperature skipped as it cannot exceed 50°C."
+      );
+    }
     const keysCount = Object.keys(extracted).length;
 
     if (keysCount > 0) {
@@ -134,6 +144,21 @@ export default function Prediction({ nav, pageParams }) {
     }
 
     if (extractedValue) {
+      if (field === "temperature") {
+        const numVal = Number(extractedValue);
+        if (!isNaN(numVal) && (numVal > 50 || numVal < 0)) {
+          setVoiceToast(
+            language === "mr"
+              ? "⚠️ तापमान ० ते ५०°C दरम्यान असावे!"
+              : language === "hi"
+              ? "⚠️ तापमान 0 से 50°C के बीच होना चाहिए!"
+              : "⚠️ Temperature must be between 0 and 50°C!"
+          );
+          setTimeout(() => setVoiceToast(""), 4000);
+          return;
+        }
+      }
+
       setForm((prev) => ({
         ...prev,
         [field]: extractedValue,
@@ -159,9 +184,36 @@ export default function Prediction({ nav, pageParams }) {
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "temperature") {
+      if (value !== "" && !isNaN(Number(value))) {
+        if (Number(value) > 50) {
+          setError(
+            language === "mr"
+              ? "⚠️ कमाल तापमान ५०°C पेक्षा जास्त असू शकत नाही."
+              : language === "hi"
+              ? "⚠️ अधिकतम तापमान 50°C से अधिक नहीं हो सकता।"
+              : "⚠️ Maximum temperature cannot exceed 50°C."
+          );
+          return;
+        }
+        if (Number(value) < 0) {
+          setError(
+            language === "mr"
+              ? "⚠️ तापमान ०°C पेक्षा कमी असू शकत नाही."
+              : language === "hi"
+              ? "⚠️ तापमान 0°C से कम नहीं हो सकता।"
+              : "⚠️ Temperature cannot be less than 0°C."
+          );
+          return;
+        }
+      }
+    }
+
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
 
     if (error) {
@@ -185,6 +237,40 @@ export default function Prediction({ nav, pageParams }) {
       !form.temperature
     ) {
       setError(t("fillAllFields"));
+      return;
+    }
+
+    const tempNum = Number(form.temperature);
+    if (isNaN(tempNum)) {
+      setError(
+        language === "mr"
+          ? "⚠️ कृपया योग्य तापमान प्रविष्ट करा."
+          : language === "hi"
+          ? "⚠️ कृपया मान्य तापमान दर्ज करें।"
+          : "⚠️ Please enter a valid numerical temperature."
+      );
+      return;
+    }
+
+    if (tempNum > 50) {
+      setError(
+        language === "mr"
+          ? "⚠️ कमाल तापमान ५०°C पेक्षा जास्त असू शकत नाही. (० ते ५०°C दरम्यान असावे)"
+          : language === "hi"
+          ? "⚠️ अधिकतम तापमान 50°C से अधिक नहीं हो सकता। (0 से 50°C के बीच होना चाहिए)"
+          : "⚠️ Maximum temperature cannot exceed 50°C. (Must be between 0°C and 50°C)"
+      );
+      return;
+    }
+
+    if (tempNum < 0) {
+      setError(
+        language === "mr"
+          ? "⚠️ तापमान ०°C पेक्षा कमी असू शकत नाही."
+          : language === "hi"
+          ? "⚠️ तापमान 0°C से कम नहीं हो सकता।"
+          : "⚠️ Temperature cannot be less than 0°C."
+      );
       return;
     }
 
@@ -525,6 +611,22 @@ export default function Prediction({ nav, pageParams }) {
               onVoiceInput={(val) => handleSingleFieldVoice("temperature", val)}
               placeholder="e.g. 32"
               type="number"
+              min="0"
+              max="50"
+              hint={
+                Boolean(form.temperature && Number(form.temperature) > 50)
+                  ? language === "mr"
+                    ? "⚠️ कमाल तापमान ५०°C पेक्षा जास्त असू शकत नाही"
+                    : language === "hi"
+                    ? "⚠️ अधिकतम तापमान 50°C से अधिक नहीं हो सकता"
+                    : "⚠️ Maximum temperature cannot exceed 50°C"
+                  : language === "mr"
+                  ? "मर्यादा: ० ते ५०°C (५० पेक्षा जास्त मान्य नाही)"
+                  : language === "hi"
+                  ? "सीमा: 0 से 50°C (50 से अधिक मान्य नहीं)"
+                  : "Limit: 0 to 50°C (values over 50 not allowed)"
+              }
+              error={Boolean(form.temperature && Number(form.temperature) > 50)}
               icon={<Thermometer size={15} />}
               suffix="°C"
             />
@@ -803,6 +905,9 @@ function Input({
   icon,
   suffix,
   hint,
+  min = "0",
+  max,
+  error,
 }) {
   const handleSingleVoice = (spokenText) => {
     if (onVoiceInput) {
@@ -830,12 +935,17 @@ function Input({
         <input
           type={type}
           step="any"
-          min="0"
+          min={min}
+          max={max}
           name={name}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full rounded-xl border border-[#DCE8D9] bg-white dark:bg-[#132318] dark:border-gray-700 px-4 py-3 text-sm text-gray-800 dark:text-white outline-none transition placeholder:text-gray-400 focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100 ${
+          className={`w-full rounded-xl border ${
+            error
+              ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-[#DCE8D9] dark:border-gray-700 focus:border-[#2E7D32] focus:ring-2 focus:ring-green-100"
+          } bg-white dark:bg-[#132318] px-4 py-3 text-sm text-gray-800 dark:text-white outline-none transition placeholder:text-gray-400 ${
             suffix ? "pr-24" : ""
           }`}
         />
@@ -846,7 +956,7 @@ function Input({
         )}
       </div>
       {hint && (
-        <p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+        <p className={`mt-1 text-[10px] font-semibold ${error ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"}`}>
           {hint}
         </p>
       )}

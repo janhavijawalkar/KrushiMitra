@@ -856,6 +856,29 @@ def predict_productivity():
             area_ha = raw_area / 2.47105
 
         # -------------------------------------------------
+        # Temperature Validation: Maximum allowed temperature is 50°C
+        # -------------------------------------------------
+        try:
+            max_temp_val = float(data["MaxTemp"])
+        except (ValueError, TypeError):
+            return jsonify({
+                "success": False,
+                "message": "Invalid temperature value provided."
+            }), 400
+
+        if max_temp_val > 50.0:
+            return jsonify({
+                "success": False,
+                "message": "Maximum temperature cannot exceed 50°C. Please enter a valid temperature value (0°C - 50°C)."
+            }), 400
+
+        if max_temp_val < 0.0:
+            return jsonify({
+                "success": False,
+                "message": "Temperature cannot be negative. Please enter a valid temperature value (0°C - 50°C)."
+            }), 400
+
+        # -------------------------------------------------
         # Create input DataFrame
         # -------------------------------------------------
 
@@ -886,7 +909,7 @@ def predict_productivity():
             ],
 
             "MaxTemp": [
-                float(data["MaxTemp"])
+                max_temp_val
             ]
 
         })
