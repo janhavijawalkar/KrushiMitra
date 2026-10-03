@@ -768,9 +768,9 @@ const translations = {
     select: "Select",
     fillAllFields: "Please fill all fields.",
     makeSureBackendRunning:
-      "Make sure your Flask backend is running on port 5000.",
+      "Unable to reach server. Please check your internet connection and try again.",
     backendConnectionError:
-      "Unable to connect to the KrushiMitra backend. Please make sure Flask is running on port 5000.",
+      "Unable to connect to the KrushiMitra cloud server. Please check your internet connection.",
 
     aiCropRecommendation: "AI CROP RECOMMENDATION",
     cropRecommendation: "Crop Recommendation",
@@ -1369,9 +1369,9 @@ const translations = {
     fillAllFields:
       "कृपया सभी फ़ील्ड भरें।",
     makeSureBackendRunning:
-      "सुनिश्चित करें कि Flask बैकएंड पोर्ट 5000 पर चल रहा है।",
+      "सर्वर से संपर्क नहीं हो पा रहा है। कृपया अपना इंटरनेट कनेक्शन जांचें।",
     backendConnectionError:
-      "KrushiMitra बैकएंड से कनेक्ट नहीं हो सका। कृपया सुनिश्चित करें कि Flask पोर्ट 5000 पर चल रहा है।",
+      "KrushiMitra क्लाउड सर्वर से संपर्क नहीं हो सका। कृपया इंटरनेट जांचें और पुनः प्रयास करें।",
 
     aiCropRecommendation:
       "AI फसल सिफारिश",
@@ -2031,9 +2031,9 @@ const translations = {
     fillAllFields:
       "कृपया शेतीची सर्व आवश्यक माहिती भरा.",
     makeSureBackendRunning:
-      "कृषीमित्र सर्व्हर पोर्ट 5000 वर सुरू असल्याची खात्री करा.",
+      "सर्व्हरशी संपर्क होऊ शकला नाही. कृपया इंटरनेट कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.",
     backendConnectionError:
-      "सर्व्हरशी संपर्क होऊ शकला नाही. कृपया बॅकएंड चालू असल्याची खात्री करा.",
+      "कृषीमित्र क्लाउड सर्व्हरशी संपर्क होऊ शकला नाही. कृपया इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.",
 
     aiCropRecommendation:
       "मातीनुसार योग्य पीक सल्ला",
@@ -3146,10 +3146,10 @@ export function AppProvider({ children }) {
         success: false,
         message:
           language === "mr"
-            ? "सर्व्हरशी संपर्क होऊ शकला नाही. कृपया बॅकएंड सर्व्हर चालू असल्याची खात्री करा."
+            ? "सर्व्हरशी संपर्क होऊ शकला नाही. कृपया इंटरनेट कनेक्शन तपासा आणि पुन्हा प्रयत्न करा."
             : language === "hi"
-            ? "सर्वर से संपर्क नहीं हो सका। कृपया जांचें कि बैकएंड सर्वर चल रहा है।"
-            : "Could not connect to KrushiMitra database server. Please ensure backend is running.",
+            ? "सर्वर से संपर्क नहीं हो सका। कृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें।"
+            : "Could not connect to KrushiMitra cloud server. Please check your internet connection.",
       };
     }
   };

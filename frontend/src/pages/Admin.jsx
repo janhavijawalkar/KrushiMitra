@@ -1768,7 +1768,7 @@ export default function Admin({ nav }) {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-gray-800">{at("dbEngineOverview")}</h3>
-                    <p className="text-[10px] text-gray-400">{dbStats?.db_file || "MySQL 127.0.0.1:3306/krushimitra"}</p>
+                    <p className="text-[10px] text-gray-400">{dbStats?.db_file || "MySQL Cloud Engine (krushimitra)"}</p>
                   </div>
                 </div>
                 <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5">

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { useApp } from "../context/AppContext";
+import { buildApiUrl } from "../utils/apiConfig";
 
 export default function Profile() {
   const {
@@ -75,7 +76,7 @@ export default function Profile() {
     setSendingEmail(true);
     setEmailToast("");
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/auth/resend-welcome-email", {
+      const res = await fetch(buildApiUrl("/auth/resend-welcome-email"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: currentUser.email }),
@@ -87,7 +88,7 @@ export default function Profile() {
         setEmailToast(`Failed: ${data.message || "Could not dispatch email."}`);
       }
     } catch (err) {
-      setEmailToast("Server error. Please verify backend is running.");
+      setEmailToast("Server error. Please check your internet connection.");
     } finally {
       setSendingEmail(false);
     }

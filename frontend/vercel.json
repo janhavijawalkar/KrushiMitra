@@ -25,6 +25,19 @@
           "value": "attachment; filename=KrushiMitra-Setup.exe"
         }
       ]
+    },
+    {
+      "source": "/downloads/(.*)\\.url",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/octet-stream"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=KrushiMitra.url"
+        }
+      ]
     }
   ],
   "rewrites": [

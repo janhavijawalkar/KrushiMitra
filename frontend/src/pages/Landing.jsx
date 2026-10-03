@@ -2172,29 +2172,29 @@ export default function Landing({ nav }) {
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
-                  <a
-                    href="/downloads/KrushiMitra-Setup.exe"
-                    download="KrushiMitra-Setup.exe"
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 py-2.5 px-3 text-xs font-black !text-white shadow-sm transition active:scale-95 cursor-pointer text-center no-underline"
-                  >
-                    <Download size={15} className="!text-white" />
-                    <span className="!text-white">
-                      {language === "mr" ? "📥 KrushiMitra-Setup.exe" : language === "hi" ? "📥 KrushiMitra-Setup.exe" : "📥 KrushiMitra-Setup.exe"}
-                    </span>
-                  </a>
                   <button
                     type="button"
                     onClick={() => {
                       setModalPlatform("desktop");
                       setShowInstallModal(true);
                     }}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-purple-600 dark:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 py-2.5 px-3 text-xs font-bold text-purple-800 dark:text-purple-300 transition cursor-pointer text-center"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 py-2.5 px-3 text-xs font-black !text-white shadow-sm transition active:scale-95 cursor-pointer text-center"
                   >
-                    <Monitor size={15} />
-                    <span>
-                      {language === "mr" ? "🖥️ १-क्लिक इन्स्टॉल" : language === "hi" ? "🖥️ १-क्लिक इंस्टॉल" : "🖥️ 1-Click Install"}
+                    <Monitor size={15} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr" ? "🖥️ थेट १-क्लिक इन्स्टॉल" : language === "hi" ? "🖥️ तुरंत १-क्लिक इंस्टॉल" : "🖥️ 1-Click Install"}
                     </span>
                   </button>
+                  <a
+                    href="/downloads/KrushiMitra.url"
+                    download="KrushiMitra.url"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-purple-600 dark:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 py-2.5 px-3 text-xs font-bold text-purple-800 dark:text-purple-300 transition cursor-pointer text-center no-underline"
+                  >
+                    <Download size={15} />
+                    <span>
+                      {language === "mr" ? "📥 डेस्कटॉप शॉर्टकट (.URL)" : language === "hi" ? "📥 डेस्कटॉप शॉर्टकट (.URL)" : "📥 Desktop Shortcut (.URL)"}
+                    </span>
+                  </a>
                 </div>
               </div>
             )}

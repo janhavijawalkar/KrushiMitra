@@ -181,81 +181,111 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           {/* ===================== TAB 1: DESKTOP / PC ===================== */}
           {activeTab === "desktop" && (
             <>
-              {/* OPTION 1: DIRECT WINDOWS SETUP EXE DOWNLOAD */}
-              <a
-                href="/downloads/KrushiMitra-Setup.exe"
-                download="KrushiMitra-Setup.exe"
-                className="btn-shimmer group flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline transition"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
-                    <FolderDown size={21} className="!text-white" />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
-                      {language === "mr"
-                        ? "📥 KrushiMitra-Setup.exe डाऊनलोड"
-                        : language === "hi"
-                        ? "📥 KrushiMitra-Setup.exe डाउनलोड"
-                        : "📥 Download KrushiMitra-Setup.exe"}
-                    </p>
-                    <p className="text-[10.5px] text-purple-100 font-medium truncate mt-0.5">
-                      {language === "mr"
-                        ? "Windows संगणकासाठी थेट १-क्लिक इन्स्टॉलर (.EXE)"
-                        : language === "hi"
-                        ? "Windows कंप्यूटर के लिए १-क्लिक इंस्टॉलर (.EXE)"
-                        : "Direct 1-Click Windows PC setup file (.EXE)"}
-                    </p>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
-                  .EXE File
-                </span>
-              </a>
-
-              {/* OPTION 2: 1-CLICK PWA APP INSTALL */}
+              {/* OPTION 1: 1-CLICK PWA APP INSTALL (PRIMARY & 100% SAFE - NO WARNINGS) */}
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="group w-full flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-400 dark:border-emerald-600 bg-emerald-50/80 dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer transition text-left"
+                className="btn-shimmer group w-full flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer transition text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
+                    <Monitor size={21} className="!text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs sm:text-sm font-black !text-white leading-tight">
+                        {isAppInstalled
+                          ? language === "mr"
+                            ? "✓ संगणकावर आधीच इन्स्टॉल आहे"
+                            : language === "hi"
+                            ? "✓ कंप्यूटर पर पहले से इंस्टॉल है"
+                            : "✓ App Installed on PC"
+                          : installSuccess
+                          ? language === "mr"
+                            ? "✓ इन्स्टॉल प्रक्रिया सुरू झाली!"
+                            : language === "hi"
+                            ? "✓ इंस्टॉल प्रक्रिया शुरू हो गई!"
+                            : "✓ Installation Launched!"
+                          : language === "mr"
+                          ? "🌟 थेट १-क्लिक इन्स्टॉल (१००% सुरक्षित)"
+                          : language === "hi"
+                          ? "🌟 तुरंत १-क्लिक इंस्टॉल (१००% सुरक्षित)"
+                          : "🌟 1-Click Install (100% Safe, No Warning)"}
+                      </p>
+                    </div>
+                    <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
+                      {language === "mr"
+                        ? "कोणत्याही वॉर्निंगशिवाय थेट डेस्कटॉपवर स्वतंत्र ॲप तयार होते"
+                        : language === "hi"
+                        ? "बिना किसी चेतावनी के सीधे डेस्कटॉप पर स्वतंत्र ऐप बनता है"
+                        : "Creates desktop app directly without any warning"}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-lg bg-amber-400 text-gray-950 font-black px-2 py-1 text-[10px] shadow-xs">
+                  {language === "mr" ? "शिफारस" : language === "hi" ? "अनुशंसित" : "Recommended"}
+                </span>
+              </button>
+
+              {/* OPTION 2: DIRECT DESKTOP SHORTCUT (.URL FILE) */}
+              <a
+                href="/downloads/KrushiMitra.url"
+                download="KrushiMitra.url"
+                className="group flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer no-underline transition text-left"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-200 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
-                    <Monitor size={19} />
+                    <FolderDown size={19} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-tight">
-                      {isAppInstalled
-                        ? language === "mr"
-                          ? "✓ संगणकावर आधीच इन्स्टॉल आहे"
-                          : language === "hi"
-                          ? "✓ कंप्यूटर पर पहले से इंस्टॉल है"
-                          : "✓ App Installed on PC"
-                        : installSuccess
-                        ? language === "mr"
-                          ? "✓ इन्स्टॉल प्रक्रिया सुरू झाली!"
-                          : language === "hi"
-                          ? "✓ इंस्टॉल प्रक्रिया शुरू हो गई!"
-                          : "✓ Installation Launched!"
-                        : language === "mr"
-                        ? "🖥️ थेट १-क्लिक इन्स्टॉल (Browser Install)"
+                      {language === "mr"
+                        ? "📥 KrushiMitra डेस्कटॉप शॉर्टकट (.URL)"
                         : language === "hi"
-                        ? "🖥️ तुरंत १-क्लिक इंस्टॉल (Browser Install)"
-                        : "🖥️ 1-Click Browser Install"}
+                        ? "📥 KrushiMitra डेस्कटॉप शॉर्टकट (.URL)"
+                        : "📥 KrushiMitra Desktop Shortcut (.URL)"}
                     </p>
                     <p className="text-[10.5px] text-gray-600 dark:text-emerald-300 font-medium truncate mt-0.5">
                       {language === "mr"
-                        ? "ब्राऊजरद्वारे थेट डेस्कटॉपवर स्वतंत्र ॲप जोडले जाते"
+                        ? "थेट डेस्कटॉप शॉर्टकट फाईल • सुरक्षित आणि त्वरित डाऊनलोड"
                         : language === "hi"
-                        ? "ब्राउज़र द्वारा सीधे डेस्कटॉप पर ऐप जुड़ता है"
-                        : "Installs directly to desktop via browser"}
+                        ? "सीधी डेस्कटॉप शॉर्टकट फ़ाइल • सुरक्षित व तुरंत डाउनलोड"
+                        : "Instant desktop shortcut file • Safe & lightweight"}
                     </p>
                   </div>
                 </div>
                 <span className="shrink-0 rounded-lg bg-emerald-200/80 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
-                  1-Click
+                  .URL
                 </span>
-              </button>
+              </a>
+
+              {/* OPTION 3: STANDALONE EXE INSTALLER */}
+              <a
+                href="/downloads/KrushiMitra-Setup.exe"
+                download="KrushiMitra-Setup.exe"
+                className="group flex items-center justify-between gap-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50/90 dark:bg-[#15271a] p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1a3322] cursor-pointer no-underline transition text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                    <FolderDown size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                      KrushiMitra-Setup.exe (.EXE इन्स्टॉलर)
+                    </p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                      {language === "mr"
+                        ? "Windows सेटअप फाईल (SmartScreen चे नोटिफिकेशन आल्यास 'Keep' निवडा)"
+                        : language === "hi"
+                        ? "Windows सेटअप फ़ाइल (SmartScreen आने पर 'Keep' चुनें)"
+                        : "Windows setup file (If SmartScreen appears, click 'Keep')"}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-md bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 text-[9.5px] font-bold text-gray-700 dark:text-gray-300">
+                  .EXE
+                </span>
+              </a>
 
               {/* ZERO CONFIG INSTANT SETUP BADGE */}
               <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#162A1D] p-3 text-center">

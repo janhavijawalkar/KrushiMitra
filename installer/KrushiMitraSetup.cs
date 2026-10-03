@@ -13,20 +13,8 @@ namespace KrushiMitraDesktop
         {
             try
             {
+                // Target official deployed cloud URL
                 string targetUrl = "https://krushimitra.vercel.app/";
-                try
-                {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:5173/");
-                    request.Timeout = 800;
-                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                    {
-                        if (response.StatusCode == HttpStatusCode.OK)
-                        {
-                            targetUrl = "http://localhost:5173/";
-                        }
-                    }
-                }
-                catch { }
 
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 string shortcutPath = Path.Combine(desktopPath, "KrushiMitra.url");
