@@ -715,10 +715,12 @@ export default function Landing({ nav }) {
 
           {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* SINGLE UNIFIED DOWNLOAD / INSTALL APP BUTTON */}
             <button
               type="button"
-              onClick={handleDirectDesktopInstall}
+              onClick={() => {
+                setModalPlatform(null);
+                setShowInstallModal(true);
+              }}
               className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
               title={
                 isAppInstalled
@@ -1009,23 +1011,24 @@ export default function Landing({ nav }) {
                   <span>{demoLoading ? t("loading") : (t("quickDemoLogin") || "1-Click Demo Login")}</span>
                 </button>
 
-                {isDesktopUser && !isAppInstalled && (
-                  <button
-                    type="button"
-                    onClick={handleDirectDesktopInstall}
-                    className="flex items-center gap-2 rounded-2xl border-2 border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-[#162C1D] px-5 py-3.5 text-sm font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-md hover:bg-emerald-100 dark:hover:bg-[#1C3825] cursor-pointer transition-all hover:scale-105 active:scale-95"
-                    title="1-Click Install KrushiMitra Desktop App"
-                  >
-                    <Monitor size={18} className="text-[#1B5E20] dark:text-[#4ADE80]" />
-                    <span>
-                      {language === "mr"
-                        ? "🖥️ डेस्कटॉपवर १-क्लिक अ‍ॅप मिळवा"
-                        : language === "hi"
-                        ? "🖥️ डेस्कटॉप पर १-क्लिक ऐप पाएं"
-                        : "🖥️ 1-Click Desktop App"}
-                    </span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalPlatform(null);
+                    setShowInstallModal(true);
+                  }}
+                  className="flex items-center gap-2 rounded-2xl border-2 border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-[#162C1D] px-5 py-3.5 text-sm font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-md hover:bg-emerald-100 dark:hover:bg-[#1C3825] cursor-pointer transition-all hover:scale-105 active:scale-95"
+                  title="Download KrushiMitra App"
+                >
+                  <Download size={18} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+                  <span>
+                    {language === "mr"
+                      ? "📥 अ‍ॅप डाऊनलोड करा (Android / PC)"
+                      : language === "hi"
+                      ? "📥 ऐप डाउनलोड करें (Android / PC)"
+                      : "📥 Download App (Android / PC)"}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -2168,25 +2171,28 @@ export default function Landing({ nav }) {
                   </span>
                 </div>
 
-                <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
+                  <a
+                    href="/downloads/KrushiMitra-Setup.exe"
+                    download="KrushiMitra-Setup.exe"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 py-2.5 px-3 text-xs font-black !text-white shadow-sm transition active:scale-95 cursor-pointer text-center no-underline"
+                  >
+                    <Download size={15} className="!text-white" />
+                    <span className="!text-white">
+                      {language === "mr" ? "📥 KrushiMitra-Setup.exe" : language === "hi" ? "📥 KrushiMitra-Setup.exe" : "📥 KrushiMitra-Setup.exe"}
+                    </span>
+                  </a>
                   <button
                     type="button"
-                    onClick={handleDirectDesktopInstall}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 py-3.5 px-4 text-xs font-black !text-white shadow-md transition active:scale-95 cursor-pointer text-center"
+                    onClick={() => {
+                      setModalPlatform("desktop");
+                      setShowInstallModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-purple-600 dark:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 py-2.5 px-3 text-xs font-bold text-purple-800 dark:text-purple-300 transition cursor-pointer text-center"
                   >
-                    <Monitor size={17} className="!text-white" />
-                    <span className="!text-white">
-                      {isAppInstalled
-                        ? language === "mr"
-                          ? "✓ KrushiMitra डेस्कटॉपवर आधीच इन्स्टॉल आहे"
-                          : language === "hi"
-                          ? "✓ KrushiMitra डेस्कटॉप पर पहले से इंस्टॉल है"
-                          : "✓ KrushiMitra is installed on Desktop"
-                        : language === "mr"
-                        ? "🖥️ संगणकावर १-क्लिक इन्स्टॉल करा (Desktop App)"
-                        : language === "hi"
-                        ? "🖥️ कंप्यूटर पर १-क्लिक इंस्टॉल करें (Desktop App)"
-                        : "🖥️ 1-Click Install to Desktop (PC)"}
+                    <Monitor size={15} />
+                    <span>
+                      {language === "mr" ? "🖥️ १-क्लिक इन्स्टॉल" : language === "hi" ? "🖥️ १-क्लिक इंस्टॉल" : "🖥️ 1-Click Install"}
                     </span>
                   </button>
                 </div>

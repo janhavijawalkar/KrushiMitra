@@ -47,18 +47,36 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
 
   const handleInstallClick = async () => {
     if (promptInstall) {
-      const ok = await promptInstall();
-      if (ok) {
-        setInstallSuccess(true);
-        setTimeout(() => {
-          onClose();
-          setInstallSuccess(false);
-        }, 2200);
-        return;
+      try {
+        const ok = await promptInstall();
+        if (ok) {
+          setInstallSuccess(true);
+          setTimeout(() => {
+            onClose();
+            setInstallSuccess(false);
+          }, 2200);
+          return;
+        }
+      } catch (err) {
+        console.warn("Prompt install error:", err);
       }
     }
-    // If browser prompt is already dismissed or handled by address bar:
-    setShowManualGuide(true);
+    // If browser prompt is not supported/triggered, automatically download direct installer
+    if (activeTab === "desktop") {
+      const link = document.createElement("a");
+      link.href = "/downloads/KrushiMitra-Setup.exe";
+      link.download = "KrushiMitra-Setup.exe";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (activeTab === "android") {
+      const link = document.createElement("a");
+      link.href = "/downloads/KrushiMitra.apk";
+      link.download = "KrushiMitra.apk";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
     setInstallSuccess(true);
     setTimeout(() => setInstallSuccess(false), 3500);
   };
@@ -163,24 +181,56 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
           {/* ===================== TAB 1: DESKTOP / PC ===================== */}
           {activeTab === "desktop" && (
             <>
-              {/* PRIMARY ACTION: 1-CLICK DESKTOP APP INSTALL */}
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="btn-shimmer group w-full flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer text-left transition"
+              {/* OPTION 1: DIRECT WINDOWS SETUP EXE DOWNLOAD */}
+              <a
+                href="/downloads/KrushiMitra-Setup.exe"
+                download="KrushiMitra-Setup.exe"
+                className="btn-shimmer group flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 p-3.5 text-white shadow-md hover:-translate-y-0.5 active:scale-95 cursor-pointer no-underline transition"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-xs">
-                    <Monitor size={21} className="!text-white" />
+                    <FolderDown size={21} className="!text-white" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
+                      {language === "mr"
+                        ? "📥 KrushiMitra-Setup.exe डाऊनलोड"
+                        : language === "hi"
+                        ? "📥 KrushiMitra-Setup.exe डाउनलोड"
+                        : "📥 Download KrushiMitra-Setup.exe"}
+                    </p>
+                    <p className="text-[10.5px] text-purple-100 font-medium truncate mt-0.5">
+                      {language === "mr"
+                        ? "Windows संगणकासाठी थेट १-क्लिक इन्स्टॉलर (.EXE)"
+                        : language === "hi"
+                        ? "Windows कंप्यूटर के लिए १-क्लिक इंस्टॉलर (.EXE)"
+                        : "Direct 1-Click Windows PC setup file (.EXE)"}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
+                  .EXE File
+                </span>
+              </a>
+
+              {/* OPTION 2: 1-CLICK PWA APP INSTALL */}
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="group w-full flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-400 dark:border-emerald-600 bg-emerald-50/80 dark:bg-[#183321] p-3 text-[#1B5E20] dark:text-[#4ADE80] shadow-xs hover:bg-emerald-100 dark:hover:bg-[#20442c] active:scale-95 cursor-pointer transition text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-200 dark:bg-[#20442c] text-[#1B5E20] dark:text-[#4ADE80] shadow-xs">
+                    <Monitor size={19} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-black !text-white leading-tight">
+                    <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-tight">
                       {isAppInstalled
                         ? language === "mr"
                           ? "✓ संगणकावर आधीच इन्स्टॉल आहे"
                           : language === "hi"
                           ? "✓ कंप्यूटर पर पहले से इंस्टॉल है"
-                          : "✓ App Already Installed on PC"
+                          : "✓ App Installed on PC"
                         : installSuccess
                         ? language === "mr"
                           ? "✓ इन्स्टॉल प्रक्रिया सुरू झाली!"
@@ -188,27 +238,27 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                           ? "✓ इंस्टॉल प्रक्रिया शुरू हो गई!"
                           : "✓ Installation Launched!"
                         : language === "mr"
-                        ? "🖥️ संगणकावर १-क्लिक इन्स्टॉल करा"
+                        ? "🖥️ थेट १-क्लिक इन्स्टॉल (Browser Install)"
                         : language === "hi"
-                        ? "🖥️ कंप्यूटर पर १-क्लिक इंस्टॉल करें"
-                        : "🖥️ 1-Click Install to Desktop"}
+                        ? "🖥️ तुरंत १-क्लिक इंस्टॉल (Browser Install)"
+                        : "🖥️ 1-Click Browser Install"}
                     </p>
-                    <p className="text-[10.5px] text-emerald-100 font-medium truncate mt-0.5">
+                    <p className="text-[10.5px] text-gray-600 dark:text-emerald-300 font-medium truncate mt-0.5">
                       {language === "mr"
-                        ? "Windows स्क्रीनवर स्वतंत्र ॲप म्हणून इन्स्टॉल होते"
+                        ? "ब्राऊजरद्वारे थेट डेस्कटॉपवर स्वतंत्र ॲप जोडले जाते"
                         : language === "hi"
-                        ? "Windows स्क्रीन पर स्वतंत्र ऐप के रूप में इंस्टॉल होता है"
-                        : "Installs directly to your Windows desktop & start menu"}
+                        ? "ब्राउज़र द्वारा सीधे डेस्कटॉप पर ऐप जुड़ता है"
+                        : "Installs directly to desktop via browser"}
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-lg bg-white/25 px-2.5 py-1 text-[10px] font-black !text-white">
-                  1-Click App
+                <span className="shrink-0 rounded-lg bg-emerald-200/80 dark:bg-emerald-900/80 px-2 py-1 text-[10px] font-black text-emerald-900 dark:text-emerald-200">
+                  1-Click
                 </span>
               </button>
 
               {/* ZERO CONFIG INSTANT SETUP BADGE */}
-              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#162A1D] p-3.5 text-center">
+              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-[#162A1D] p-3 text-center">
                 <p className="text-xs font-black text-emerald-900 dark:text-emerald-200 flex items-center justify-center gap-1.5">
                   <ShieldCheck size={16} className="text-[#1B5E20] dark:text-[#4ADE80] shrink-0" />
                   <span>
@@ -218,13 +268,6 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                       ? "⚡ किसी अन्य सॉफ़्टवेयर की आवश्यकता नहीं • १००% सुरक्षित व मुफ्त"
                       : "⚡ No 3rd-party software needed • 100% Free & Safe"}
                   </span>
-                </p>
-                <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-1 font-medium">
-                  {language === "mr"
-                    ? "वरील १-क्लिक बटण दाबताच KrushiMitra ॲप तुमच्या संगणकावर चालू होईल."
-                    : language === "hi"
-                    ? "ऊपर दिया १-क्लिक बटन दबाते ही KrushiMitra ऐप आपके कंप्यूटर पर शुरू हो जाएगा।"
-                    : "Click the 1-click button above to launch KrushiMitra directly on your PC."}
                 </p>
               </div>
             </>
