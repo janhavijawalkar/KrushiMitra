@@ -1,4 +1,5 @@
-﻿{
+{
+  "id": "/",
   "name": "KrushiMitra - Smart Farming AI",
   "short_name": "KrushiMitra",
   "description": "AI-powered crop yield prediction, soil recommendation, and weather analysis for farmers",

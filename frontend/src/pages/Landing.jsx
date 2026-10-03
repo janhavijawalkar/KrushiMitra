@@ -98,15 +98,46 @@ export default function Landing({ nav }) {
     tDistrict,
   } = useApp();
 
-  const { isInstallable, promptInstall } = useOnlineStatus();
+  const { isInstallable, isAppInstalled, promptInstall } = useOnlineStatus();
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [modalPlatform, setModalPlatform] = useState(null);
   const [downloadPlatformTab, setDownloadPlatformTab] = useState("all");
+  const [installSuccessToast, setInstallSuccessToast] = useState(false);
+  const [showAddressBarHint, setShowAddressBarHint] = useState(false);
   const [isDesktopUser, setIsDesktopUser] = useState(() => {
     if (typeof navigator === "undefined") return false;
     const ua = navigator.userAgent || navigator.vendor || window.opera || "";
     return !/android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
   });
+
+  const handleDirectDesktopInstall = async () => {
+    // On mobile devices, open the platform-specific mobile download/install guidance
+    if (!isDesktopUser) {
+      setModalPlatform(null);
+      setShowInstallModal(true);
+      return;
+    }
+
+    // On Desktop: directly trigger browser's native PWA installation dialog
+    if (promptInstall) {
+      try {
+        const accepted = await promptInstall();
+        if (accepted) {
+          setInstallSuccessToast(true);
+          setTimeout(() => setInstallSuccessToast(false), 5000);
+          return;
+        }
+      } catch (err) {
+        console.warn("Direct desktop install error:", err);
+      }
+    }
+
+    // If native prompt has already fired or is accessible via address bar:
+    setShowAddressBarHint(true);
+    setModalPlatform("desktop");
+    setShowInstallModal(true);
+    setTimeout(() => setShowAddressBarHint(false), 8000);
+  };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(null);
@@ -690,18 +721,21 @@ export default function Landing({ nav }) {
             {/* SINGLE UNIFIED DOWNLOAD / INSTALL APP BUTTON */}
             <button
               type="button"
-              onClick={() => {
-                setModalPlatform(null);
-                setShowInstallModal(true);
-              }}
+              onClick={handleDirectDesktopInstall}
               className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
               title={
-                isDesktopUser
+                isAppInstalled
                   ? language === "mr"
-                    ? "संगणकावर KrushiMitra इन्स्टॉल करा"
+                    ? "✓ KrushiMitra अ‍ॅप इन्स्टॉल आहे"
                     : language === "hi"
-                    ? "कंप्यूटर पर KrushiMitra इंस्टॉल करें"
-                    : "Install KrushiMitra on Desktop"
+                    ? "✓ KrushiMitra ऐप इंस्टॉल है"
+                    : "✓ KrushiMitra App Installed"
+                  : isDesktopUser
+                  ? language === "mr"
+                    ? "संगणकावर KrushiMitra १-क्लिक इन्स्टॉल करा"
+                    : language === "hi"
+                    ? "कंप्यूटर पर KrushiMitra १-क्लिक इंस्टॉल करें"
+                    : "1-Click Install KrushiMitra on Desktop"
                   : language === "mr"
                   ? "अ‍ॅप इन्स्टॉल करा"
                   : language === "hi"
@@ -715,12 +749,18 @@ export default function Landing({ nav }) {
                 <Smartphone size={13} className="text-[#1B5E20] dark:text-[#4ADE80]" />
               )}
               <span className="hidden sm:inline">
-                {isDesktopUser
+                {isAppInstalled
                   ? language === "mr"
-                    ? "डेस्कटॉप अ‍ॅप"
+                    ? "✓ अ‍ॅप इन्स्टॉल आहे"
                     : language === "hi"
-                    ? "डेस्कटॉप ऐप"
-                    : "Desktop App"
+                    ? "✓ ऐप इंस्टॉल है"
+                    : "✓ App Installed"
+                  : isDesktopUser
+                  ? language === "mr"
+                    ? "🖥️ डेस्कटॉप अ‍ॅप इन्स्टॉल"
+                    : language === "hi"
+                    ? "🖥️ डेस्कटॉप ऐप इंस्टॉल"
+                    : "🖥️ Install Desktop App"
                   : language === "mr"
                   ? "अ‍ॅप इन्स्टॉल"
                   : language === "hi"
@@ -728,7 +768,7 @@ export default function Landing({ nav }) {
                   : "Install App"}
               </span>
               <span className="sm:hidden">
-                {language === "mr" ? "अ‍ॅप" : language === "hi" ? "ऐप" : "App"}
+                {isAppInstalled ? "✓ App" : language === "mr" ? "अ‍ॅप" : language === "hi" ? "ऐप" : "App"}
               </span>
             </button>
 
@@ -971,6 +1011,24 @@ export default function Landing({ nav }) {
                   <Wheat size={18} className="text-[#2E7D32] dark:text-[#4ADE80]" />
                   <span>{demoLoading ? t("loading") : (t("quickDemoLogin") || "1-Click Demo Login")}</span>
                 </button>
+
+                {isDesktopUser && !isAppInstalled && (
+                  <button
+                    type="button"
+                    onClick={handleDirectDesktopInstall}
+                    className="flex items-center gap-2 rounded-2xl border-2 border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-[#162C1D] px-5 py-3.5 text-sm font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-md hover:bg-emerald-100 dark:hover:bg-[#1C3825] cursor-pointer transition-all hover:scale-105 active:scale-95"
+                    title="1-Click Install KrushiMitra Desktop App"
+                  >
+                    <Monitor size={18} className="text-[#1B5E20] dark:text-[#4ADE80]" />
+                    <span>
+                      {language === "mr"
+                        ? "🖥️ डेस्कटॉपवर १-क्लिक अ‍ॅप मिळवा"
+                        : language === "hi"
+                        ? "🖥️ डेस्कटॉप पर १-क्लिक ऐप पाएं"
+                        : "🖥️ 1-Click Desktop App"}
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -2132,15 +2190,22 @@ export default function Landing({ nav }) {
                 <div className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
                   <button
                     type="button"
-                    onClick={() => {
-                      setModalPlatform("desktop");
-                      setShowInstallModal(true);
-                    }}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 py-3 px-4 text-xs font-black !text-white shadow-md transition cursor-pointer text-center"
+                    onClick={handleDirectDesktopInstall}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 py-3.5 px-4 text-xs font-black !text-white shadow-md transition active:scale-95 cursor-pointer text-center"
                   >
-                    <Monitor size={16} className="!text-white" />
+                    <Monitor size={17} className="!text-white" />
                     <span className="!text-white">
-                      {language === "mr" ? "🖥️ संगणकावर १-क्लिक इन्स्टॉल करा (Desktop App)" : language === "hi" ? "🖥️ कंप्यूटर पर १-क्लिक इंस्टॉल करें (Desktop App)" : "🖥️ 1-Click Install to Desktop (PC)"}
+                      {isAppInstalled
+                        ? language === "mr"
+                          ? "✓ KrushiMitra डेस्कटॉपवर आधीच इन्स्टॉल आहे"
+                          : language === "hi"
+                          ? "✓ KrushiMitra डेस्कटॉप पर पहले से इंस्टॉल है"
+                          : "✓ KrushiMitra is installed on Desktop"
+                        : language === "mr"
+                        ? "🖥️ संगणकावर १-क्लिक इन्स्टॉल करा (Desktop App)"
+                        : language === "hi"
+                        ? "🖥️ कंप्यूटर पर १-क्लिक इंस्टॉल करें (Desktop App)"
+                        : "🖥️ 1-Click Install to Desktop (PC)"}
                     </span>
                   </button>
                 </div>
@@ -2357,6 +2422,61 @@ export default function Landing({ nav }) {
         }}
         initialPlatform={modalPlatform}
       />
+
+      {/* 1-CLICK DESKTOP ADDRESS BAR POINTER BANNER */}
+      {showAddressBarHint && (
+        <div className="fixed top-4 right-4 sm:right-12 z-[999999] max-w-sm rounded-2xl bg-[#1B5E20] text-white p-4 shadow-2xl border-2 border-emerald-300 animate-bounce">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">↗️</span>
+            <div>
+              <p className="text-xs font-black">
+                {language === "mr"
+                  ? "ब्राउझरच्या वरच्या ॲड्रेस बारमध्ये 🖥️ किंवा 'Install' वर क्लिक करा!"
+                  : language === "hi"
+                  ? "ब्राउज़र के ऊपर एड्रेस बार में 🖥️ या 'Install' पर क्लिक करें!"
+                  : "Click 🖥️ or 'Install' in your top address bar!"}
+              </p>
+              <p className="text-[11px] text-emerald-100 mt-1">
+                {language === "mr"
+                  ? "१ सेकंदात KrushiMitra चे स्वतंत्र ॲप तुमच्या डेस्कटॉपवर येईल."
+                  : language === "hi"
+                  ? "१ सेकंड में KrushiMitra का ऐप आपके डेस्कटॉप पर आ जाएगा।"
+                  : "KrushiMitra will be added directly to your Windows desktop screen."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddressBarHint(false)}
+              className="text-white hover:text-emerald-200 text-xs font-bold p-1 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 1-CLICK DESKTOP SUCCESS TOAST */}
+      {installSuccessToast && (
+        <div className="fixed bottom-6 right-6 z-[999999] rounded-2xl bg-[#1B5E20] text-white px-5 py-3.5 shadow-2xl border-2 border-emerald-400 flex items-center gap-3 animate-fade-in">
+          <CheckCircle2 size={24} className="text-emerald-300 shrink-0" />
+          <div>
+            <p className="text-sm font-black">
+              {language === "mr"
+                ? "✓ KrushiMitra डेस्कटॉपवर यशस्वीरित्या इन्स्टॉल झाले!"
+                : language === "hi"
+                ? "✓ KrushiMitra डेस्कटॉप पर सफलतापूर्वक इंस्टॉल हो गया!"
+                : "✓ KrushiMitra installed successfully on Desktop!"}
+            </p>
+            <p className="text-xs text-emerald-100">
+              {language === "mr"
+                ? "आता तुम्ही तुमच्या संगणकाच्या मुख्य स्क्रीनवरून थेट ॲप उघडू शकता."
+                : language === "hi"
+                ? "अब आप अपने कंप्यूटर की मुख्य स्क्रीन से सीधे ऐप खोल सकते हैं।"
+                : "You can now launch the app directly from your desktop screen."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

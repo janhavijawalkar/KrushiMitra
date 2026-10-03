@@ -16,7 +16,7 @@ import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 export default function InstallModal({ isOpen, onClose, initialPlatform = null }) {
   const { language } = useApp();
-  const { isInstallable, promptInstall } = useOnlineStatus();
+  const { isInstallable, isAppInstalled, promptInstall } = useOnlineStatus();
   const [activeTab, setActiveTab] = useState("desktop");
   const [installSuccess, setInstallSuccess] = useState(false);
   const [showManualGuide, setShowManualGuide] = useState(false);
@@ -175,7 +175,13 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-black !text-white leading-tight">
-                      {installSuccess
+                      {isAppInstalled
+                        ? language === "mr"
+                          ? "✓ संगणकावर आधीच इन्स्टॉल आहे"
+                          : language === "hi"
+                          ? "✓ कंप्यूटर पर पहले से इंस्टॉल है"
+                          : "✓ App Already Installed on PC"
+                        : installSuccess
                         ? language === "mr"
                           ? "✓ इन्स्टॉल प्रक्रिया सुरू झाली!"
                           : language === "hi"

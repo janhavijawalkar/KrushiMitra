@@ -14,6 +14,13 @@ export function useOnlineStatus() {
   const [isInstallable, setIsInstallable] = useState(() => {
     return typeof window !== "undefined" ? Boolean(window.__krushiMitraDeferredPrompt) : false;
   });
+  const [isAppInstalled, setIsAppInstalled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -46,6 +53,7 @@ export function useOnlineStatus() {
       window.__krushiMitraDeferredPrompt = null;
       setDeferredPrompt(null);
       setIsInstallable(false);
+      setIsAppInstalled(true);
     };
 
     const handlePromptReady = () => {
@@ -80,6 +88,7 @@ export function useOnlineStatus() {
       const choiceResult = await promptEvent.userChoice;
       if (choiceResult.outcome === "accepted") {
         setIsInstallable(false);
+        setIsAppInstalled(true);
         setDeferredPrompt(null);
         if (typeof window !== "undefined") {
           window.__krushiMitraDeferredPrompt = null;
@@ -96,6 +105,7 @@ export function useOnlineStatus() {
     isOnline,
     wasOffline,
     isInstallable,
+    isAppInstalled,
     promptInstall,
   };
 }

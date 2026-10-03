@@ -11,6 +11,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "icons/*.png"],
       manifest: {
+        id: "/",
         name: "KrushiMitra",
         short_name: "KrushiMitra",
         description:
@@ -95,7 +96,8 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: false,
+        enabled: true,
+        type: "module",
       },
     }),
   ],

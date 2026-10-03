@@ -47,12 +47,6 @@ const updateSW = registerSW({
     console.log("[PWA] KrushiMitra is ready to work offline!");
   },
 });
-
-// 3. Ensure Service Worker is registered in all environments for 1-click install
-if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {});
-}
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
