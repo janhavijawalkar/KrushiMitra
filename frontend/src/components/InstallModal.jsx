@@ -64,8 +64,8 @@ export default function InstallModal({ isOpen, onClose, initialPlatform = null }
     // If browser prompt is not supported/triggered, automatically download direct installer
     if (activeTab === "desktop") {
       const link = document.createElement("a");
-      link.href = "/downloads/KrushiMitra-Setup.exe";
-      link.download = "KrushiMitra-Setup.exe";
+      link.href = "/downloads/KrushiMitra.url";
+      link.download = "KrushiMitra.url";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

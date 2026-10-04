@@ -62,6 +62,7 @@ if RAW_DB_URL:
 SQLITE_PATH = os.getenv("SQLITE_PATH", os.path.join(BASE_DIR, "krushimitra.db"))
 
 _active_engine = None
+_mysql_unavailable = False
 
 try:
     import pymysql
@@ -86,9 +87,9 @@ def get_db():
     Attempts MySQL first if DB_TYPE is mysql, otherwise falls back to SQLite.
     Supports local MySQL, cloud connection URLs, and SSL certificates automatically.
     """
-    global _active_engine
+    global _active_engine, _mysql_unavailable
 
-    if DB_TYPE == "mysql" and HAS_PYMYSQL:
+    if DB_TYPE == "mysql" and HAS_PYMYSQL and not _mysql_unavailable:
         is_remote_host = MYSQL_HOST not in ("127.0.0.1", "localhost", "")
         use_ssl = (
             MYSQL_SSL_MODE in ("true", "1", "required", "yes")
@@ -145,7 +146,8 @@ def get_db():
             _active_engine = "mysql"
             return conn, "mysql"
         except Exception as e:
-            print(f"[DATABASE WARNING] MySQL connection to {MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB} failed ({e}). Falling back to SQLite.")
+            _mysql_unavailable = True
+            print(f"[DATABASE WARNING] MySQL connection to {MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB} failed ({e}). Falling back to SQLite permanently for this session.", flush=True)
 
     # SQLite fallback
     conn = sqlite3.connect(SQLITE_PATH)
@@ -353,6 +355,7 @@ def init_db():
             irrigation_type TEXT DEFAULT '',
             primary_crops TEXT DEFAULT '',
             kisan_id TEXT DEFAULT '',
+            farm_details TEXT DEFAULT '',
             status TEXT DEFAULT 'Active',
             member_since TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -385,6 +388,9 @@ def init_db():
             n_val REAL,
             p_val REAL,
             k_val REAL,
+            nitrogen REAL DEFAULT 0,
+            phosphorus REAL DEFAULT 0,
+            potassium REAL DEFAULT 0,
             temperature REAL,
             humidity REAL,
             ph REAL,
@@ -444,6 +450,19 @@ def init_db():
         ]:
             try:
                 cursor.execute(f"ALTER TABLE support_tickets ADD COLUMN {col_def[0]} {col_def[1]}")
+            except Exception:
+                pass
+
+        # Ensure SQLite users has farm_details
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN farm_details TEXT DEFAULT ''")
+        except Exception:
+            pass
+
+        # Ensure SQLite recommendation_history has nitrogen, phosphorus, potassium, n_val, p_val, k_val
+        for c in ["nitrogen", "phosphorus", "potassium", "n_val", "p_val", "k_val"]:
+            try:
+                cursor.execute(f"ALTER TABLE recommendation_history ADD COLUMN {c} REAL DEFAULT 0")
             except Exception:
                 pass
 

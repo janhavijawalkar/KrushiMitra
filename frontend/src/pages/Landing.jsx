@@ -109,15 +109,37 @@ export default function Landing({ nav }) {
     return !/android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
   });
 
-  const handleDirectDesktopInstall = async () => {
-    // On mobile devices, open the platform-specific mobile download/install modal
-    if (!isDesktopUser) {
-      setModalPlatform(null);
-      setShowInstallModal(true);
+  const handleOneClickDirectInstall = async () => {
+    // 1. If Desktop (Windows PC / Laptop / Mac):
+    if (isDesktopUser) {
+      if (promptInstall) {
+        try {
+          const accepted = await promptInstall();
+          if (accepted) {
+            setInstallSuccessToast(true);
+            setTimeout(() => setInstallSuccessToast(false), 5000);
+            return;
+          }
+        } catch (err) {
+          console.warn("Direct desktop install error:", err);
+        }
+      }
+
+      // If browser prompt is not supported/ready:
+      // Instantly trigger download of KrushiMitra.url desktop shortcut (no warnings, drops straight to PC)
+      const link = document.createElement("a");
+      link.href = "/downloads/KrushiMitra.url";
+      link.download = "KrushiMitra.url";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setInstallSuccessToast(true);
+      setTimeout(() => setInstallSuccessToast(false), 5000);
       return;
     }
 
-    // On Desktop: directly trigger browser's 1-click native installation dialog
+    // 2. If Mobile (Android):
     if (promptInstall) {
       try {
         const accepted = await promptInstall();
@@ -127,13 +149,20 @@ export default function Landing({ nav }) {
           return;
         }
       } catch (err) {
-        console.warn("Direct desktop install error:", err);
+        console.warn("Mobile install error:", err);
       }
     }
 
-    // If already installed or handled by browser:
+    // Fallback on Mobile: Directly download the Android APK file
+    const link = document.createElement("a");
+    link.href = "/downloads/KrushiMitra.apk";
+    link.download = "KrushiMitra.apk";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     setInstallSuccessToast(true);
-    setTimeout(() => setInstallSuccessToast(false), 4500);
+    setTimeout(() => setInstallSuccessToast(false), 5000);
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -649,7 +678,7 @@ export default function Landing({ nav }) {
   const faqs = localizedFaqs[language] || localizedFaqs.en;
 
   return (
-    <div className="min-h-screen bg-[#F6F8F4] dark:bg-[#0D1710] text-[#17291A] dark:text-[#F8FAFC] selection:bg-[#2E7D32] selection:text-white transition-colors duration-300">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F6F8F4] dark:bg-[#0D1710] text-[#17291A] dark:text-[#F8FAFC] selection:bg-[#2E7D32] selection:text-white transition-colors duration-300">
       {/* =========================================================
           1. HEADER / NAVIGATION BAR
          ========================================================= */}
@@ -658,16 +687,17 @@ export default function Landing({ nav }) {
           {/* BRAND LOGO */}
           <div
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="flex items-center gap-3 cursor-pointer group select-none"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none shrink-0"
           >
-            <div className="km-morph-icon flex h-11 w-11 items-center justify-center bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] text-white shadow-md transition-transform duration-300 group-hover:scale-110">
-              <Sprout size={24} strokeWidth={2.4} />
+            <div className="km-morph-icon flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#10B981] text-white shadow-md transition-transform duration-300 group-hover:scale-110">
+              <Sprout size={20} className="sm:hidden" strokeWidth={2.4} />
+              <Sprout size={24} className="hidden sm:block" strokeWidth={2.4} />
             </div>
             <div>
-              <span className="text-xl font-black tracking-tight text-[#1B5E20] dark:text-[#4ADE80]">
+              <span className="text-lg sm:text-xl font-black tracking-tight text-[#1B5E20] dark:text-[#4ADE80]">
                 KrushiMitra
               </span>
-              <p className="text-[10px] font-bold tracking-wider text-[#55715A] dark:text-[#A3B899] uppercase">
+              <p className="hidden sm:block text-[10px] font-bold tracking-wider text-[#55715A] dark:text-[#A3B899] uppercase">
                 {t("aiAgriculture") || "Smart Agriculture Assistant"}
               </p>
             </div>
@@ -721,7 +751,7 @@ export default function Landing({ nav }) {
                 setModalPlatform(null);
                 setShowInstallModal(true);
               }}
-              className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
+              className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black text-[#1B5E20] dark:text-[#4ADE80] shadow-2xs hover:bg-emerald-100 dark:hover:bg-[#20442c] cursor-pointer transition active:scale-95"
               title={
                 isAppInstalled
                   ? language === "mr"
@@ -814,7 +844,7 @@ export default function Landing({ nav }) {
                 <button
                   type="button"
                   onClick={() => nav?.("login")}
-                  className="key-cap hidden md:flex items-center gap-1 text-xs py-1.5 sm:py-2 px-3 sm:px-3.5 font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer"
+                  className="!hidden md:!inline-flex key-cap items-center gap-1 text-xs py-1.5 sm:py-2 px-3 sm:px-3.5 font-bold text-gray-700 dark:text-gray-200 hover:text-[#2E7D32] dark:hover:text-[#4ADE80] cursor-pointer"
                 >
                   <span>{t("signIn") || "Sign In"}</span>
                 </button>
@@ -961,9 +991,9 @@ export default function Landing({ nav }) {
             {/* LEFT HERO CONTENT */}
             <div className="space-y-6 lg:col-span-6 text-left">
               {/* TOP BADGE - EXPLICIT HIGH CONTRAST IN DARK AND LIGHT */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/50 dark:border-emerald-500/60 bg-emerald-50 dark:bg-[#183321] px-4 py-1.5 text-xs font-black shadow-md backdrop-blur-md transition-all hover:scale-105">
-                <Sparkles size={14} className="text-emerald-700 dark:text-[#4ADE80] animate-spin" />
-                <span className="text-emerald-900 dark:text-[#4ADE80] font-extrabold tracking-wide">
+              <div className="inline-flex max-w-full items-center gap-1.5 sm:gap-2 rounded-full border border-emerald-400/50 dark:border-emerald-500/60 bg-emerald-50 dark:bg-[#183321] px-3 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-xs font-black shadow-md backdrop-blur-md transition-all hover:scale-105">
+                <Sparkles size={13} className="shrink-0 text-emerald-700 dark:text-[#4ADE80] animate-spin" />
+                <span className="text-emerald-900 dark:text-[#4ADE80] font-extrabold tracking-wide truncate sm:whitespace-normal">
                   {t("heroBadge") || "Smart Farming & AI Agriculture Assistant"}
                 </span>
               </div>
@@ -1047,38 +1077,38 @@ export default function Landing({ nav }) {
                 </div>
 
                 {/* FLOATING CARD 1: CROP YIELD FORECAST */}
-                <div className="absolute -top-4 -left-4 sm:-left-6 rounded-2xl glass-panel p-3.5 shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-[km-float_4s_ease-in-out_infinite]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="km-morph-icon flex h-9 w-9 items-center justify-center bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300">
-                      <TrendingUp size={18} />
+                <div className="absolute top-2 left-2 sm:-top-4 sm:-left-6 rounded-2xl glass-panel p-2.5 sm:p-3.5 shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-[km-float_4s_ease-in-out_infinite]">
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="km-morph-icon flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300">
+                      <TrendingUp size={15} className="sm:w-[18px] sm:h-[18px]" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("yieldForecast") || (language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "पैदावार अनुमान" : "Yield Forecast")}</p>
-                      <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-                        1.38 {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"} <span className="text-[10px] text-gray-400 font-normal">({tCrop ? tCrop("Soybean") : "Soybean"})</span>
+                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("yieldForecast") || (language === "mr" ? "उत्पादन अंदाज" : language === "hi" ? "पैदावार अनुमान" : "Yield Forecast")}</p>
+                      <p className="text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-400">
+                        1.38 {language === "mr" ? "टन/एकर" : language === "hi" ? "टन/एकड़" : "t/acre"} <span className="text-[9px] sm:text-[10px] text-gray-400 font-normal">({tCrop ? tCrop("Soybean") : "Soybean"})</span>
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* FLOATING CARD 2: OPTIMAL CROP RECOMMENDATION */}
-                <div className="absolute -bottom-4 -right-4 sm:-right-6 rounded-2xl glass-panel p-3.5 shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-[km-float_4.5s_ease-in-out_infinite_1s]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="km-morph-icon flex h-9 w-9 items-center justify-center bg-green-100 dark:bg-green-900/80 text-green-700 dark:text-green-300">
-                      <Sprout size={18} />
+                <div className="absolute bottom-2 right-2 sm:-bottom-4 sm:-right-6 rounded-2xl glass-panel p-2.5 sm:p-3.5 shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-[km-float_4.5s_ease-in-out_infinite_1s]">
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="km-morph-icon flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center bg-green-100 dark:bg-green-900/80 text-green-700 dark:text-green-300">
+                      <Sprout size={15} className="sm:w-[18px] sm:h-[18px]" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("optimalMatch") || (language === "mr" ? "योग्य पीक शिफारस" : language === "hi" ? "उपयुक्त फसल सिफारिश" : "Optimal Crop")}</p>
-                      <p className="text-sm font-black text-gray-900 dark:text-white">
-                        🌱 {tCrop ? tCrop("Cotton") : "Cotton"} <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">95.2%</span>
+                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400">{t("optimalMatch") || (language === "mr" ? "योग्य पीक शिफारस" : language === "hi" ? "उपयुक्त फसल सिफारिश" : "Optimal Crop")}</p>
+                      <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white">
+                        🌱 {tCrop ? tCrop("Cotton") : "Cotton"} <span className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">95.2%</span>
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* FLOATING CARD 3: LIVE CLIMATE BADGE */}
-                <div className="absolute bottom-4 left-4 rounded-xl bg-black/65 backdrop-blur-md px-3.5 py-1.5 text-white flex items-center gap-2 text-xs font-semibold shadow-md">
-                  <CloudSun size={15} className="text-amber-400" />
+                <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 rounded-xl bg-black/65 backdrop-blur-md px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-white flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold shadow-md">
+                  <CloudSun size={13} className="text-amber-400 sm:w-[15px] sm:h-[15px]" />
                   <span>28°C • {t("sowingWindow") || (language === "mr" ? "खरीप पेरणीसाठी सर्वोत्तम वेळ" : language === "hi" ? "खरीफ बुवाई के लिए सही समय" : "Optimal Kharif Sowing Window")}</span>
                 </div>
               </div>

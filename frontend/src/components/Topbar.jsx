@@ -202,7 +202,7 @@ export default function Topbar({ title, nav, setMobileOpen }) {
         <button
           type="button"
           onClick={() => setShowInstallModal(true)}
-          className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-3 py-2 text-xs font-bold text-emerald-800 dark:text-[#4ADE80] shadow-2xs transition hover:bg-emerald-100 dark:hover:bg-[#20442c] hover:shadow-sm cursor-pointer"
+          className="hidden sm:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 dark:bg-[#183321] px-3 py-2 text-xs font-bold text-emerald-800 dark:text-[#4ADE80] shadow-2xs transition hover:bg-emerald-100 dark:hover:bg-[#20442c] hover:shadow-sm cursor-pointer"
           title={language === "mr" ? "अ‍ॅप इन्स्टॉल करा (कोणतेही ३रे ॲप नको)" : language === "hi" ? "ऐप इंस्टॉल करें (बिना किसी तीसरे ऐप)" : "Install KrushiMitra App"}
         >
           <Download size={13} className="text-[#2E7D32] dark:text-[#4ADE80]" />
