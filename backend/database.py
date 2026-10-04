@@ -328,6 +328,10 @@ def init_db():
                 cursor.execute(f"ALTER TABLE support_tickets ADD COLUMN {col_def[0]} {col_def[1]}")
             except Exception:
                 pass
+        try:
+            cursor.execute("ALTER TABLE support_tickets MODIFY COLUMN user_name VARCHAR(150) DEFAULT ''")
+        except Exception:
+            pass
 
         # Ensure MySQL users has farm_details, kisan_id, farm_unit
         for col_def in [
@@ -979,14 +983,16 @@ def save_support_ticket(data):
         except (ValueError, TypeError):
             rating_val = None
 
+    farmer_name = data.get("name") or data.get("user_name") or "Farmer"
     record_id = execute_insert("""
     INSERT INTO support_tickets (
-        ticket_id, user_email, name, district, category, subject, message, status, rating
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ticket_id, user_name, user_email, name, district, category, subject, message, status, rating
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         ticket_id,
+        farmer_name,
         data.get("user_email") or "guest@krushimitra.in",
-        data.get("name") or data.get("user_name") or "Farmer",
+        farmer_name,
         data.get("district") or "Maharashtra",
         data.get("category") or "General Inquiry",
         data.get("subject") or "General Query",
