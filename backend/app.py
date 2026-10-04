@@ -42,7 +42,7 @@ security.limiter.init_app(app)
 # Allow React frontend to access Flask APIs from localhost, LAN devices, and mobile devices
 CORS(
     app,
-    resources={r"/api/*": {"origins": "*"}},
+    resources={r"/*": {"origins": "*"}},
     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "X-User-Email", "X-Admin-Email"],
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
 )
@@ -175,6 +175,7 @@ def home():
 
 
 @app.route("/api/health", methods=["GET"])
+@app.route("/health", methods=["GET"])
 def health_check():
     """System health & active database engine diagnostic endpoint."""
     try:
@@ -1232,6 +1233,7 @@ def get_weather():
 # =========================================================
 
 @app.route("/api/auth/register", methods=["POST"])
+@app.route("/auth/register", methods=["POST"])
 @security.limiter.limit("20 per minute")
 def register():
     try:
@@ -1325,6 +1327,7 @@ def register():
 
 
 @app.route("/api/auth/login", methods=["POST"])
+@app.route("/auth/login", methods=["POST"])
 @security.limiter.limit("25 per minute")
 def login():
     try:
@@ -1378,6 +1381,7 @@ def login():
 
 
 @app.route("/api/auth/google", methods=["POST"])
+@app.route("/auth/google", methods=["POST"])
 @security.limiter.limit("30 per minute")
 def google_auth():
     """Authenticates farmer using Google OAuth 2.0 Identity Services or cross-device profile."""

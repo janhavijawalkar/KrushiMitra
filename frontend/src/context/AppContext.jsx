@@ -3103,12 +3103,17 @@ export function AppProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
       if (!response.ok || !data.success) {
         return {
           success: false,
           userNotFound: Boolean(data.user_not_found),
-          message: data.message || "Invalid email or password",
+          message: data.message || (response.status === 401 ? "Incorrect password. Please verify and try again." : `Login failed (${response.status})`),
         };
       }
       login(data.user);
@@ -3121,7 +3126,12 @@ export function AppProvider({ children }) {
         login(found);
         return { success: true, user: found };
       }
-      return { success: false, message: "Database server connection error." };
+      return {
+        success: false,
+        message: err?.message && !err.message.includes("fetch")
+          ? `Connection error: ${err.message}`
+          : "Database server connection error. Please try again."
+      };
     }
   };
 
@@ -3133,9 +3143,14 @@ export function AppProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registrationData),
       });
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
       if (!response.ok || !data.success) {
-        return { success: false, message: data.message || "Registration failed" };
+        return { success: false, message: data.message || `Registration failed (${response.status})` };
       }
       login(data.user);
       registerUser(data.user);

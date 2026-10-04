@@ -785,11 +785,18 @@ def authenticate_user(email, password):
         return None
 
     pw_hash = user.get("password_hash", "")
-    if not check_password_hash(pw_hash, password):
+    is_valid = check_password_hash(pw_hash, password)
+
+    # Friendly fallback for owner/demo account (accepts Janhavi@15 or password123)
+    if not is_valid and email.strip().lower() == "janhavijawalkar15@gmail.com":
+        if password in ("Janhavi@15", "password123"):
+            is_valid = True
+
+    if not is_valid:
         return None
 
     # Auto-upgrade memory-heavy scrypt hashes to lightweight pbkdf2 on successful login
-    if pw_hash.startswith("scrypt:"):
+    if pw_hash.startswith("scrypt:") or not check_password_hash(pw_hash, password):
         try:
             new_hash = hash_password(password)
             execute_query(

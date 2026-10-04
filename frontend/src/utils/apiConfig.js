@@ -11,7 +11,11 @@ export const getApiBaseUrl = () => {
     import.meta.env.VITE_BACKEND_URL;
 
   if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
-    return envUrl.trim().replace(/\/+$/, "");
+    let clean = envUrl.trim().replace(/\/+$/, "");
+    if (!clean.endsWith("/api")) {
+      clean = `${clean}/api`;
+    }
+    return clean;
   }
 
   // 2. Browser environment
