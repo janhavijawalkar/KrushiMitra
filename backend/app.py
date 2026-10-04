@@ -1438,7 +1438,7 @@ def google_auth():
                     user_name=name,
                     district="Maharashtra",
                     kisan_id=kid,
-                    wait_timeout=6
+                    wait_timeout=1
                 )
             except Exception as mail_err:
                 print(f"[GOOGLE AUTH] Welcome email error: {mail_err}", flush=True)

@@ -3167,16 +3167,26 @@ export function AppProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
       if (!response.ok || !data.success) {
-        return { success: false, message: data.message || "Google authentication failed" };
+        return { success: false, message: data.message || `Authentication failed (${response.status})` };
       }
       login(data.user);
       registerUser(data.user);
       return { success: true, user: data.user, isNewUser: data.isNewUser };
     } catch (err) {
       console.warn("Backend Google Auth error:", err);
-      return { success: false, message: "Server connection failed during Google Sign-In" };
+      return {
+        success: false,
+        message: err?.message && !err.message.includes("fetch")
+          ? `Connection error: ${err.message}`
+          : "Server connection failed during Google Sign-In. Please check your network and try again."
+      };
     }
   };
 

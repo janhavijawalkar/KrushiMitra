@@ -12,7 +12,7 @@ export default function GoogleAuthButton({ mode = "signin", onSuccess, onError }
 
   const clientId =
     import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    ""; // Set in frontend/.env
+    "507555250010-fp8i4uugpfavdt8lp3o399vavocu573r.apps.googleusercontent.com";
 
   useEffect(() => {
     if (!clientId) return;
