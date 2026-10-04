@@ -113,13 +113,13 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
             result["success"] = False
             result["error"] = err_msg
 
-    thread = threading.Thread(target=worker, daemon=False)
+    thread = threading.Thread(target=worker, daemon=True)
     thread.start()
 
     if wait_timeout and wait_timeout > 0:
-        thread.join(timeout=wait_timeout)
+        thread.join(timeout=min(wait_timeout, 2.0))
         if thread.is_alive():
-            print(f"[EMAIL SERVICE] Email to {to_email} still transmitting in background...", flush=True)
+            print(f"[EMAIL SERVICE] Email to {to_email} transmitting asynchronously in background...", flush=True)
             return {"success": True, "delivered": False, "pending": True}
 
     return result

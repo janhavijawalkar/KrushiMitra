@@ -26,10 +26,18 @@ JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "72"))  # 3 days
 # =========================================================
 # 1. RATE LIMITER CONFIGURATION
 # =========================================================
+def get_client_ip():
+    """Safely extracts client IP address behind reverse proxies (Render, Cloudflare)."""
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.remote_addr or "127.0.0.1"
+
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_client_ip,
     default_limits=["500 per day", "120 per minute"],
     storage_uri="memory://",
+    strategy="fixed-window",
 )
 
 

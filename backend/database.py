@@ -7,6 +7,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
 
+def hash_password(password):
+    """
+    Generates PBKDF2:SHA256 password hash.
+    Memory footprint is <64KB (compared to scrypt's 32-64MB), preventing
+    out-of-memory worker termination (502 Bad Gateway) on cloud containers.
+    """
+    return generate_password_hash(password, method="pbkdf2:sha256")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
@@ -292,15 +300,52 @@ def init_db():
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS support_tickets (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            user_name VARCHAR(150) NOT NULL,
+            ticket_id VARCHAR(100) DEFAULT '',
+            name VARCHAR(150) DEFAULT '',
+            user_name VARCHAR(150) DEFAULT '',
             user_email VARCHAR(150) NOT NULL,
             subject VARCHAR(200) NOT NULL,
-            category VARCHAR(50) NOT NULL,
+            category VARCHAR(50) NOT NULL DEFAULT 'General Inquiry',
             message TEXT NOT NULL,
+            district VARCHAR(100) DEFAULT 'Maharashtra',
+            rating INT DEFAULT NULL,
+            admin_reply TEXT DEFAULT NULL,
             status VARCHAR(30) DEFAULT 'Open',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_tickets_email (user_email)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
+
+        # Ensure MySQL support_tickets has all necessary columns
+        for col_def in [
+            ("ticket_id", "VARCHAR(100) DEFAULT ''"),
+            ("name", "VARCHAR(150) DEFAULT ''"),
+            ("district", "VARCHAR(100) DEFAULT 'Maharashtra'"),
+            ("rating", "INT DEFAULT NULL"),
+            ("admin_reply", "TEXT DEFAULT NULL")
+        ]:
+            try:
+                cursor.execute(f"ALTER TABLE support_tickets ADD COLUMN {col_def[0]} {col_def[1]}")
+            except Exception:
+                pass
+
+        # Ensure MySQL users has farm_details, kisan_id, farm_unit
+        for col_def in [
+            ("farm_details", "TEXT DEFAULT NULL"),
+            ("kisan_id", "VARCHAR(100) DEFAULT ''"),
+            ("farm_unit", "VARCHAR(20) DEFAULT 'Acres'")
+        ]:
+            try:
+                cursor.execute(f"ALTER TABLE users ADD COLUMN {col_def[0]} {col_def[1]}")
+            except Exception:
+                pass
+
+        # Ensure MySQL recommendation_history has nitrogen, phosphorus, potassium, n_val, p_val, k_val
+        for c in ["nitrogen", "phosphorus", "potassium", "n_val", "p_val", "k_val"]:
+            try:
+                cursor.execute(f"ALTER TABLE recommendation_history ADD COLUMN {c} DOUBLE DEFAULT 0")
+            except Exception:
+                pass
 
         # 5. Password Resets Table
         cursor.execute("""
@@ -479,7 +524,7 @@ def init_db():
             (
                 "KrushiMitra Administrator",
                 "admin@krushimitra.in",
-                generate_password_hash("adminpassword"),
+                hash_password("adminpassword"),
                 "+91 98000 00001",
                 "Admin",
                 "Maharashtra",
@@ -497,7 +542,7 @@ def init_db():
             (
                 "Ramesh Patil",
                 "ramesh.patil@krushimitra.in",
-                generate_password_hash("password123"),
+                hash_password("password123"),
                 "+91 98230 45678",
                 "Farmer",
                 "Maharashtra",
@@ -515,7 +560,7 @@ def init_db():
             (
                 "Janhavi Jawalkar",
                 "janhavijawalkar15@gmail.com",
-                generate_password_hash("password123"),
+                hash_password("password123"),
                 "+91 98220 12345",
                 "Farmer",
                 "Maharashtra",
@@ -548,6 +593,22 @@ def init_db():
         if engine == "sqlite":
             conn.commit()
         print("[DATABASE] Initial user seeding complete.")
+
+    # Automatically migrate existing users from memory-heavy scrypt hashes to lightweight pbkdf2 hashes
+    demo_passwords = {
+        "admin@krushimitra.in": "adminpassword",
+        "ramesh.patil@krushimitra.in": "password123",
+        "janhavijawalkar15@gmail.com": "password123"
+    }
+    for demo_email, demo_pw in demo_passwords.items():
+        try:
+            update_sql = "UPDATE users SET password_hash = ? WHERE email = ? AND (password_hash LIKE 'scrypt:%' OR password_hash = '')"
+            if engine == "mysql":
+                cursor.execute(update_sql.replace("?", "%s"), (hash_password(demo_pw), demo_email))
+            else:
+                cursor.execute(update_sql, (hash_password(demo_pw), demo_email))
+        except Exception:
+            pass
 
     def _extract_count(row):
         if not row:
@@ -690,7 +751,7 @@ def init_db():
 # =========================================================
 
 def create_user(name, email, password, role="Farmer", district="Pune", phone="", farm_size="5.0"):
-    password_hash = generate_password_hash(password)
+    password_hash = hash_password(password)
     member_since = datetime.now().strftime("%B %Y")
     
     # Generate unique Kisan ID (e.g., MH-PUN-392817)
@@ -716,9 +777,26 @@ def authenticate_user(email, password):
         (email.strip().lower(),),
         fetch_mode="one"
     )
-    if user and check_password_hash(user["password_hash"], password):
-        return user
-    return None
+    if not user:
+        return None
+
+    pw_hash = user.get("password_hash", "")
+    if not check_password_hash(pw_hash, password):
+        return None
+
+    # Auto-upgrade memory-heavy scrypt hashes to lightweight pbkdf2 on successful login
+    if pw_hash.startswith("scrypt:"):
+        try:
+            new_hash = hash_password(password)
+            execute_query(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (new_hash, user["id"])
+            )
+            user["password_hash"] = new_hash
+        except Exception:
+            pass
+
+    return user
 
 def get_user_by_email(email):
     if not email or not str(email).strip():
@@ -790,7 +868,7 @@ def change_user_password(email, old_password, new_password):
     if not user or not check_password_hash(user["password_hash"], old_password):
         return False
         
-    new_hash = generate_password_hash(new_password)
+    new_hash = hash_password(new_password)
     execute_query(
         "UPDATE users SET password_hash = ? WHERE email = ?",
         (new_hash, email.strip().lower())
@@ -990,7 +1068,7 @@ def create_user_by_admin(data):
     if existing:
         return None, "User with this email already exists"
         
-    pw_hash = generate_password_hash(password)
+    pw_hash = hash_password(password)
     user_id = execute_insert("""
     INSERT INTO users (
         name, email, password_hash, phone, role, district, farm_size, farm_unit,
@@ -1130,7 +1208,7 @@ def reset_password_with_token(token, new_password):
     if not email:
         return False
     
-    new_hash = generate_password_hash(new_password)
+    new_hash = hash_password(new_password)
     execute_query(
         "UPDATE users SET password_hash = ? WHERE email = ?",
         (new_hash, email)

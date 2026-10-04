@@ -29,6 +29,13 @@ OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 app = Flask(__name__)
 
+# Reverse proxy support (for Render, Cloudflare, AWS)
+try:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+except Exception:
+    pass
+
 # Initialize Enterprise Rate Limiter
 security.limiter.init_app(app)
 
@@ -63,7 +70,7 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 
 
 # =========================================================
-# LOAD MODELS RESILIENTLY
+# LOAD MODELS RESILIENTLY (MEMORY-OPTIMIZED FOR CLOUD)
 # =========================================================
 
 try:
@@ -82,14 +89,22 @@ except Exception as e:
     print(f"[WARNING] Failed to load crop_recommendation_features.pkl: {e}")
     recommendation_features = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
-try:
-    productivity_model = joblib.load(
-        os.path.join(MODEL_DIR, "productivity_random_forest.pkl")
-    )
-except Exception as e:
-    print(f"[WARNING] Failed to load productivity_random_forest.pkl: {e}")
-    print("[NOTE] If deploying with Git LFS, run 'git lfs pull' in your build command.")
-    productivity_model = None
+# Lazy-loaded on first demand with mmap_mode='r' to prevent 160MB heap bloat
+# and OOM crashes on Render's 512MB RAM tier
+_productivity_model = None
+
+def get_productivity_model():
+    global _productivity_model
+    if _productivity_model is None:
+        prod_path = os.path.join(MODEL_DIR, "productivity_random_forest.pkl")
+        if os.path.exists(prod_path):
+            try:
+                _productivity_model = joblib.load(prod_path, mmap_mode="r")
+                print("[ML ENGINE] Productivity model memory-mapped successfully (mmap_mode='r')", flush=True)
+            except Exception as e:
+                print(f"[WARNING] Failed to load productivity_random_forest.pkl: {e}", flush=True)
+                _productivity_model = None
+    return _productivity_model
 
 try:
     productivity_features = joblib.load(
@@ -112,10 +127,7 @@ if recommendation_model is not None:
 else:
     print("[WARNING] Recommendation model running in agronomic rule-engine mode")
 
-if productivity_model is not None:
-    print("[OK] Productivity model loaded")
-else:
-    print("[WARNING] Productivity model running in regional agro-climatic baseline mode")
+print("[OK] Productivity model configured for lazy memory-mapped loading")
 
 print(
     "Recommendation features:",
@@ -277,7 +289,8 @@ def estimate_crop_productivity_tonnes_acre(crop_name, district_name, season_name
     area_ha = area_acres / 2.47105
 
     # Try model prediction
-    if productivity_model is not None and len(productivity_features) > 0:
+    prod_model = get_productivity_model()
+    if prod_model is not None and len(productivity_features) > 0:
         try:
             input_df = pd.DataFrame({
                 "District_Name": [dist_std if dist_std else "PUNE"],
@@ -293,7 +306,7 @@ def estimate_crop_productivity_tonnes_acre(crop_name, district_name, season_name
                 if col not in input_enc.columns:
                     input_enc[col] = 0
             input_enc = input_enc[productivity_features]
-            pred = productivity_model.predict(input_enc)[0]
+            pred = prod_model.predict(input_enc)[0]
             pred_acre = round(float(pred) / 2.47105, 2)
             if 0.2 <= pred_acre <= 50.0:
                 return pred_acre
@@ -958,8 +971,9 @@ def predict_productivity():
         # Prediction
         # -------------------------------------------------
 
-        if productivity_model is not None and len(productivity_features) > 0:
-            prediction = productivity_model.predict(
+        prod_model = get_productivity_model()
+        if prod_model is not None and len(productivity_features) > 0:
+            prediction = prod_model.predict(
                 input_encoded
             )
             predicted_productivity = float(
@@ -1275,7 +1289,7 @@ def register():
                 district=district,
                 kisan_id=kisan_id,
                 phone=phone,
-                wait_timeout=6
+                wait_timeout=1
             )
             email_sent = mail_res.get("success", False) if isinstance(mail_res, dict) else bool(mail_res)
             if email_sent:
@@ -1537,7 +1551,7 @@ def forgot_password():
             user_name=user_name,
             reset_token=token,
             reset_url=reset_url,
-            wait_timeout=6
+            wait_timeout=1
         )
 
         email_dispatched = mail_res.get("success", False) if isinstance(mail_res, dict) else bool(mail_res)
