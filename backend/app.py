@@ -1355,7 +1355,7 @@ def login():
             return jsonify({
                 "success": False,
                 "user_not_found": False,
-                "message": "Incorrect password. Please verify your password or use 'Forgot Password'."
+                "message": "Incorrect password. If you originally registered with Google, please click 'Continue with Google', or use 'Forgot Password' below to set your password."
             }), 401
 
         # Generate cryptographically signed JWT token
@@ -1473,6 +1473,7 @@ def google_auth():
 
 
 @app.route("/api/auth/resend-welcome-email", methods=["POST"])
+@app.route("/auth/resend-welcome-email", methods=["POST"])
 @security.limiter.limit("10 per minute")
 def resend_welcome_email():
     """Resends the official KrushiMitra welcome and Kisan ID dossier email."""
@@ -1524,6 +1525,7 @@ def verify_token():
 
 
 @app.route("/api/auth/forgot-password", methods=["POST"])
+@app.route("/auth/forgot-password", methods=["POST"])
 @security.limiter.limit("10 per minute")
 def forgot_password():
     """Generates password reset token and sends an official reset email."""
@@ -1559,15 +1561,16 @@ def forgot_password():
         )
 
         email_dispatched = mail_res.get("success", False) if isinstance(mail_res, dict) else bool(mail_res)
+        is_live_delivery = bool(email_dispatched and not mail_res.get("simulated", False) and mail_res.get("delivered", False))
 
         return jsonify({
             "success": True,
-            "message": f"Password reset link has been dispatched to {email}. Please check your inbox and Spam / Junk folder.",
+            "message": f"Password reset link has been dispatched for {email}. Please check your inbox or use the instant reset option below.",
             "email": email,
             "email_dispatched": email_dispatched,
             "dev_token": token,
             "dev_reset_url": reset_url,
-            "is_smtp_live": email_service.is_smtp_configured()
+            "is_smtp_live": is_live_delivery
         }), 200
 
 
@@ -1580,6 +1583,7 @@ def forgot_password():
 
 
 @app.route("/api/auth/verify-reset-token", methods=["GET"])
+@app.route("/auth/verify-reset-token", methods=["GET"])
 def verify_reset_token():
     """Validates that a password reset token is active and unexpired."""
     try:
@@ -1604,6 +1608,7 @@ def verify_reset_token():
 
 
 @app.route("/api/auth/reset-password", methods=["POST"])
+@app.route("/auth/reset-password", methods=["POST"])
 def reset_password():
     """Securely updates password for a verified reset token."""
     try:
@@ -1646,9 +1651,19 @@ def reset_password():
 @app.route("/api/dev/recent-emails", methods=["GET"])
 def get_recent_emails():
     """Returns recent sent emails for dev debugging and inspection."""
+    active_providers = []
+    if os.getenv("RESEND_API_KEY", "").strip():
+        active_providers.append("resend")
+    if os.getenv("BREVO_API_KEY", "").strip():
+        active_providers.append("brevo")
+    if (os.getenv("EMAIL_WEBHOOK_URL", "") or os.getenv("GMAIL_WEBHOOK_URL", "")).strip():
+        active_providers.append("webhook")
+    active_providers.append("smtp")
+
     return jsonify({
         "success": True,
         "is_smtp_configured": email_service.is_smtp_configured(),
+        "active_providers": active_providers,
         "recent_emails": email_service.RECENT_SENT_EMAILS
     }), 200
 

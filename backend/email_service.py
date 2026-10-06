@@ -19,7 +19,7 @@ RECENT_SENT_EMAILS = []
 
 
 def get_smtp_config():
-    """Dynamically reads SMTP settings from environment on each invocation."""
+    """Dynamically reads SMTP settings strictly from environment variables."""
     server = os.getenv("SMTP_SERVER", "smtp.gmail.com").strip()
     port = int(os.getenv("SMTP_PORT", "587"))
     email = os.getenv("SMTP_EMAIL", "").strip()
@@ -28,48 +28,163 @@ def get_smtp_config():
 
 
 def is_smtp_configured():
-    """Checks if real SMTP credentials are provided in .env."""
+    """Checks if real email credentials (API key or SMTP) are configured."""
+    if os.getenv("RESEND_API_KEY", "").strip():
+        return True
+    if os.getenv("BREVO_API_KEY", "").strip():
+        return True
+    if os.getenv("EMAIL_WEBHOOK_URL", "").strip() or os.getenv("GMAIL_WEBHOOK_URL", "").strip():
+        return True
     _, _, email, password = get_smtp_config()
     return bool(email and password and email != "your-email@gmail.com")
 
 
+def send_via_resend(api_key, to_email, subject, html_content, text_content=None):
+    """Sends email via Resend HTTP REST API over port 443 (never blocked by cloud firewalls)."""
+    import requests
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json"
+    }
+    from_addr = os.getenv("RESEND_FROM", "KrushiMitra <onboarding@resend.dev>").strip()
+    payload = {
+        "from": from_addr,
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content
+    }
+    if text_content:
+        payload["text"] = text_content
+    r = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=12)
+    if r.status_code in (200, 201):
+        return True, r.json()
+    return False, f"Resend API error ({r.status_code}): {r.text}"
+
+
+def send_via_brevo(api_key, to_email, subject, html_content, text_content=None):
+    """Sends email via Brevo HTTP REST API over port 443 (never blocked by cloud firewalls)."""
+    import requests
+    headers = {
+        "api-key": api_key.strip(),
+        "Content-Type": "application/json",
+        "accept": "application/json"
+    }
+    sender_email = os.getenv("BREVO_SENDER_EMAIL", "krushimitra.project1@gmail.com").strip()
+    payload = {
+        "sender": {"name": "KrushiMitra कृषीमित्र", "email": sender_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
+    if text_content:
+        payload["textContent"] = text_content
+    r = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers, timeout=12)
+    if r.status_code in (200, 201):
+        return True, r.json()
+    return False, f"Brevo API error ({r.status_code}): {r.text}"
+
+
+def send_via_webhook(webhook_url, to_email, subject, html_content, text_content=None):
+    """Sends email via HTTP Webhook / Google Apps Script relay over port 443."""
+    import requests
+    payload = {
+        "to": to_email,
+        "subject": subject,
+        "html": html_content,
+        "text": text_content or ""
+    }
+    r = requests.post(webhook_url.strip(), json=payload, headers={"Content-Type": "application/json"}, timeout=12)
+    if r.status_code in (200, 201):
+        return True, r.text
+    return False, f"Webhook error ({r.status_code}): {r.text}"
+
+
 def send_email_robust(to_email, subject, html_content, text_content=None, wait_timeout=5):
     """
-    Sends an email using the configured SMTP server.
-    Uses non-daemon thread so transmission is never dropped by Python runtime.
-    Waits up to wait_timeout seconds (default 5s) to guarantee delivery confirmation.
+    Sends an email using available HTTP APIs (Resend, Brevo, Webhook) or fallback SMTP.
+    HTTP APIs use port 443 which bypasses cloud firewall restrictions on Render.
     """
     to_email = (to_email or "").strip()
     result = {
         "success": False,
         "error": None,
         "delivered": False,
-        "simulated": False
+        "simulated": False,
+        "provider": None
     }
 
     def worker():
+        # 1. Try Resend HTTP API (Port 443)
+        resend_key = os.getenv("RESEND_API_KEY", "").strip()
+        if resend_key:
+            try:
+                ok, detail = send_via_resend(resend_key, to_email, subject, html_content, text_content)
+                if ok:
+                    print(f"[EMAIL SERVICE] Email successfully dispatched via Resend API to: {to_email}", flush=True)
+                    result["success"] = True
+                    result["delivered"] = True
+                    result["provider"] = "resend"
+                    RECENT_SENT_EMAILS.append({"to": to_email, "subject": subject, "provider": "resend", "timestamp": datetime.now().isoformat(), "simulated": False})
+                    return
+                print(f"[EMAIL SERVICE] Resend returned non-200: {detail}. Falling back...", flush=True)
+            except Exception as e:
+                print(f"[EMAIL SERVICE] Resend invocation error: {e}. Falling back...", flush=True)
+
+        # 2. Try Brevo HTTP API (Port 443)
+        brevo_key = os.getenv("BREVO_API_KEY", "").strip()
+        if brevo_key:
+            try:
+                ok, detail = send_via_brevo(brevo_key, to_email, subject, html_content, text_content)
+                if ok:
+                    print(f"[EMAIL SERVICE] Email successfully dispatched via Brevo API to: {to_email}", flush=True)
+                    result["success"] = True
+                    result["delivered"] = True
+                    result["provider"] = "brevo"
+                    RECENT_SENT_EMAILS.append({"to": to_email, "subject": subject, "provider": "brevo", "timestamp": datetime.now().isoformat(), "simulated": False})
+                    return
+                print(f"[EMAIL SERVICE] Brevo returned non-200: {detail}. Falling back...", flush=True)
+            except Exception as e:
+                print(f"[EMAIL SERVICE] Brevo invocation error: {e}. Falling back...", flush=True)
+
+        # 3. Try Webhook / Google Apps Script Relay (Port 443)
+        webhook_url = (os.getenv("EMAIL_WEBHOOK_URL", "") or os.getenv("GMAIL_WEBHOOK_URL", "")).strip()
+        if webhook_url:
+            try:
+                ok, detail = send_via_webhook(webhook_url, to_email, subject, html_content, text_content)
+                if ok:
+                    print(f"[EMAIL SERVICE] Email successfully dispatched via Webhook to: {to_email}", flush=True)
+                    result["success"] = True
+                    result["delivered"] = True
+                    result["provider"] = "webhook"
+                    RECENT_SENT_EMAILS.append({"to": to_email, "subject": subject, "provider": "webhook", "timestamp": datetime.now().isoformat(), "simulated": False})
+                    return
+                print(f"[EMAIL SERVICE] Webhook error: {detail}. Falling back...", flush=True)
+            except Exception as e:
+                print(f"[EMAIL SERVICE] Webhook invocation error: {e}. Falling back...", flush=True)
+
+        # 4. Standard SMTP Dispatch (Works locally or on unblocked hosts)
         try:
             server_host, port, sender_email, sender_password = get_smtp_config()
 
-            if not is_smtp_configured():
-                # Dev / Offline Simulation Mode
+            if not (sender_email and sender_password):
+                # Simulation Mode
                 log_entry = {
                     "to": to_email,
                     "subject": subject,
                     "html": html_content,
                     "text": text_content or "",
                     "timestamp": datetime.now().isoformat(),
-                    "simulated": True
+                    "simulated": True,
+                    "provider": "simulation"
                 }
                 RECENT_SENT_EMAILS.append(log_entry)
                 if len(RECENT_SENT_EMAILS) > 50:
                     RECENT_SENT_EMAILS.pop(0)
-                
                 print(f"[EMAIL SERVICE (SIMULATION)] Mail logged for: {to_email}", flush=True)
-                print(f"[EMAIL SERVICE (SIMULATION)] Subject: {subject}", flush=True)
                 result["success"] = True
                 result["simulated"] = True
                 result["delivered"] = True
+                result["provider"] = "simulation"
                 return
 
             msg = MIMEMultipart("alternative")
@@ -81,7 +196,7 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
                 msg.attach(MIMEText(text_content, "plain", "utf-8"))
             msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-            server = smtplib.SMTP(server_host, port, timeout=20)
+            server = smtplib.SMTP(server_host, port, timeout=12)
             server.ehlo()
             server.starttls()
             server.ehlo()
@@ -93,22 +208,33 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
                 "to": to_email,
                 "subject": subject,
                 "timestamp": datetime.now().isoformat(),
-                "simulated": False
+                "simulated": False,
+                "provider": "smtp"
             }
             RECENT_SENT_EMAILS.append(log_entry)
             print(f"[EMAIL SERVICE] Real SMTP Email successfully sent to: {to_email}", flush=True)
             result["success"] = True
             result["delivered"] = True
+            result["provider"] = "smtp"
 
         except Exception as e:
             err_msg = str(e)
-            print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {err_msg}", flush=True)
+            if "Network is unreachable" in err_msg or "101" in err_msg or "timed out" in err_msg:
+                print(
+                    f"[EMAIL SERVICE NOTICE] Cloud firewall (Render free tier) blocked outbound SMTP port ({server_host}:{port}). "
+                    f"To enable real emails on Render, add BREVO_API_KEY or RESEND_API_KEY to Render Environment Variables.",
+                    flush=True
+                )
+            else:
+                print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {err_msg}", flush=True)
+
             RECENT_SENT_EMAILS.append({
                 "to": to_email,
                 "subject": subject,
                 "error": err_msg,
                 "timestamp": datetime.now().isoformat(),
-                "simulated": True
+                "simulated": True,
+                "provider": "failed_smtp"
             })
             result["success"] = False
             result["error"] = err_msg
@@ -117,9 +243,9 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
     thread.start()
 
     if wait_timeout and wait_timeout > 0:
-        thread.join(timeout=min(wait_timeout, 2.0))
+        thread.join(timeout=min(wait_timeout, 2.5))
         if thread.is_alive():
-            print(f"[EMAIL SERVICE] Email to {to_email} transmitting asynchronously in background...", flush=True)
+            print(f"[EMAIL SERVICE] Email to {to_email} transmitting in background...", flush=True)
             return {"success": True, "delivered": False, "pending": True}
 
     return result

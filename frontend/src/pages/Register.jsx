@@ -99,9 +99,10 @@ export default function Register({ nav }) {
 
     if (result.success) {
       if (addNotification) {
+        const kid = result.user?.kisan_id ? ` (Kisan ID: ${result.user.kisan_id})` : "";
         addNotification(
           "Welcome to KrushiMitra! 🌾",
-          `Welcome ${form.name.trim()}! An official onboarding email has been dispatched to ${form.email.trim()}.`,
+          `Welcome ${form.name.trim()}! Your official Kisan account${kid} is active and ready.`,
           "system"
         );
       }

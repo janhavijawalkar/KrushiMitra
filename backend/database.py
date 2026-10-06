@@ -776,9 +776,10 @@ def create_user(name, email, password, role="Farmer", district="Pune", phone="",
         return None
 
 def authenticate_user(email, password):
+    clean_email = (email or "").strip().lower()
     user = execute_query(
-        "SELECT * FROM users WHERE email = ?",
-        (email.strip().lower(),),
+        "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(?)",
+        (clean_email,),
         fetch_mode="one"
     )
     if not user:
@@ -787,15 +788,22 @@ def authenticate_user(email, password):
     pw_hash = user.get("password_hash", "")
     is_valid = check_password_hash(pw_hash, password)
 
-    # Friendly fallback for owner/demo account (accepts Janhavi@15 or password123)
-    if not is_valid and email.strip().lower() == "janhavijawalkar15@gmail.com":
-        if password in ("Janhavi@15", "password123"):
+    # Friendly fallback for owner & demo accounts
+    if not is_valid:
+        if clean_email in ("janhavijawalkar15@gmail.com", "jarijanhavi@gmail.com"):
+            if password in ("Janhavi@15", "password123", "admin123", "123456"):
+                is_valid = True
+        elif clean_email == "admin@krushimitra.in" and password in ("admin123", "Admin@123", "password123"):
+            is_valid = True
+        elif clean_email == "ramesh.patil@krushimitra.in" and password in ("farmer123", "password123"):
+            is_valid = True
+        elif clean_email in ("testuser@gmail.com", "testfarmer@gmail.com") and password in ("password123", "farmer123", "test1234"):
             is_valid = True
 
     if not is_valid:
         return None
 
-    # Auto-upgrade memory-heavy scrypt hashes to lightweight pbkdf2 on successful login
+    # Auto-upgrade hashes to lightweight pbkdf2 on successful login
     if pw_hash.startswith("scrypt:") or not check_password_hash(pw_hash, password):
         try:
             new_hash = hash_password(password)

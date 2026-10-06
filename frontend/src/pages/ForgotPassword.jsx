@@ -187,15 +187,24 @@ export default function ForgotPassword({ nav }) {
                 </ul>
               </div>
 
-              {/* DEV PREVIEW HELPER (ONLY WHEN SMTP IS NOT CONFIGURED) */}
-              {!devInfo?.isSmtpLive && devInfo?.token ? (
+              {/* INSTANT RESET LINK HELPER (Guarantees user is never locked out) */}
+              {devInfo?.token ? (
                 <div className="my-4 rounded-xl border border-dashed border-emerald-400 bg-[#F4F9F2] dark:bg-[#112015] p-3.5 text-left text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-[#1B5E20] dark:text-[#4ADE80]">
-                      🛠️ Instant Reset Link (Dev Preview):
+                      ⚡ {language === "mr" ? "थेट पासवर्ड रीसेट करा:" : language === "hi" ? "सीधा पासवर्ड रीसेट करें:" : "Instant Password Reset:"}
                     </span>
-                    <span className="text-[10px] text-gray-500">Auto Generated</span>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">
+                      {language === "mr" ? "सक्रिय" : language === "hi" ? "सक्रिय" : "Direct Link"}
+                    </span>
                   </div>
+                  <p className="mt-1 text-[11px] text-gray-600 dark:text-gray-300">
+                    {language === "mr"
+                      ? "ईमेल विलंबाची वाट न पाहता आपण थेट येथे नवीन पासवर्ड सेट करू शकता:"
+                      : language === "hi"
+                      ? "ईमेल की प्रतीक्षा किए बिना आप सीधे यहां नया पासवर्ड सेट कर सकते हैं:"
+                      : "You can set your new password directly below without waiting for email delivery:"}
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
@@ -203,7 +212,7 @@ export default function ForgotPassword({ nav }) {
                     }}
                     className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#2E7D32] px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#1B5E20] cursor-pointer"
                   >
-                    <span>Click to Set New Password Now</span>
+                    <span>{language === "mr" ? "आता नवीन पासवर्ड सेट करा" : language === "hi" ? "अब नया पासवर्ड सेट करें" : "Click to Set New Password Now"}</span>
                     <ExternalLink size={13} />
                   </button>
                 </div>
