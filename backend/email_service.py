@@ -114,6 +114,8 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
     }
 
     def worker():
+        api_errors = []
+
         # 1. Try Resend HTTP API (Port 443)
         resend_key = os.getenv("RESEND_API_KEY", "").strip()
         if resend_key:
@@ -126,8 +128,10 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
                     result["provider"] = "resend"
                     RECENT_SENT_EMAILS.append({"to": to_email, "subject": subject, "provider": "resend", "timestamp": datetime.now().isoformat(), "simulated": False})
                     return
+                api_errors.append(f"Resend: {detail}")
                 print(f"[EMAIL SERVICE] Resend returned non-200: {detail}. Falling back...", flush=True)
             except Exception as e:
+                api_errors.append(f"Resend exception: {e}")
                 print(f"[EMAIL SERVICE] Resend invocation error: {e}. Falling back...", flush=True)
 
         # 2. Try Brevo HTTP API (Port 443)
@@ -142,8 +146,10 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
                     result["provider"] = "brevo"
                     RECENT_SENT_EMAILS.append({"to": to_email, "subject": subject, "provider": "brevo", "timestamp": datetime.now().isoformat(), "simulated": False})
                     return
+                api_errors.append(f"Brevo: {detail}")
                 print(f"[EMAIL SERVICE] Brevo returned non-200: {detail}. Falling back...", flush=True)
             except Exception as e:
+                api_errors.append(f"Brevo exception: {e}")
                 print(f"[EMAIL SERVICE] Brevo invocation error: {e}. Falling back...", flush=True)
 
         # 3. Try Webhook / Google Apps Script Relay (Port 443)
@@ -158,8 +164,10 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
                     result["provider"] = "webhook"
                     RECENT_SENT_EMAILS.append({"to": to_email, "subject": subject, "provider": "webhook", "timestamp": datetime.now().isoformat(), "simulated": False})
                     return
+                api_errors.append(f"Webhook: {detail}")
                 print(f"[EMAIL SERVICE] Webhook error: {detail}. Falling back...", flush=True)
             except Exception as e:
+                api_errors.append(f"Webhook exception: {e}")
                 print(f"[EMAIL SERVICE] Webhook invocation error: {e}. Falling back...", flush=True)
 
         # 4. Standard SMTP Dispatch (Works locally or on unblocked hosts)
@@ -228,14 +236,17 @@ def send_email_robust(to_email, subject, html_content, text_content=None, wait_t
             else:
                 print(f"[EMAIL SERVICE ERROR] Failed to send email to {to_email}: {err_msg}", flush=True)
 
-            RECENT_SENT_EMAILS.append({
+            log_data = {
                 "to": to_email,
                 "subject": subject,
                 "error": err_msg,
                 "timestamp": datetime.now().isoformat(),
                 "simulated": True,
                 "provider": "failed_smtp"
-            })
+            }
+            if api_errors:
+                log_data["api_errors"] = api_errors
+            RECENT_SENT_EMAILS.append(log_data)
             result["success"] = False
             result["error"] = err_msg
 
