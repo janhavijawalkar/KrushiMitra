@@ -48,6 +48,11 @@ import {
 } from "recharts";
 
 import { useApp } from "../context/AppContext";
+import {
+  exportElementToPdf,
+  exportElementAsImage,
+  generateAnalyticsReportPDF,
+} from "../utils/pdfGenerator";
 
 // Color Palette tailored to modern clean agricultural design
 const CROP_COLORS = [
@@ -1439,6 +1444,8 @@ export default function Analytics({ nav }) {
   const [dataMode, setDataMode] = useState("myFarm"); // 'myFarm' | 'stateBenchmark'
   const [selectedSeason, setSelectedSeason] = useState("all"); // 'all' | 'kharif' | 'rabi' | 'summer'
   const [selectedDistrict, setSelectedDistrict] = useState(user?.district || "Pune");
+  const [downloadingId, setDownloadingId] = useState(null); // 'graphs-pdf' | 'graphs-png' | 'chart-...'
+  const [downloadSuccessMsg, setDownloadSuccessMsg] = useState("");
 
   // Selected district active profile
   const currentDistrictProfile = useMemo(() => {
@@ -2182,6 +2189,100 @@ export default function Analytics({ nav }) {
     return [...districtRankingData].sort((a, b) => b.yield - a.yield).slice(0, 7);
   }, [districtRankingData]);
 
+  const handleDownloadFullGraphsPDF = async () => {
+    setDownloadingId("graphs-pdf");
+    setDownloadSuccessMsg("");
+    try {
+      const section = document.getElementById("analytics-graphs-section");
+      const filename =
+        language === "mr"
+          ? `KrushiMitra_कृषी_आलेख_${selectedDistrict}_MR.pdf`
+          : language === "hi"
+          ? `KrushiMitra_कृषि_ग्राफ_${selectedDistrict}_HI.pdf`
+          : `KrushiMitra_Agri_Analytics_${selectedDistrict}_EN.pdf`;
+
+      if (section) {
+        await exportElementToPdf(section, filename, { scale: 2 });
+      } else {
+        await generateAnalyticsReportPDF(
+          {
+            district: selectedDistrict,
+            farmSize: userFarmSize,
+            avgYield: dynamicAverageYield,
+            topCrop: topCropDisplay,
+            rankings: districtRankingData,
+          },
+          user,
+          { language }
+        );
+      }
+      setDownloadSuccessMsg(
+        language === "mr"
+          ? "कृषी आलेख अहवाल (PDF) एका क्लिकमध्ये डाउनलोड झाला!"
+          : language === "hi"
+          ? "कृषि ग्राफ रिपोर्ट (PDF) एक क्लिक में डाउनलोड हो गया!"
+          : "Agri Analytics Graphs PDF downloaded successfully in 1 click!"
+      );
+      setTimeout(() => setDownloadSuccessMsg(""), 4500);
+    } catch (err) {
+      console.error("Error downloading graphs PDF:", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadFullGraphsImage = async () => {
+    setDownloadingId("graphs-png");
+    setDownloadSuccessMsg("");
+    try {
+      const section = document.getElementById("analytics-graphs-section");
+      const filename =
+        language === "mr"
+          ? `KrushiMitra_कृषी_आलेख_${selectedDistrict}.png`
+          : language === "hi"
+          ? `KrushiMitra_कृषि_ग्राफ_${selectedDistrict}.png`
+          : `KrushiMitra_Agri_Analytics_${selectedDistrict}.png`;
+
+      if (section) {
+        await exportElementAsImage(section, filename, { scale: 2 });
+        setDownloadSuccessMsg(
+          language === "mr"
+            ? "सर्व आलेख इमेज (PNG) यशस्वीरित्या डाउनलोड झाली!"
+            : language === "hi"
+            ? "सभी ग्राफ इमेज (PNG) सफलतापूर्वक डाउनलोड हो गई!"
+            : "Analytics Graphs Image (PNG) downloaded successfully!"
+        );
+        setTimeout(() => setDownloadSuccessMsg(""), 4500);
+      }
+    } catch (err) {
+      console.error("Error downloading graphs image:", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadSingleChart = async (elementId, chartTitle) => {
+    setDownloadingId(elementId);
+    setDownloadSuccessMsg("");
+    try {
+      const cleanTitle = (chartTitle || "Chart").replace(/[^a-zA-Z0-9_\u0900-\u097F]/g, "_").slice(0, 30);
+      const filename = `KrushiMitra_${cleanTitle}_${selectedDistrict}.png`;
+      await exportElementAsImage(elementId, filename, { scale: 2 });
+      setDownloadSuccessMsg(
+        language === "mr"
+          ? `"${chartTitle}" आलेख डाउनलोड झाला!`
+          : language === "hi"
+          ? `"${chartTitle}" ग्राफ डाउनलोड हो गया!`
+          : `"${chartTitle}" downloaded successfully!`
+      );
+      setTimeout(() => setDownloadSuccessMsg(""), 4500);
+    } catch (err) {
+      console.error("Error downloading single chart:", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const handlePrint = () => {
     window.dispatchEvent(new Event("resize"));
     setTimeout(() => {
@@ -2302,18 +2403,63 @@ export default function Analytics({ nav }) {
             </p>
           </div>
 
-          {/* PRINT / EXPORT BUTTON */}
-          <div className="flex flex-wrap items-center gap-3">
+          {/* 1-CLICK DOWNLOAD BUTTONS (LIKE REPORTS PAGE) */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* 1-CLICK DOWNLOAD PDF */}
+            <button
+              type="button"
+              onClick={handleDownloadFullGraphsPDF}
+              disabled={downloadingId === "graphs-pdf"}
+              className="btn-shimmer flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-[#1B5E20] shadow-md transition hover:bg-green-50 hover:shadow-lg active:scale-95 cursor-pointer disabled:opacity-75"
+            >
+              {downloadingId === "graphs-pdf" ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B5E20] border-t-transparent" />
+              ) : (
+                <Download size={15} className="text-[#1B5E20]" />
+              )}
+              <span>
+                {downloadingId === "graphs-pdf"
+                  ? (language === "mr" ? "तयार होत आहे..." : language === "hi" ? "तैयार हो रहा है..." : "Generating PDF...")
+                  : (language === "mr" ? "१-क्लिक आलेख PDF" : language === "hi" ? "1-क्लिक ग्राफ PDF" : "1-Click Download PDF")}
+              </span>
+            </button>
+
+            {/* 1-CLICK SAVE IMAGE (PNG) */}
+            <button
+              type="button"
+              onClick={handleDownloadFullGraphsImage}
+              disabled={downloadingId === "graphs-png"}
+              className="flex items-center gap-2 rounded-2xl bg-white/20 border border-white/30 px-3.5 py-2.5 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/30 hover:border-white/50 active:scale-95 cursor-pointer disabled:opacity-75"
+              title={language === "mr" ? "सर्व आलेख इमेज (PNG) म्हणून डाउनलोड करा" : language === "hi" ? "सभी ग्राफ इमेज (PNG) के रूप में डाउनलोड करें" : "Download all graphs as PNG image"}
+            >
+              {downloadingId === "graphs-png" ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Download size={14} />
+              )}
+              <span>{language === "mr" ? "इमेज (PNG)" : language === "hi" ? "इमेज (PNG)" : "Save PNG"}</span>
+            </button>
+
+            {/* PRINT OPTION */}
             <button
               type="button"
               onClick={handlePrint}
-              className="btn-shimmer flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white hover:text-[#1B5E20] cursor-pointer shadow-sm"
+              className="flex items-center gap-1.5 rounded-2xl bg-black/20 px-3 py-2.5 text-xs font-bold text-white/90 backdrop-blur-md transition hover:bg-black/30 hover:text-white cursor-pointer"
+              title={txt.exportBtn}
             >
-              <Printer size={15} />
-              <span>{txt.exportBtn}</span>
+              <Printer size={14} />
+              <span className="hidden sm:inline">{language === "mr" ? "प्रिंट" : language === "hi" ? "प्रिंट" : "Print"}</span>
             </button>
           </div>
         </div>
+
+        {/* DOWNLOAD SUCCESS ALERT NOTIFICATION */}
+        {downloadSuccessMsg && (
+          <div className="relative z-10 mt-4 flex items-center gap-2.5 rounded-2xl bg-white/95 text-[#1B5E20] border border-emerald-300 px-4 py-2.5 text-xs font-extrabold shadow-lg animate-fade-in backdrop-blur-md">
+            <CheckCircle2 size={16} className="text-[#2E7D32] shrink-0" />
+            <span>{downloadSuccessMsg}</span>
+          </div>
+        )}
 
         {/* INTERACTIVE CONTROLS BAR */}
         <div className="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/20 pt-4">
@@ -2557,6 +2703,7 @@ export default function Analytics({ nav }) {
       {/* =========================================================
           MAIN VISUALIZATION: ULTRA-SIMPLE FARMER VIEW VS DETAILED CHARTS
       ========================================================= */}
+      <div id="analytics-graphs-section" className="space-y-6">
       {viewMode === "simple" ? (
         /* ULTRA-SIMPLE FARMER-FRIENDLY VISUAL MODULES */
         <div className="space-y-6">
@@ -3067,7 +3214,7 @@ export default function Analytics({ nav }) {
           {/* ROW 1: CROP DIVERSITY (DONUT) & SOIL NUTRIENTS (RADAR) */}
           <div className="grid gap-6 lg:grid-cols-2 analytics-grid-row">
             {/* CHART 1: CROP DIVERSITY (DONUT / PIE) */}
-            <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
+            <div id="chart-crop-diversity" className="card print-card print-avoid-break p-6 depth-1 space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                 <div>
                   <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -3076,9 +3223,25 @@ export default function Analytics({ nav }) {
                   </h2>
                   <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.cropDistDesc}</p>
                 </div>
-                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32] dark:text-emerald-300">
-                  {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32] dark:text-emerald-300">
+                    {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadSingleChart("chart-crop-diversity", txt.cropDistTitle)}
+                    disabled={downloadingId === "chart-crop-diversity"}
+                    title={language === "mr" ? "हा आलेख १-क्लिक डाउनलोड करा" : language === "hi" ? "यह ग्राफ 1-क्लिक डाउनलोड करें" : "1-Click Download Graph"}
+                    className="no-export flex items-center gap-1 rounded-xl border border-gray-200 dark:border-emerald-800/60 bg-white dark:bg-[#183321] px-2.5 py-1 text-[11px] font-bold text-[#1B5E20] dark:text-emerald-300 shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+                  >
+                    {downloadingId === "chart-crop-diversity" ? (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Download size={13} />
+                    )}
+                    <span>{language === "mr" ? "डाउनलोड" : language === "hi" ? "डाउनलोड" : "Download"}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="h-72 w-full">
@@ -3135,7 +3298,7 @@ export default function Analytics({ nav }) {
             </div>
 
             {/* CHART 2: SOIL NUTRIENT N-P-K & pH (RADAR CHART) */}
-            <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
+            <div id="chart-soil-radar" className="card print-card print-avoid-break p-6 depth-1 space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                 <div>
                   <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -3144,9 +3307,25 @@ export default function Analytics({ nav }) {
                   </h2>
                   <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.soilRadarDesc}</p>
                 </div>
-                <span className="rounded-full bg-blue-50 dark:bg-blue-950/70 border border-transparent dark:border-blue-800/40 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:text-blue-300">
-                  {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-blue-50 dark:bg-blue-950/70 border border-transparent dark:border-blue-800/40 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:text-blue-300">
+                    {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadSingleChart("chart-soil-radar", txt.soilRadarTitle)}
+                    disabled={downloadingId === "chart-soil-radar"}
+                    title={language === "mr" ? "हा आलेख १-क्लिक डाउनलोड करा" : language === "hi" ? "यह ग्राफ 1-क्लिक डाउनलोड करें" : "1-Click Download Graph"}
+                    className="no-export flex items-center gap-1 rounded-xl border border-gray-200 dark:border-blue-800/60 bg-white dark:bg-[#183321] px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 shadow-2xs hover:bg-blue-50 dark:hover:bg-blue-900/50 transition cursor-pointer"
+                  >
+                    {downloadingId === "chart-soil-radar" ? (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Download size={13} />
+                    )}
+                    <span>{language === "mr" ? "डाउनलोड" : language === "hi" ? "डाउनलोड" : "Download"}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="h-72 w-full">
@@ -3204,7 +3383,7 @@ export default function Analytics({ nav }) {
           {/* ROW 2: SEASONAL YIELD GROWTH & CLIMATE TELEMETRY */}
           <div className="grid gap-6 lg:grid-cols-2 analytics-grid-row">
             {/* CHART 3: SEASONAL YIELD GROWTH (AREA CHART) */}
-            <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
+            <div id="chart-yield-trend" className="card print-card print-avoid-break p-6 depth-1 space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                 <div>
                   <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -3213,9 +3392,25 @@ export default function Analytics({ nav }) {
                   </h2>
                   <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.yieldTrendDesc}</p>
                 </div>
-                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32] dark:text-emerald-300">
-                  {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-2.5 py-1 text-[10px] font-bold text-[#2E7D32] dark:text-emerald-300">
+                    {tDistrict ? tDistrict(selectedDistrict) : selectedDistrict}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadSingleChart("chart-yield-trend", txt.yieldTrendTitle)}
+                    disabled={downloadingId === "chart-yield-trend"}
+                    title={language === "mr" ? "हा आलेख १-क्लिक डाउनलोड करा" : language === "hi" ? "यह ग्राफ 1-क्लिक डाउनलोड करें" : "1-Click Download Graph"}
+                    className="no-export flex items-center gap-1 rounded-xl border border-gray-200 dark:border-emerald-800/60 bg-white dark:bg-[#183321] px-2.5 py-1 text-[11px] font-bold text-[#1B5E20] dark:text-emerald-300 shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+                  >
+                    {downloadingId === "chart-yield-trend" ? (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Download size={13} />
+                    )}
+                    <span>{language === "mr" ? "डाउनलोड" : language === "hi" ? "डाउनलोड" : "Download"}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="h-72 w-full">
@@ -3272,7 +3467,7 @@ export default function Analytics({ nav }) {
             </div>
 
             {/* CHART 4: AGRO-CLIMATE & MOISTURE CORRELATION (COMPOSED) */}
-            <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
+            <div id="chart-climate-correlation" className="card print-card print-avoid-break p-6 depth-1 space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                 <div>
                   <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -3281,9 +3476,25 @@ export default function Analytics({ nav }) {
                   </h2>
                   <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.climateDesc}</p>
                 </div>
-                <span className="rounded-full bg-rose-50 dark:bg-rose-950/70 border border-transparent dark:border-rose-800/40 px-2.5 py-1 text-[10px] font-bold text-rose-600 dark:text-rose-300">
-                  {currentDistrictProfile.rainfall} mm/yr
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-rose-50 dark:bg-rose-950/70 border border-transparent dark:border-rose-800/40 px-2.5 py-1 text-[10px] font-bold text-rose-600 dark:text-rose-300">
+                    {currentDistrictProfile.rainfall} mm/yr
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadSingleChart("chart-climate-correlation", txt.climateTitle)}
+                    disabled={downloadingId === "chart-climate-correlation"}
+                    title={language === "mr" ? "हा आलेख १-क्लिक डाउनलोड करा" : language === "hi" ? "यह ग्राफ 1-क्लिक डाउनलोड करें" : "1-Click Download Graph"}
+                    className="no-export flex items-center gap-1 rounded-xl border border-gray-200 dark:border-rose-800/60 bg-white dark:bg-[#183321] px-2.5 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-300 shadow-2xs hover:bg-rose-50 dark:hover:bg-rose-900/50 transition cursor-pointer"
+                  >
+                    {downloadingId === "chart-climate-correlation" ? (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Download size={13} />
+                    )}
+                    <span>{language === "mr" ? "डाउनलोड" : language === "hi" ? "डाउनलोड" : "Download"}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="h-72 w-full">
@@ -3341,7 +3552,7 @@ export default function Analytics({ nav }) {
           </div>
 
           {/* ROW 3: MAHARASHTRA DISTRICT AGRONOMY RANKING (BAR CHART) */}
-          <div className="card print-card print-avoid-break p-6 depth-1 space-y-4">
+          <div id="chart-district-ranking" className="card print-card print-avoid-break p-6 depth-1 space-y-4">
             <div className="flex flex-col justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3 sm:flex-row sm:items-center">
               <div>
                 <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -3350,9 +3561,25 @@ export default function Analytics({ nav }) {
                 </h2>
                 <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{txt.districtRankDesc}</p>
               </div>
-              <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-3 py-1 text-xs font-bold text-[#2E7D32] dark:text-emerald-300">
-                {language === "mr" ? "प्रमुख कृषी विभाग" : language === "hi" ? "प्रमुख कृषि क्षेत्र" : "Maharashtra Agro Zones"}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-transparent dark:border-emerald-800/40 px-3 py-1 text-xs font-bold text-[#2E7D32] dark:text-emerald-300">
+                  {language === "mr" ? "प्रमुख कृषी विभाग" : language === "hi" ? "प्रमुख कृषि क्षेत्र" : "Maharashtra Agro Zones"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSingleChart("chart-district-ranking", txt.districtRankTitle)}
+                  disabled={downloadingId === "chart-district-ranking"}
+                  title={language === "mr" ? "हा आलेख १-क्लिक डाउनलोड करा" : language === "hi" ? "यह ग्राफ 1-क्लिक डाउनलोड करें" : "1-Click Download Graph"}
+                  className="no-export flex items-center gap-1 rounded-xl border border-gray-200 dark:border-emerald-800/60 bg-white dark:bg-[#183321] px-2.5 py-1 text-[11px] font-bold text-[#1B5E20] dark:text-emerald-300 shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+                >
+                  {downloadingId === "chart-district-ranking" ? (
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Download size={13} />
+                  )}
+                  <span>{language === "mr" ? "डाउनलोड" : language === "hi" ? "डाउनलोड" : "Download"}</span>
+                </button>
+              </div>
             </div>
 
             <div className="h-72 w-full">
@@ -3399,6 +3626,7 @@ export default function Analytics({ nav }) {
           </div>
         </div>
       )}
+      </div>
 
       {/* =========================================================
           ROW 4: AGRONOMIC INSIGHTS & AI SUMMARY - DYNAMIC PER CITY

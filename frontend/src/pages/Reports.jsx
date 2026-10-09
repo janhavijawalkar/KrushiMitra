@@ -19,6 +19,7 @@ import {
   generateYieldReportPDF,
   generateRecommendationReportPDF,
   generateComprehensiveFarmReportPDF,
+  generateAnalyticsReportPDF,
 } from "../utils/pdfGenerator";
 
 function formatHistoryDate(dateStr) {
@@ -126,6 +127,42 @@ export default function Reports({ nav }) {
       },
     });
   }
+
+  // Visual Farm Graphs & Analytics Report Dossier (Always available for 1-click download)
+  availableReports.push({
+    id: "analyticsReport",
+    title:
+      t("analyticsReportItemTitle") ||
+      (language === "mr"
+        ? "कृषी विश्लेषण व आलेख अहवाल"
+        : language === "hi"
+        ? "कृषि विश्लेषण एवं ग्राफ रिपोर्ट"
+        : "Visual Graphs & Agri-Telemetry Dossier"),
+    translationKey: "agriAnalyticsReport",
+    description:
+      t("analyticsReportItemDesc") ||
+      (language === "mr"
+        ? "शेतातील उत्पादकता, पीक विविधता, मातीतील N-P-K पोषण रडार आणि महाराष्ट्र जिल्हावार क्रमवारीचा १-क्लिक डाउनलोड अहवाल."
+        : language === "hi"
+        ? "खेत की उत्पादकता, फसल विविधता, मृदा N-P-K पोषण रडार और जिलावार उत्पादकता रैंकिंग की 1-क्लिक डाउनलोड रिपोर्ट।"
+        : "Visual farm telemetry, crop diversity donut, soil nutrient radar, and regional productivity benchmarks in 1 click."),
+    date: new Date().toLocaleDateString(language === "mr" || language === "hi" ? "mr-IN" : "en-IN"),
+    type:
+      t("analyticsReportItemType") ||
+      (language === "mr" ? "दृश्य आलेख अहवाल" : language === "hi" ? "विज़ुअल ग्राफ रिपोर्ट" : "Visual Telemetry"),
+    icon: BarChart3,
+    count: 5,
+    action: async () => {
+      await generateAnalyticsReportPDF(
+        {
+          district: user?.district || "Pune",
+          farmSize: user?.farmSize || "4.5",
+        },
+        user,
+        { language }
+      );
+    },
+  });
 
   const handleDownloadPDF = async (report) => {
     setDownloadingType(report.id);

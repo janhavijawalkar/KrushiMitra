@@ -70,6 +70,23 @@ const PDF_TRANSLATIONS = {
     filenameYield: "KrushiMitra_Crop_Yield_Report_EN.pdf",
     filenameRec: "KrushiMitra_Crop_Recommendation_Report_EN.pdf",
     filenameComp: "KrushiMitra_Comprehensive_Farm_Report_EN.pdf",
+
+    // Analytics Report
+    analyticsReportTitle: "Agri Analytics & Telemetry Dossier",
+    analyticsReportSubtitle: "Visual farm telemetry, crop diversity, soil nutrient radar, and regional productivity benchmarks",
+    kpiYield: "Avg. Yield",
+    kpiSoilHealth: "Soil Health Index",
+    kpiEstProduction: "Est. Total Harvest",
+    kpiTopCrop: "Leading Crop",
+    districtRankingHeading: "Maharashtra District Productivity Rankings",
+    colTopCrop: "Dominant Crop",
+    colYieldAcre: "Productivity (t/acre)",
+    seasonalBreakdownHeading: "Seasonal Crop Productivity & Calendar",
+    colSeasonName: "Season",
+    colExpectedYield: "Expected Yield",
+    colPrimaryCrops: "Major Crops",
+    soilHealthHeading: "Soil N-P-K Nutrients & Agro-Climatic Insights",
+    filenameAnalytics: "KrushiMitra_Agri_Analytics_Report_EN.pdf",
   },
 
   mr: {
@@ -137,6 +154,23 @@ const PDF_TRANSLATIONS = {
     filenameYield: "KrushiMitra_पीक_उत्पादन_अहवाल_MR.pdf",
     filenameRec: "KrushiMitra_पीक_शिफारस_अहवाल_MR.pdf",
     filenameComp: "KrushiMitra_सर्वसमावेशक_शेती_अहवाल_MR.pdf",
+
+    // Analytics Report
+    analyticsReportTitle: "कृषी विश्लेषण व आलेख अहवाल (Agri Analytics)",
+    analyticsReportSubtitle: "शेताचे दृश्य आलेख, पीक विविधता, मातीतील N-P-K पोषण रडार आणि जिल्हावार उत्पादकता तुलना",
+    kpiYield: "सरासरी उत्पादकता",
+    kpiSoilHealth: "मृदा आरोग्य निर्देशांक",
+    kpiEstProduction: "एकूण उत्पादन",
+    kpiTopCrop: "प्रमुख पीक",
+    districtRankingHeading: "महाराष्ट्र जिल्हावार कृषी उत्पादकता क्रमवारी",
+    colTopCrop: "प्रमुख पीक",
+    colYieldAcre: "उत्पादकता (टन/एकर)",
+    seasonalBreakdownHeading: "हंगामनिहाय पीक उत्पादकता व शेती दिनदर्शिका",
+    colSeasonName: "हंगाम",
+    colExpectedYield: "अंदाजित उत्पादन",
+    colPrimaryCrops: "प्रमुख पिके",
+    soilHealthHeading: "मातीतील N-P-K पोषण व कृषी सल्ला",
+    filenameAnalytics: "KrushiMitra_कृषी_विश्लेषण_अहवाल_MR.pdf",
   },
 
   hi: {
@@ -204,6 +238,23 @@ const PDF_TRANSLATIONS = {
     filenameYield: "KrushiMitra_फसल_उत्पादन_रिपोर्ट_HI.pdf",
     filenameRec: "KrushiMitra_फसल_सिफारिश_रिपोर्ट_HI.pdf",
     filenameComp: "KrushiMitra_व्यापक_कृषि_रिपोर्ट_HI.pdf",
+
+    // Analytics Report
+    analyticsReportTitle: "कृषि विश्लेषण एवं ग्राफ रिपोर्ट (Agri Analytics)",
+    analyticsReportSubtitle: "खेत के दृश्य चार्ट, फसल विविधता, मृदा N-P-K पोषण रडार और जिलावार उत्पादकता रैंकिंग",
+    kpiYield: "औसत उत्पादकता",
+    kpiSoilHealth: "मृदा स्वास्थ्य सूचकांक",
+    kpiEstProduction: "कुल उत्पादन",
+    kpiTopCrop: "प्रमुख फसल",
+    districtRankingHeading: "महाराष्ट्र जिलावार कृषि उत्पादकता रैंकिंग",
+    colTopCrop: "प्रमुख फसल",
+    colYieldAcre: "उत्पादकता (टन/एकड़)",
+    seasonalBreakdownHeading: "मौसमी फसल उत्पादकता एवं कृषि कैलेंडर",
+    colSeasonName: "मौसम",
+    colExpectedYield: "अनुमानित उपज",
+    colPrimaryCrops: "प्रमुख फसलें",
+    soilHealthHeading: "मृदा N-P-K पोषण एवं कृषि सलाह",
+    filenameAnalytics: "KrushiMitra_कृषि_विश्लेषण_रिपोर्ट_HI.pdf",
   },
 };
 
@@ -724,6 +775,252 @@ export async function generateComprehensiveFarmReportPDF(predictions = [], recom
   `;
 
   await renderHtmlToPdf(htmlContent, t.filenameComp);
+}
+
+/**
+ * 4. Generate Visual Analytics & Agro-Telemetry Report PDF (1-click download from Reports.jsx or Analytics.jsx)
+ */
+export async function generateAnalyticsReportPDF(analyticsContext = {}, user = {}, options = {}) {
+  const lang = resolveLang(options, user);
+  const t = PDF_TRANSLATIONS[lang] || PDF_TRANSLATIONS.en;
+
+  const farmerName = user?.name || user?.userName || (user?.email ? user.email.split("@")[0] : t.registeredFarmer);
+  const todayStr = formatDate(new Date(), lang);
+
+  const district = analyticsContext.district || user?.district || "Pune";
+  const farmSize = analyticsContext.farmSize || user?.farmSize || "4.5";
+  const avgYield = analyticsContext.avgYield || "2.85";
+  const soilIndex = analyticsContext.soilIndex || "84";
+  const estHarvest = analyticsContext.estHarvest || (parseFloat(avgYield) * parseFloat(farmSize)).toFixed(1);
+  const topCrop = analyticsContext.topCrop || "Soybean";
+
+  const rankings = Array.isArray(analyticsContext.rankings) && analyticsContext.rankings.length > 0
+    ? analyticsContext.rankings
+    : [
+        { district: "Kolhapur", topCrop: "Sugarcane", yield: "3.42", rainfall: 1100 },
+        { district: "Pune", topCrop: "Soybean", yield: "2.85", rainfall: 680 },
+        { district: "Nashik", topCrop: "Grapes/Onion", yield: "2.95", rainfall: 720 },
+        { district: "Nagpur", topCrop: "Cotton/Orange", yield: "2.70", rainfall: 890 },
+        { district: "Solapur", topCrop: "Pomegranate/Jowar", yield: "2.30", rainfall: 540 },
+        { district: "Amravati", topCrop: "Cotton", yield: "2.65", rainfall: 840 },
+      ];
+
+  const seasons = [
+    { name: localizeSeason("kharif", lang), yield: (parseFloat(avgYield) * 1.15).toFixed(2), crops: localizeCrop("Soybean", lang) + ", " + localizeCrop("Cotton", lang) + ", " + localizeCrop("Tur", lang), icon: "🌧️" },
+    { name: localizeSeason("rabi", lang), yield: (parseFloat(avgYield) * 0.95).toFixed(2), crops: localizeCrop("Gram", lang) + ", " + localizeCrop("Wheat", lang) + ", " + localizeCrop("Onion", lang), icon: "❄️" },
+    { name: localizeSeason("summer", lang), yield: (parseFloat(avgYield) * 0.65).toFixed(2), crops: localizeCrop("Groundnut", lang) + ", " + localizeCrop("Vegetables", lang), icon: "☀️" },
+  ];
+
+  const rankingRowsHtml = rankings.slice(0, 6).map((item, idx) => `
+    <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f7fbf6'}; border-bottom: 1px solid #e2ece0;">
+      <td style="padding: 7px 8px; text-align: center; font-weight: bold; color: #555;">${idx + 1}</td>
+      <td style="padding: 7px 8px; font-weight: bold; color: #1B5E20;">${localizeDistrict(item.district || item.districtLabel, lang)}</td>
+      <td style="padding: 7px 8px; text-align: center; color: #333;">${localizeCrop(item.topCrop, lang)}</td>
+      <td style="padding: 7px 8px; text-align: center; font-weight: 800; color: #10B981;">${item.yield} ${t.tonnesPerHa}</td>
+      <td style="padding: 7px 8px; text-align: center; color: #666;">${item.rainfall || 750} mm</td>
+    </tr>
+  `).join("");
+
+  const seasonRowsHtml = seasons.map((item, idx) => `
+    <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f7fbf6'}; border-bottom: 1px solid #e2ece0;">
+      <td style="padding: 7px 8px; font-weight: bold; color: #1B5E20;">${item.icon} ${item.name}</td>
+      <td style="padding: 7px 8px; text-align: center; font-weight: 800; color: #10B981;">${item.yield} ${t.tonnesPerHa}</td>
+      <td style="padding: 7px 8px; color: #333;">${item.crops}</td>
+    </tr>
+  `).join("");
+
+  const htmlContent = `
+    <div style="padding: 28px 32px; background: #ffffff; width: 736px; min-height: 1040px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <!-- TOP BRAND BANNER -->
+        <div style="background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 60%, #10B981 100%); padding: 18px 24px; border-radius: 16px; color: #ffffff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(27,94,32,0.15);">
+          <div>
+            <div style="font-size: 22px; font-weight: 900; letter-spacing: 0.5px;">${t.brandTitle}</div>
+            <div style="font-size: 10px; font-weight: 700; opacity: 0.9; margin-top: 2px;">${t.brandSubtitle}</div>
+          </div>
+          <div style="text-align: right; font-size: 11px;">
+            <div style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-weight: bold; margin-bottom: 4px;">${t.verifiedStamp}</div>
+            <div>${t.generatedOn} <strong>${todayStr}</strong></div>
+            <div>${t.farmerName} <strong>${farmerName}</strong></div>
+          </div>
+        </div>
+
+        <!-- REPORT TITLE -->
+        <div style="margin-bottom: 16px; border-left: 4px solid #2E7D32; padding-left: 12px;">
+          <h1 style="margin: 0; font-size: 17px; font-weight: 900; color: #172B18;">${t.analyticsReportTitle}</h1>
+          <p style="margin: 3px 0 0 0; font-size: 11px; color: #55715A; font-weight: 500;">${t.analyticsReportSubtitle}</p>
+        </div>
+
+        <!-- 4 KPI SUMMARY CARDS -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
+          <div style="background: #F4F9F2; border: 1px solid #D7EAD5; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #4B6B4E; font-weight: bold;">${t.kpiYield}</div>
+            <div style="font-size: 16px; font-weight: 900; color: #1B5E20; margin-top: 2px;">${avgYield} <span style="font-size: 9px;">${t.tonnesPerHa}</span></div>
+            <div style="font-size: 9px; color: #718096; margin-top: 2px;">${localizeDistrict(district, lang)}</div>
+          </div>
+          <div style="background: #F4F9F2; border: 1px solid #D7EAD5; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #4B6B4E; font-weight: bold;">${t.kpiSoilHealth}</div>
+            <div style="font-size: 16px; font-weight: 900; color: #2E7D32; margin-top: 2px;">${soilIndex} / 100</div>
+            <div style="font-size: 9px; color: #718096; margin-top: 2px;">${t.optimal}</div>
+          </div>
+          <div style="background: #F4F9F2; border: 1px solid #D7EAD5; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #4B6B4E; font-weight: bold;">${t.kpiEstProduction}</div>
+            <div style="font-size: 16px; font-weight: 900; color: #10B981; margin-top: 2px;">${estHarvest} <span style="font-size: 9px;">tonnes</span></div>
+            <div style="font-size: 9px; color: #718096; margin-top: 2px;">${farmSize} ${t.hectares}</div>
+          </div>
+          <div style="background: #F4F9F2; border: 1px solid #D7EAD5; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #4B6B4E; font-weight: bold;">${t.kpiTopCrop}</div>
+            <div style="font-size: 15px; font-weight: 900; color: #1B5E20; margin-top: 2px;">${localizeCrop(topCrop, lang)}</div>
+            <div style="font-size: 9px; color: #718096; margin-top: 2px;">${t.verified}</div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: DISTRICT PRODUCTIVITY BENCHMARKS -->
+        <div style="margin-bottom: 18px;">
+          <h2 style="font-size: 13px; font-weight: bold; color: #1B5E20; margin: 0 0 8px 0;">${t.districtRankingHeading}</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <thead>
+              <tr style="background: #2E7D32; color: #ffffff;">
+                <th style="padding: 7px 6px; font-weight: bold; text-align: center; width: 28px;">${t.colSr}</th>
+                <th style="padding: 7px 8px; font-weight: bold; text-align: left;">${t.colDistrict}</th>
+                <th style="padding: 7px 8px; font-weight: bold; text-align: center;">${t.colTopCrop}</th>
+                <th style="padding: 7px 8px; font-weight: bold; text-align: center;">${t.colYieldAcre}</th>
+                <th style="padding: 7px 8px; font-weight: bold; text-align: center;">${t.colRainfall}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rankingRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SECTION 2: SEASONAL CROP CALENDAR -->
+        <div style="margin-bottom: 18px;">
+          <h2 style="font-size: 13px; font-weight: bold; color: #1B5E20; margin: 0 0 8px 0;">${t.seasonalBreakdownHeading}</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <thead>
+              <tr style="background: #10B981; color: #ffffff;">
+                <th style="padding: 7px 8px; font-weight: bold; text-align: left;">${t.colSeasonName}</th>
+                <th style="padding: 7px 8px; font-weight: bold; text-align: center;">${t.colExpectedYield}</th>
+                <th style="padding: 7px 8px; font-weight: bold; text-align: left;">${t.colPrimaryCrops}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${seasonRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ADVISORY SUMMARY NOTE -->
+        <div style="background: #F3F8F2; border: 1px solid #D2E6D0; border-radius: 12px; padding: 10px 14px;">
+          <div style="font-size: 10.5px; font-weight: bold; color: #1B5E20; margin-bottom: 2px;">🌱 KrushiMitra Agro-Telemetry Advisory:</div>
+          <p style="margin: 0; font-size: 10px; color: #2E5C32; line-height: 1.4;">
+            ${t.yieldAdvisoryText}
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #718096;">
+        <div>${t.footerNotice}</div>
+        <div style="font-weight: bold; color: #2E7D32;">KrushiMitra © ${new Date().getFullYear()}</div>
+      </div>
+    </div>
+  `;
+
+  await renderHtmlToPdf(htmlContent, t.filenameAnalytics);
+}
+
+/**
+ * 5. Export any rendered DOM element or chart section to PDF in 1 click
+ */
+export async function exportElementToPdf(elementOrId, filename = "KrushiMitra_Analytics_Graphs.pdf", options = {}) {
+  const el = typeof elementOrId === "string" ? document.getElementById(elementOrId) : elementOrId;
+  if (!el) {
+    console.warn("Element not found for PDF export:", elementOrId);
+    return false;
+  }
+
+  try {
+    const canvas = await html2canvas(el, {
+      scale: options.scale || 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: options.backgroundColor || "#ffffff",
+      ignoreElements: (node) => {
+        if (node.classList && (node.classList.contains("no-export") || node.classList.contains("no-print"))) {
+          return true;
+        }
+        return false;
+      },
+    });
+
+    const orientation = options.orientation || (canvas.width > canvas.height * 1.25 ? "landscape" : "portrait");
+    const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
+    const pageWidth = orientation === "landscape" ? 297 : 210;
+    const pageHeight = orientation === "landscape" ? 210 : 297;
+
+    const margin = options.margin !== undefined ? options.margin : 8;
+    const contentWidth = pageWidth - margin * 2;
+    const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    doc.addImage(canvas.toDataURL("image/jpeg", 0.98), "JPEG", margin, position, contentWidth, imgHeight);
+    heightLeft -= pageHeight - margin * 2;
+
+    while (heightLeft > 5) {
+      position = heightLeft - imgHeight + margin;
+      doc.addPage();
+      doc.addImage(canvas.toDataURL("image/jpeg", 0.98), "JPEG", margin, position, contentWidth, imgHeight);
+      heightLeft -= pageHeight - margin * 2;
+    }
+
+    doc.save(filename);
+    return true;
+  } catch (err) {
+    console.error("Export element to PDF error:", err);
+    throw err;
+  }
+}
+
+/**
+ * 6. Export any rendered DOM element or chart section to PNG image in 1 click
+ */
+export async function exportElementAsImage(elementOrId, filename = "KrushiMitra_Graph.png", options = {}) {
+  const el = typeof elementOrId === "string" ? document.getElementById(elementOrId) : elementOrId;
+  if (!el) {
+    console.warn("Element not found for image export:", elementOrId);
+    return false;
+  }
+
+  try {
+    const canvas = await html2canvas(el, {
+      scale: options.scale || 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: options.backgroundColor || "#ffffff",
+      ignoreElements: (node) => {
+        if (node.classList && (node.classList.contains("no-export") || node.classList.contains("no-print"))) {
+          return true;
+        }
+        return false;
+      },
+    });
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = filename.endsWith(".png") ? filename : `${filename}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return true;
+  } catch (err) {
+    console.error("Export element to Image error:", err);
+    throw err;
+  }
 }
 
 /* Sample fallback data for preview if user history is empty */
